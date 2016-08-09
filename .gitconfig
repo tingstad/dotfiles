@@ -4,4 +4,6 @@
 	filemode = false
 	autocrlf = input
         excludesfile = ~/gitignore
+[github]
+        user = tingstad
 
