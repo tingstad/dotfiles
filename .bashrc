@@ -89,6 +89,26 @@ alias ll='ls -alF'
 alias la='ls -A'
 alias l='ls -CF'
 
+
+color_prompt=yes
+if [ "$color_prompt" = yes ]; then
+    BLACK='\033[30m'
+    RED='\033[31m'
+    GREEN='\033[32m'
+    YELLOW='\033[33m'
+    BLUE='\033[34m'
+    MAGENTA='\033[35m'
+    CYAN='\033[36m'
+    WHITE='\033[37m'
+    RESET='\033[0m'
+fi
+exitstatus(){
+    [ $? -eq 0 ] && echo -en "${GREEN}:)" || echo -en "${RED}:("
+    echo -en "${RESET}"
+}
+PS1="\A \$(exitstatus) \u@\h ${YELLOW}\w${RESET}\$(git branch 2>/dev/null|grep \*)> "
+
+
 # Add an "alert" alias for long running commands.  Use like so:
 #   sleep 10; alert
 alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
