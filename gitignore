@@ -1,0 +1,26 @@
+# Eclipse
+.classpath
+.project
+.settings/
+.metadata/
+queries/
+templates/
+output/
+ 
+# IntelliJ
+.idea/
+*.iml
+*.iws
+ 
+# Mac
+.DS_Store
+ 
+# Maven
+log/
+target/
+dependency-reduced-pom.xml
+
+# Linux
+*~
+.*.swp
+

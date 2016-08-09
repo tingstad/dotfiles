@@ -3,3 +3,5 @@
 [core]
 	filemode = false
 	autocrlf = input
+        excludesfile = ~/gitignore
+
