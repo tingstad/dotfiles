@@ -107,8 +107,11 @@ if [ "$color_prompt" = yes ]; then
     CYAN='\033[36m'
     WHITE='\033[37m'
     RESET='\033[0m'
+else
+    unset BLACK RED GREEN YELLOW BLUE MAGENTA CYAN WHITE RESET
 fi
 exitstatus(){
+    GREEN="";RED="";RESET=""
     [ $? -eq 0 ] && echo -en "${GREEN}:)" || echo -en "${RED}:("
     echo -en "${RESET}"
 }
