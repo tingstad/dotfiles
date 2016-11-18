@@ -96,7 +96,6 @@ alias mci='mvn clean install'
 grip(){
     find "${3-.}" -name '.[^.]*' -prune -o -name "${2:-*}" -type f -print0 | xargs -0 egrep --binary-files=without-match ${@:4} "$1" ;}
 
-color_prompt=yes
 if [ "$color_prompt" = yes ]; then
     BLACK='\033[30m'
     RED='\033[31m'
@@ -111,8 +110,9 @@ else
     unset BLACK RED GREEN YELLOW BLUE MAGENTA CYAN WHITE RESET
 fi
 exitstatus(){
+    local rc=$?
     GREEN="";RED="";RESET=""
-    [ $? -eq 0 ] && echo -en "${GREEN}:)" || echo -en "${RED}:("
+    [ $rc -eq 0 ] && echo -en "${GREEN}:)" || echo -en "${RED}:("
     echo -en "${RESET}"
 }
 PS1="\A \$(exitstatus) \u@\h ${YELLOW}\w${RESET}\$(git branch 2>/dev/null|grep \*)> "
