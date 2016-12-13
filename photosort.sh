@@ -2,7 +2,7 @@
 
 # Script to prepare photos for Facebook or similar,
 # by Richard H. Tingstad (richard.tingstad+fb@gmail.com)
-# version 2.7
+# version 2.8
 #
 # Makes target directory if needed
 # Copies (and resizes) all jp(e)g files there,
@@ -38,6 +38,25 @@ check_dependencies() {
   for i in "identify -version" "convert -version" "stat --help" "find --help"
     do $i >/dev/null || fail "${i% *} failed and is a required command"
   done
+}
+
+FFORMAT="^[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}.[0-9]{2}.[0-9]{2}"
+
+time_taken() {
+  local file="$1"
+  # %z %y %w: changed/modified/birth
+  local stat="$(stat --printf "%z\n%y\n%w" "$file")"
+  local exif="$(identify -format "%[EXIF:*]" "$file" | grep -i 'Exif:DateTime' \
+      | cut -d= -f2 | sort | head -n 1)"
+  local name="$(basename "$file" | egrep "$FFORMAT")"
+  local time="$(echo -e "$stat\n$exif\n$name" | sed 's/[^0-9]//g' | egrep -o '^[0-9]{8,14}' \
+      | sort | head -n 1)"
+  [ ${#time} -lt 14 ] && time=$(printf "$time%0$[ 14 - ${#time} ]u" 0)
+  local pretty=$(echo $time | sed -r \
+'s/([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})/\1-\2-\3_\4.\5.\6/')
+  echo $pretty | egrep -q "${FFORMAT}" || \
+    fail "Unexpected error: $pretty does not have format ${FFORMAT}"
+  echo $pretty
 }
 
 [ $# -lt 2 ] && usage
@@ -85,23 +104,7 @@ for src in "${@:$offset}";do
   find "$src" ${recursive--maxdepth 1} -path "$dir" -prune -o \
     -type f \( -iname '*.jpg' -o -iname '*.jpeg' \) -print0 \
   | while read -d $'\0' i ;do
-    # smallest changed/modified/birth
-    y=$(stat --printf "%z\n%y\n%w" "$i" | sort | head -n 1)
-    t=$(identify -format "%[EXIF:*]" "$i" | grep -i 'Exif:DateTime' \
-        | cut -d= -f2 | sort | head -n 1)
-    t=$(echo -e "$y\n$t" | sed 's/[^0-9]//g' | egrep -o '^[0-9]{0,14}' \
-        | sort | head -n 1)
-    [ ${#t} -lt 14 ] && t=$(printf "$t%0$[ 14 - ${#t} ]u" 0)
-    t=$(echo $t | sed -r \
-'s/([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})/\1-\2-\3_\4.\5.\6/')
-    FFORMAT="^[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}.[0-9]{2}.[0-9]{2}(-[0-9]+)?$"
-    echo "$t" | egrep -q "${FFORMAT}" || \
-      fail "Unexpected error: $t does not have format ${FFORMAT}"
-    y=$(basename "$i" .jpg)
-    # Do not rename file to later date if it looks processed
-    echo "$y" | egrep -q "${FFORMAT}" && \
-      t=$(echo -e "$y\n$t" | sort | head -n 1)
-    c=""
+    t=$(time_taken "$i")
     while [ -e "$dir/$t$c.jpg" ]; do
       c=$[ $c - 1 ]
     done
