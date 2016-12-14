@@ -4,6 +4,7 @@
 	filemode = false
 	autocrlf = input
         excludesfile = ~/gitignore
+	editor = vim
 [github]
         user = tingstad
 
