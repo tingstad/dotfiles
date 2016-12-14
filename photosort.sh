@@ -49,8 +49,9 @@ time_taken() {
     local exif="$(identify -format "%[EXIF:*]" "$file" | grep -i 'Exif:DateTime' \
             | cut -d= -f2 | sort | head -n 1)"
     local name="$(basename "$file" | egrep "$FFORMAT")"
-    local time="$(echo -e "$stat\n$exif\n$name" | sed 's/[^0-9]//g' | egrep -o '^[0-9]{8,14}' \
-            | sort | head -n 1)"
+    local time="$(echo -e "$stat\n$exif\n$name" \
+            | egrep -io '(19|2[0-9])[0-9]{2}[^a-z0-9](0[1-9]|1[0-2])[^a-z0-9](0[1-9]|[12][0-9]|3[01]).*' \
+            | sed 's/[^0-9]//g' | egrep -o '^[0-9]{8,14}' | sort | head -n 1)"
     [ ${#time} -lt 14 ] && time=$(printf "$time%0$[ 14 - ${#time} ]u" 0)
     local pretty=$(echo $time | sed -r \
 's/([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})/\1-\2-\3_\4.\5.\6/')
