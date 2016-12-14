@@ -3,7 +3,7 @@
 [core]
 	filemode = false
 	autocrlf = input
-        excludesfile = ~/gitignore
+	excludesfile = ~/gitignore
 	editor = vim
 [github]
         user = tingstad
