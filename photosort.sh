@@ -106,6 +106,7 @@ for src in "${@:$offset}";do
         -type f \( -iname '*.jpg' -o -iname '*.jpeg' \) -print0 \
     | while read -d $'\0' i ;do
         t=$(time_taken "$i")
+        c=""
         while [ -e "$dir/$t$c.jpg" ]; do
             c=$[ $c - 1 ]
         done
