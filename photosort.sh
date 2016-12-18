@@ -45,19 +45,33 @@ FFORMAT="^[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}.[0-9]{2}.[0-9]{2}"
 time_taken() {
     local file="$1"
     # %z %y %w: changed/modified/birth
-    local stat="$(stat --printf "%z\n%y\n%w" "$file")"
+    local stat="$(stat --printf='%z\n%y\n%w' "$file")"
     local exif="$(identify -format "%[EXIF:*]" "$file" | grep -i 'Exif:DateTime' \
-            | cut -d= -f2 | sort | head -n 1)"
-    local name="$(basename "$file" | egrep "$FFORMAT")"
+        | cut -d= -f2 | sort | head -n 1)"
+    local name="$(basename "$file" | egrep -o "$FFORMAT")"
     local time="$(echo -e "$stat\n$exif\n$name" \
-            | egrep -io '(19|2[0-9])[0-9]{2}[^a-z0-9](0[1-9]|1[0-2])[^a-z0-9](0[1-9]|[12][0-9]|3[01]).*' \
-            | sed 's/[^0-9]//g' | egrep -o '^[0-9]{8,14}' | sort | head -n 1)"
+        | egrep -io '(19|2[0-9])[0-9]{2}[^a-z0-9](0[1-9]|1[0-2])[^a-z0-9](0[1-9]|[12][0-9]|3[01]).*' \
+        | sed 's/[^0-9]//g' | egrep -o '^[0-9]{8,14}' | sort | head -n 1)"
     [ ${#time} -lt 14 ] && time=$(printf "$time%0$[ 14 - ${#time} ]u" 0)
     local pretty=$(echo $time | sed -r \
 's/([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})/\1-\2-\3_\4.\5.\6/')
     echo $pretty | egrep -q "${FFORMAT}" || \
         fail "Unexpected error: $pretty does not have format ${FFORMAT}"
     echo $pretty
+}
+
+is_duplicate() {
+    local file="$1"
+    local time="$2"
+    local dest="$3"
+    local size=$(stat --printf=%s "$file")
+    for f in "$dest/$time"*.jpg; do
+        [ -f "$f" ] \
+            && [ $size = $(stat --printf=%s "$f") ] \
+            && cmp --quiet "$file" "$f" \
+            && return 0
+    done
+    return 1
 }
 
 [ $# -lt 2 ] && usage
@@ -106,6 +120,8 @@ for src in "${@:$offset}";do
         -type f \( -iname '*.jpg' -o -iname '*.jpeg' \) -print0 \
     | while read -d $'\0' i ;do
         t=$(time_taken "$i")
+        is_duplicate "$i" "$t" "$dir" \
+            && echo "Skipping duplicate: $i ($t)" && continue
         c=""
         while [ -e "$dir/$t$c.jpg" ]; do
             c=$[ $c - 1 ]
