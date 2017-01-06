@@ -76,76 +76,80 @@ is_duplicate() {
     return 1
 }
 
-[ $# -lt 2 ] && usage
-
-offset=1
-for arg; do
-    offset=$[ $offset + 1 ]
-    if [ "$arg" = "--rename" ]; then
-        rename=true
-    elif [ "$arg" = "--recursive" ]; then
-        recursive=""
-    elif [ "${arg:0:9}" = "--resize=" ]; then
-        px=${arg#*=}
-        echo "$px" | egrep -q '^[0-9]+$' || fail "Invalid resize value: $px"
-    else
-        offset=$[ $offset - 1 ]
-    fi
-done
-[ $# -lt $[ $offset + 1 ] ] && usage
-
-check_dependencies
-
-i=$offset
-for src in "${@:$offset}"; do
-    [ $i -ge $# ] && break
-    [ ! -d "$src" ] && fail "Not a directory: '$src'"
-    echo "Source: $src"
-    i=$[ $i + 1 ]
-done
-for dir; do true; done
-echo "$dir" | egrep -q '/$' && dir="${dir%/*}"
-echo "Target: $dir"
-if [ ! -d "$dir" ]; then
-    echo "Creating directory '$dir'..."
-    mkdir "$dir"
-elif [ $rename ] && ls "$dir"/*.jpg >/dev/null 2>/dev/null; then
-    echo "Warning: Existing jpg files in target directory! (May be renamed.)"
-    sleep 3
-fi
-
-j=$offset
-for src in "${@:$offset}";do
-    [ $j -ge $# ] && break
-    j=$[ $j + 1 ]
-    find "$src" ${recursive--maxdepth 1} -path "$dir" -prune -o \
-        -type f \( -iname '*.jpg' -o -iname '*.jpeg' \) -print0 \
-    | while read -d $'\0' i ;do
-        t=$(time_taken "$i")
-        is_duplicate "$i" "$t" "$dir" \
-            && echo "Skipping duplicate: $i ($t)" && continue
-        c=""
-        while [ -e "$dir/$t$c.jpg" ]; do
-            c=$[ $c - 1 ]
-        done
-        dest="$dir/$t$c.jpg"
-        echo "$i > $dest"
-        if [ -z "$px" ]; then
-            cp "$i" "$dest"
+main() {
+    [ $# -lt 2 ] && usage
+    
+    offset=1
+    for arg; do
+        offset=$[ $offset + 1 ]
+        if [ "$arg" = "--rename" ]; then
+            rename=true
+        elif [ "$arg" = "--recursive" ]; then
+            recursive=""
+        elif [ "${arg:0:9}" = "--resize=" ]; then
+            px=${arg#*=}
+            echo "$px" | egrep -q '^[0-9]+$' || fail "Invalid resize value: $px"
         else
-            convert -resize "$px"x$px\> -auto-orient -strip "$i" "$dest"
+            offset=$[ $offset - 1 ]
         fi
     done
-done
+    [ $# -lt $[ $offset + 1 ] ] && usage
+    
+    check_dependencies
+    
+    i=$offset
+    for src in "${@:$offset}"; do
+        [ $i -ge $# ] && break
+        [ ! -d "$src" ] && fail "Not a directory: '$src'"
+        echo "Source: $src"
+        i=$[ $i + 1 ]
+    done
+    for dir; do true; done
+    echo "$dir" | egrep -q '/$' && dir="${dir%/*}"
+    echo "Target: $dir"
+    if [ ! -d "$dir" ]; then
+        echo "Creating directory '$dir'..."
+        mkdir "$dir"
+    elif [ $rename ] && ls "$dir"/*.jpg >/dev/null 2>/dev/null; then
+        echo "Warning: Existing jpg files in target directory! (May be renamed.)"
+        sleep 3
+    fi
+    
+    j=$offset
+    for src in "${@:$offset}";do
+        [ $j -ge $# ] && break
+        j=$[ $j + 1 ]
+        find "$src" ${recursive--maxdepth 1} -path "$dir" -prune -o \
+            -type f \( -iname '*.jpg' -o -iname '*.jpeg' \) -print0 \
+        | while read -d $'\0' i ;do
+            t=$(time_taken "$i")
+            is_duplicate "$i" "$t" "$dir" \
+                && echo "Skipping duplicate: $i ($t)" && continue
+            c=""
+            while [ -e "$dir/$t$c.jpg" ]; do
+                c=$[ $c - 1 ]
+            done
+            dest="$dir/$t$c.jpg"
+            echo "$i > $dest"
+            if [ -z "$px" ]; then
+                cp "$i" "$dest"
+            else
+                convert -resize "$px"x$px\> -auto-orient -strip "$i" "$dest"
+            fi
+        done
+    done
+    
+    [ $rename ] || exit 0
+    
+    #Anonymize file names.
+    c=0
+    find "$dir" -maxdepth 1 -type f -name '*.jpg' -print0 | sort -z \
+    | while read -d $'\0' i ;do
+        dest="$dir/$(printf "%05u" "$c").jpg"
+        echo "$i > $dest"
+        mv "$i" "$dest"
+        c=$[ $c + 1 ]
+    done
+}
+main "$@"
 
-[ $rename ] || exit 0
-
-#Anonymize file names.
-c=0
-find "$dir" -maxdepth 1 -type f -name '*.jpg' -print0 | sort -z \
-| while read -d $'\0' i ;do
-    dest="$dir/$(printf "%05u" "$c").jpg"
-    echo "$i > $dest"
-    mv "$i" "$dest"
-    c=$[ $c + 1 ]
-done
