@@ -64,12 +64,14 @@ is_duplicate() {
     local file="$1"
     local time="$2"
     local dest="$3"
-    local size=$(stat --printf=%s "$file")
+    local size
     for f in "$dest/$time"*.jpg; do
-        [ -f "$f" ] \
-            && [ $size = $(stat --printf=%s "$f") ] \
-            && cmp --quiet "$file" "$f" \
-            && return 0
+        if [ -f "$f" ]; then
+            [ -z "$size" ] && size=$(stat --printf=%s "$file")
+            [ $size = $(stat --printf=%s "$f") ] \
+                && cmp --quiet "$file" "$f" \
+                && return 0
+        fi
     done
     return 1
 }
