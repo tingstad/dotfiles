@@ -27,17 +27,17 @@ usage() {
 	 --rename         Raname target files from YYYY-MM-DD_HH.MM.SS.jpg to NNNN.jpg.
 	 --recursive      Read source directories' subdirectories
 	EOF
-    exit 1
 }
 
-fail() {
-    echo "$1" >&2 && exit 1
+error() {
+    echo "$1" >&2
 }
 
 check_dependencies() {
     for i in "identify -version" "convert -version" "stat --help" "find --help"
-        do $i >/dev/null || fail "${i% *} failed and is a required command"
+        do ! $i >/dev/null && error "${i% *} failed and is a required command" && return 1
     done
+    return 0
 }
 
 FFORMAT="^[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}.[0-9]{2}.[0-9]{2}"
@@ -52,11 +52,11 @@ time_taken() {
     local time="$(echo -e "$stat\n$exif\n$name" \
         | egrep -io '(19|2[0-9])[0-9]{2}[^a-z0-9](0[1-9]|1[0-2])[^a-z0-9](0[1-9]|[12][0-9]|3[01]).*' \
         | sed 's/[^0-9]//g' | egrep -o '^[0-9]{8,14}' | sort | head -n 1)"
+#    echo -e "DEBUG:\n$stat stat\n$exif exif\n$name name\n" \
+#| egrep -io '(19|2[0-9])[0-9]{2}[^a-z0-9](0[1-9]|1[0-2])[^a-z0-9](0[1-9]|[12][0-9]|3[01]).*' >&2
     [ ${#time} -lt 14 ] && time=$(printf "$time%0$[ 14 - ${#time} ]u" 0)
     local pretty=$(echo $time | sed -r \
 's/([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})/\1-\2-\3_\4.\5.\6/')
-    echo $pretty | egrep -q "${FFORMAT}" || \
-        fail "Unexpected error: $pretty does not have format ${FFORMAT}"
     echo $pretty
 }
 
@@ -73,11 +73,11 @@ is_duplicate() {
                 && return 0
         fi
     done
-    return 1
+    false
 }
 
 main() {
-    [ $# -lt 2 ] && usage
+    [ $# -lt 2 ] && usage && return 1
     
     offset=1
     for arg; do
@@ -88,19 +88,19 @@ main() {
             recursive=""
         elif [ "${arg:0:9}" = "--resize=" ]; then
             px=${arg#*=}
-            echo "$px" | egrep -q '^[0-9]+$' || fail "Invalid resize value: $px"
+            echo "$px" | egrep -q '^[0-9]+$' || error "Invalid resize value: $px" && return 1
         else
             offset=$[ $offset - 1 ]
         fi
     done
-    [ $# -lt $[ $offset + 1 ] ] && usage
+    [ $# -lt $[ $offset + 1 ] ] && usage && return 1
     
-    check_dependencies
+    check_dependencies || return $?
     
     i=$offset
     for src in "${@:$offset}"; do
         [ $i -ge $# ] && break
-        [ ! -d "$src" ] && fail "Not a directory: '$src'"
+        [ ! -d "$src" ] && error "Not a directory: '$src'" && return 1
         echo "Source: $src"
         i=$[ $i + 1 ]
     done
@@ -139,7 +139,7 @@ main() {
         done
     done
     
-    [ $rename ] || exit 0
+    [ $rename ] || return 0
     
     #Anonymize file names.
     c=0
@@ -150,6 +150,8 @@ main() {
         mv "$i" "$dest"
         c=$[ $c + 1 ]
     done
+    return 0
 }
+return 2>/dev/null || true
 main "$@"
 
