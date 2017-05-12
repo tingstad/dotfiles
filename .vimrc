@@ -1,4 +1,5 @@
 syntax enable
+set encoding=utf-8
 set tabstop=4       " number of visual spaces per TAB
 set softtabstop=4   " number of spaces in tab when editing
 set expandtab       " tabs are spaces
@@ -10,8 +11,11 @@ set incsearch           " search as characters are entered
 set hlsearch            " highlight matches
 set matchpairs+=<:>,«:»,‹:›,‘:’,“:”,⟨:⟩,⟪:⟫
 
-augroup configgroup
-    autocmd!
-    autocmd FileType sh setlocal noexpandtab
-augroup END
+set listchars=tab:>-    " show tab as >---
+set list
+
+"augroup configgroup
+"    autocmd!
+"    autocmd FileType sh setlocal noexpandtab
+"augroup END
 
