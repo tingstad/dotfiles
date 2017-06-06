@@ -8,7 +8,7 @@
 [github]
         user = tingstad
 [alias]
-		upstream = !git fetch -q && git --no-pager log --oneline --no-merges HEAD..${1-$(git for-each-ref $(git symbolic-ref HEAD) --format='%(upstream:short)')}
+		upstream = !git fetch -q && git --no-pager log --oneline --no-merges HEAD..${1-$(git rev-parse --abbrev-ref @{upstream})}
 		local = !git fetch -q && git --no-pager log --oneline --no-merges ${1-$(git rev-parse --abbrev-ref @{upstream})}..HEAD
 
 [pull]
