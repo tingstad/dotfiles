@@ -11,7 +11,7 @@ set showmatch           " highlight matching [{()}]
 set incsearch           " search as characters are entered
 set hlsearch            " highlight matches
 set matchpairs+=<:>,«:»,‹:›,‘:’,“:”,⟨:⟩,⟪:⟫
-
+set autoread            " detect changed file and read (load) it
 set listchars=tab:>-    " show tab as >---
 set list
 
