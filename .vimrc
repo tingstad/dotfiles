@@ -14,6 +14,8 @@ set matchpairs+=<:>,«:»,‹:›,‘:’,“:”,⟨:⟩,⟪:⟫
 set autoread            " detect changed file and read (load) it
 set listchars=tab:>-    " show tab as >---
 set list
+set textwidth=0         " do not physically break long lines
+set wrapmargin=0        " do not physically break pasted text
 
 "augroup configgroup
 "    autocmd!
