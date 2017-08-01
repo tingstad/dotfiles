@@ -8,8 +8,8 @@
 [github]
 	user = tingstad
 [alias]
-	upstream = !git fetch -q && git --no-pager log --oneline --no-merges HEAD..${1-$(git rev-parse --abbrev-ref @{upstream})}
-	local = !git fetch -q && git --no-pager log --oneline --no-merges ${1-$(git rev-parse --abbrev-ref @{upstream})}..HEAD
+	upstream = !"git fetch -q && git --no-pager log --oneline --no-merges \"HEAD..${1-$(git rev-parse --abbrev-ref @{upstream})}\""
+	local = !"git fetch -q && git --no-pager log --oneline --no-merges \"${1-$(git rev-parse --abbrev-ref @{upstream})}..HEAD\""
 	st = status
 	amend = commit --amend --no-edit
 
