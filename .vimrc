@@ -16,6 +16,8 @@ set listchars=tab:>-    " show tab as >---
 set list
 set textwidth=0         " do not physically break long lines
 set wrapmargin=0        " do not physically break pasted text
+set foldmethod=indent   " fold by indent level
+set foldlevelstart=99   " ... but keep all folds open from start
 
 "augroup configgroup
 "    autocmd!
