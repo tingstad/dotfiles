@@ -96,26 +96,32 @@ alias mci='mvn clean install'
 grip(){
     find "${3-.}" -name '.[^.]*' -prune -o -name "${2:-*}" -type f -print0 | xargs -0 egrep --binary-files=without-match ${@:4} "$1" ;}
 
-if [ "$color_prompt" = yes ]; then
-    BLACK='\033[30m'
-    RED='\033[31m'
-    GREEN='\033[32m'
-    YELLOW='\033[33m'
-    BLUE='\033[34m'
-    MAGENTA='\033[35m'
-    CYAN='\033[36m'
-    WHITE='\033[37m'
-    RESET='\033[0m'
-else
-    unset BLACK RED GREEN YELLOW BLUE MAGENTA CYAN WHITE RESET
-fi
-exitstatus(){
-    local rc=$?
-    GREEN="";RED="";RESET=""
-    [ $rc -eq 0 ] && echo -en "${GREEN}:)" || echo -en "${RED}:("
-    echo -en "${RESET}"
+nocolor() { false; }
+reset() { nocolor || echo -n '\033[00m'; }
+black() { nocolor || echo -n '\033[30m'; }
+red() { nocolor || echo -n '\033[31m'; }
+green() { nocolor || echo -n '\033[32m'; }
+yellow() { nocolor || echo -n '\033[33m'; }
+blue() { nocolor || echo -n '\033[34m'; }
+magenta() { nocolor || echo -n '\033[35m'; }
+cyan() { nocolor || echo -n '\033[36m'; }
+white() { nocolor || echo -n '\033[37m'; }
+ps(){
+    if nocolor; then return; fi
+    echo -en "\["
+    ${1}
+    echo -en "\]"
 }
-PS1="\A \$(exitstatus) \u@\h ${YELLOW}\w${RESET}\$(git branch 2>/dev/null|grep \*)> "
+exitcolor(){
+    local rc=$?
+    [ $rc -eq 0 ] && echo -en "$(green)" || echo -en "$(red)"
+    return $rc
+}
+exittext(){
+    local rc=$?
+    [ $rc -eq 0 ] && echo -en ":)" || echo -en ":("
+}
+PS1="\A \[\$(exitcolor)\]\$(exittext)$(ps reset) \u@\h $(ps yellow)\w$(ps reset)\$(git branch 2>/dev/null|grep \*)> "
 
 
 # Add an "alert" alias for long running commands.  Use like so:
