@@ -123,6 +123,7 @@ exittext(){
 }
 PS1="\A \[\$(exitcolor)\]\$(exittext)$(ps reset) \u@\h $(ps yellow)\w$(ps reset)\$(git branch 2>/dev/null|grep \*)> "
 
+export EDITOR=vim
 
 # Add an "alert" alias for long running commands.  Use like so:
 #   sleep 10; alert
