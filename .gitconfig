@@ -13,6 +13,7 @@
 	local = !"git fetch -q && git --no-pager log --oneline --no-merges \"${1-$(git rev-parse --abbrev-ref @{upstream})}..HEAD\""
 	st = status
 	amend = commit --amend --no-edit
+	up = !"if git diff | grep -q . ;then git stash && git pull && git stash pop ;else git pull ;fi && echo OK"
 
 [pull]
 	rebase = true
