@@ -88,7 +88,9 @@ main() {
             recursive=""
         elif [ "${arg:0:9}" = "--resize=" ]; then
             px=${arg#*=}
-            echo "$px" | egrep -q '^[0-9]+$' || error "Invalid resize value: $px" && return 1
+            if ! echo "$px" | egrep -q '^[0-9]+$'; then
+                 error "Invalid resize value: $px" && return 1
+            fi
         else
             offset=$[ $offset - 1 ]
         fi

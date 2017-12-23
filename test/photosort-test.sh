@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 testTimeTakenOlympus() {
     # Exif is UTC
@@ -35,6 +35,14 @@ testNoArguments() {
     assertEquals 'Output should contain "Usage"' \
         "Usage" "$(echo $out | grep -o Usage)"
     assertTrue 'No arguments should fail' "[ $status -gt 0 ]"
+}
+
+testInvalidResizeValue() {
+    out=$(main --resize=X $(mktemp -d) out/ 2>&1)
+    status=$?
+    assertEquals 'Output should contain error' \
+        "Invalid resize value: X" "$(echo $out)"
+    assertTrue 'Invalid value should fail' "[ $status -gt 0 ]"
 }
 
 DIR="$( dirname "$(pwd)/$0" )"
