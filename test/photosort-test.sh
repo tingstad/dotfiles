@@ -25,7 +25,7 @@ testTimeTakenSamsungGalaxyS5() {
     # 2015-11-11 is winter time (UTC +01:00)
     # File is 06:45 UTC +01:00
     # Exif is 07:45 UTC +??
-    time=$(time_taken 20151111_074536.jpg)
+    time=$(time_taken $DIR/20151111_074536.jpg)
     assertEquals '' '2015-11-11_06.45.36' "$time"
 }
 
