@@ -18,7 +18,7 @@ testTimeTakenInstagramSamsungGalaxyS5_summer() {
     # Exif is 07:40:07 UTC +02:00
     file="$DIR/IMG_20160809_074007.jpg"
     #touch --date='2016-08-09 07:40:06.000000000 +0200' "$file"
-    assertEquals '2016-08-09_07.40.06' "$(time_taken "$file")"
+    assertEquals '2016-08-09_07.40.07' "$(time_taken "$file")"
 }
 
 testTimeTakenSamsungGalaxyS5() {
