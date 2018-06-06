@@ -14,6 +14,10 @@
 	st = status
 	amend = commit --amend --no-edit
 	up = !"if git diff | grep -q . ;then git stash && git pull && git stash pop ;else git pull ;fi && echo OK"
+	accept-mine-rebase   = "!f() { git checkout --theirs -- \"${@:-.}\" && git add -u \"${@:-.}\"; }; f"
+	accept-others-rebase = "!f() { git checkout --ours   -- \"${@:-.}\" && git add -u \"${@:-.}\"; }; f"
+	accept-mine-merge    = "!f() { git checkout --ours   -- \"${@:-.}\" && git add -u \"${@:-.}\"; }; f"
+	accept-others-merge  = "!f() { git checkout --theirs -- \"${@:-.}\" && git add -u \"${@:-.}\"; }; f"
 
 [pull]
 	rebase = true
