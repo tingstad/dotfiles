@@ -106,7 +106,7 @@ blue() { nocolor || echo -n '\033[34m'; }
 magenta() { nocolor || echo -n '\033[35m'; }
 cyan() { nocolor || echo -n '\033[36m'; }
 white() { nocolor || echo -n '\033[37m'; }
-ps(){
+exe(){
     if nocolor; then return; fi
     echo -en "\["
     ${1}
@@ -121,7 +121,7 @@ exittext(){
     local rc=$?
     [ $rc -eq 0 ] && echo -en ":)" || echo -en ":("
 }
-PS1="\A \[\$(exitcolor)\]\$(exittext)$(ps reset) \u@\h $(ps yellow)\w$(ps reset)\$(git branch 2>/dev/null|grep \*)> "
+PS1="\A \[\$(exitcolor)\]\$(exittext)$(exe reset) \u@\h $(exe yellow)\w$(exe reset)\$(git branch 2>/dev/null|grep \*)> "
 
 export EDITOR=vim
 
