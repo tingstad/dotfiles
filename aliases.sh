@@ -10,6 +10,12 @@ if ! docker version 2>/dev/null >/dev/null ;then
     return
 fi
 
+# Only working dir supported
+alias python='docker run -it --rm -v "$PWD":/dir -w /dir frolvlad/alpine-python3 python3'
+
+# Only working dir supported
+alias mvn8='docker run -it --rm -v "$PWD":/dir -u "$(id -u):$(id -g)" -v "$HOME/.m2":/var/mvn/.m2 -w /dir maven:3.6.0-jdk-8-alpine mvn -Duser.home=/var/mvn'
+
 # Only stdout output supported
 graph-easy() {
     declare -a args
@@ -28,4 +34,17 @@ graph-easy() {
         docker run --rm -i tsub/graph-easy "$@"
     fi
 }
+
+# Only working dir supported
+unrar() {
+   #docker run --privileged=true
+    if [ $# -eq 1 ]; then
+        docker run --rm -v $(pwd):/files maxcnunes/unrar:latest unrar e -r "$1"
+    else
+        docker run --rm -v $(pwd):/files maxcnunes/unrar:latest unrar "$@"
+    fi
+}
+
+# Only working dir supported
+alias pdftk='docker run -v $(pwd):/files jottr/alpine-pdftk:latest'
 
