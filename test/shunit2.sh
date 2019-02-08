@@ -13,6 +13,8 @@
 # shUnit2 is a xUnit based unit test framework for Bourne shell scripts. It is
 # based on the popular JUnit unit testing framework for Java.
 
+[ -n "${SHUNIT_DISABLE}" ] && return
+
 # return if shunit already loaded
 [ -n "${SHUNIT_VERSION:-}" ] && exit 0
 SHUNIT_VERSION='2.1.7pre'
@@ -983,6 +985,22 @@ _shunit_escapeCharactersInString()
 _shunit_extractTestFunctions()
 {
   _shunit_script_=$1
+
+  # Extract functions from sub-scripts in addition to _shunit_script_
+  if declare -F >/dev/null 2>&1; then
+    _script_dir=$(cd "$(dirname "${_shunit_script_}")"; pwd)
+    _script_name="$(basename "${_shunit_script_}")"
+    bash <<- EOF
+		funcs(){ declare -F | cut -d' ' -f3; }
+		common="\$(funcs)"
+		cd "${_script_dir}"
+		export SHUNIT_DISABLE=1
+		source "${_script_name}"
+		funcs | grep -F -v "\$common" | grep '^test'
+	EOF
+    unset _shunit_script_ _script_dir _script_name
+    return
+  fi
 
   # extract the lines with test function names, strip of anything besides the
   # function name, and output everything on a single line.
