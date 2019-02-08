@@ -24,21 +24,19 @@ link_dotfiles() {
 }
 
 add_aliases() {
-    src="$1"
-    file="$2"
-    head="#BEGIN TINGSTAD DOTFILES"
-    tail="#END TINGSTAD DOTFILES"
-    if [ -f "$file" ] && grep -q "$head" "$file"; then
-        { rm "$file" && \
-        awk "/$head/{ skip=1;print } /$tail/{ skip=0; system(\"cat $src\") } !skip{ print }" \
-        > "$file"; } < "$file"
+    local alias_file="$1"
+    local dest="$2"
+    local head="#BEGIN TINGSTAD DOTFILES"
+    local tail="#END TINGSTAD DOTFILES"
+    if [ -f "$dest" ] && grep -q "$head" "$dest"; then
+        { rm "$dest" && \
+        awk '/'"$head"'/{ skip=1;print } /'"$tail"'/{ skip=0; print "source \"'"$alias_file"'\""  } !skip{ print }' \
+        > "$dest"; } < "$dest"
     else
-        echo "$head" >> "$file"
-        cat "$src" >> "$file"
-        echo "$tail" >> "$file"
+        echo "$head" >> "$dest"
+        echo "source \"$alias_file\"" >> "$dest"
+        echo "$tail" >> "$dest"
     fi
-
-
 }
 
 if [ "$TESTMODE" = "on" ]; then

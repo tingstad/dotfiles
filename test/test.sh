@@ -1,41 +1,45 @@
 #!/bin/bash
 
 testAliasesWhenNoExistingTargetFile() {
-    file="none_existing"
+    local file="none_existing"
 
-    add_aliases "$DIR/../aliases.sh" "$file"
+    local alias_file="$DIR/../aliases.sh" 
+    add_aliases "$alias_file" "$file"
 
     read -r -d '' expected <<- EOF
 		#BEGIN TINGSTAD DOTFILES
+		source "$alias_file"
 		#END TINGSTAD DOTFILES
 	EOF
-    actual="$(sed -n '1p;$p' $file)"
+    actual="$(cat $file)"
     line_count=$(wc -l $file | egrep -o '[0-9]+')
     rm "$file"
-    assertEquals '' "$expected" "$actual"
+    assertEquals "$expected" "$actual"
     assertTrue "[ $line_count -gt 2 ]"
 }
 
 testAliasesWhenVirginTargetFile() {
-    file="virgin_file"
+    local file="virgin_file"
     echo "something" > $file
 
-    add_aliases "$DIR/../aliases.sh" "$file"
+    local alias_file="$DIR/../aliases.sh" 
+    add_aliases "$alias_file" "$file"
 
     read -r -d '' expected <<- EOF
 		something
 		#BEGIN TINGSTAD DOTFILES
+		source "$alias_file"
 		#END TINGSTAD DOTFILES
 	EOF
-    actual="$(sed -n '1p;2p;$p' $file)"
+    actual="$(cat $file)"
     line_count=$(wc -l $file | egrep -o '[0-9]+')
     rm "$file"
-    assertEquals '' "$expected" "$actual"
+    assertEquals "$expected" "$actual"
     assertTrue "[ $line_count -gt 3 ]"
 }
 
 testAliasesExistingTargetFile() {
-    file="existing_file"
+    local file="existing_file"
     cat - > $file <<- EOF
 		before
 		#BEGIN TINGSTAD DOTFILES
@@ -43,19 +47,20 @@ testAliasesExistingTargetFile() {
 		#END TINGSTAD DOTFILES
 		after
 	EOF
+    local alias_file="$DIR/../aliases.sh" 
 
-    add_aliases "$DIR/../aliases.sh" "$file"
+    add_aliases "$alias_file" "$file"
 
     read -r -d '' expected <<- EOF
 		before
 		#BEGIN TINGSTAD DOTFILES
+		source "$alias_file"
+		#END TINGSTAD DOTFILES
 		after
 	EOF
-    actual="$(sed -n '1p;2p;$p;/some_old_content/p' $file)"
-    line_count=$(wc -l $file | egrep -o '[0-9]+')
+    actual="$(cat $file)"
     rm "$file"
-    assertEquals '' "$expected" "$actual"
-    assertTrue "[ $line_count -gt 4 ]"
+    assertEquals "$expected" "$actual"
 }
 
 DIR="$( dirname "$(pwd)/$0" )"
