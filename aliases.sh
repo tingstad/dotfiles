@@ -5,7 +5,7 @@ alias mci='mvn clean install'
 grip(){
     find "${3-.}" -name '.[^.]*' -prune -o -name "${2:-*}" -type f -print0 | xargs -0 egrep --binary-files=without-match ${@:4} "$1" ;}
 
-if ! docker version 2>/dev/null >/dev/null ;then
+if ! docker version >/dev/null 2>&1 ;then
     echo "No docker found" >&2
     return
 fi
