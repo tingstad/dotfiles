@@ -36,9 +36,11 @@ add_aliases() {
             !skip{ print }' \
         > "$target"; } < "$target"
     else
-        echo "$head" >> "$target"
-        echo "source \"$alias_file\"" >> "$target"
-        echo "$tail" >> "$target"
+        cat <<- EOF >> "$target"
+			$head
+			source "$alias_file"
+			$tail
+		EOF
     fi
 }
 
