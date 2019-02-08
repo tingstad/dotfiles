@@ -12,10 +12,8 @@ testAliasesWhenNoExistingTargetFile() {
 		#END TINGSTAD DOTFILES
 	EOF
     actual="$(cat $file)"
-    line_count=$(wc -l $file | egrep -o '[0-9]+')
     rm "$file"
     assertEquals "$expected" "$actual"
-    assertTrue "[ $line_count -gt 2 ]"
 }
 
 testAliasesWhenVirginTargetFile() {
@@ -32,10 +30,8 @@ testAliasesWhenVirginTargetFile() {
 		#END TINGSTAD DOTFILES
 	EOF
     actual="$(cat $file)"
-    line_count=$(wc -l $file | egrep -o '[0-9]+')
     rm "$file"
     assertEquals "$expected" "$actual"
-    assertTrue "[ $line_count -gt 3 ]"
 }
 
 testAliasesExistingTargetFile() {
