@@ -1,66 +1,11 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-testAliasesWhenNoExistingTargetFile() {
-    local file="none_existing"
-
-    local alias_file="$DIR/../aliases.sh" 
-    add_aliases "$alias_file" "$file"
-
-    read -r -d '' expected <<- EOF
-		#BEGIN TINGSTAD DOTFILES
-		source "$alias_file"
-		#END TINGSTAD DOTFILES
-	EOF
-    actual="$(cat $file)"
-    rm "$file"
-    assertEquals "$expected" "$actual"
-}
-
-testAliasesWhenVirginTargetFile() {
-    local file="virgin_file"
-    echo "something" > $file
-
-    local alias_file="$DIR/../aliases.sh" 
-    add_aliases "$alias_file" "$file"
-
-    read -r -d '' expected <<- EOF
-		something
-		#BEGIN TINGSTAD DOTFILES
-		source "$alias_file"
-		#END TINGSTAD DOTFILES
-	EOF
-    actual="$(cat $file)"
-    rm "$file"
-    assertEquals "$expected" "$actual"
-}
-
-testAliasesExistingTargetFile() {
-    local file="existing_file"
-    cat - > $file <<- EOF
-		before
-		#BEGIN TINGSTAD DOTFILES
-		some_old_content
-		#END TINGSTAD DOTFILES
-		after
-	EOF
-    local alias_file="$DIR/../aliases.sh" 
-
-    add_aliases "$alias_file" "$file"
-
-    read -r -d '' expected <<- EOF
-		before
-		#BEGIN TINGSTAD DOTFILES
-		source "$alias_file"
-		#END TINGSTAD DOTFILES
-		after
-	EOF
-    actual="$(cat $file)"
-    rm "$file"
-    assertEquals "$expected" "$actual"
-}
-
-DIR="$( dirname "$(pwd)/$0" )"
 TESTMODE="on"
+
+DIR=$(cd "$(dirname "$0")"; pwd)
+
+source "$DIR/test_add_aliases.sh"
+
 source "$DIR/../make.sh"
 set +o errexit
 source "$DIR/shunit2.sh"
