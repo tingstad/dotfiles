@@ -11,7 +11,7 @@ if ! docker version >/dev/null 2>&1 ;then
 fi
 
 # Only working dir supported
-alias npm='docker run -it --rm -v "$PWD":/dir -w /dir node:8.15.0-alpine npm'
+alias npm='docker run -it --rm -v "$PWD":/dir -w /dir -p 127.0.0.1:8080:8080/tcp node:8.15.0-alpine npm'
 
 # Only working dir supported
 alias python='docker run -it --rm -v "$PWD":/dir -w /dir frolvlad/alpine-python3 python3'
