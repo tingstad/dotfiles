@@ -27,3 +27,4 @@
 
 [rebase]
 	autoSquash = true
+	autoStash = true
