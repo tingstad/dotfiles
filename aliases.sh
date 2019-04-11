@@ -32,7 +32,7 @@ graph-easy() {
         args[$i]="$arg"
     done
     if [ -n "$infile" ]; then
-        docker run --rm --network none -v $infile:/input.dot:ro tsub/graph-easy "${args[@]}"
+        docker run --rm --network none -v "$infile":/input.dot:ro tsub/graph-easy "${args[@]}"
     else
         docker run --rm --network none -i tsub/graph-easy "$@"
     fi
