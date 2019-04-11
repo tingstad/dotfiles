@@ -27,11 +27,12 @@ testAliasesWhenVirginTargetFile() {
 		something
 		#BEGIN TINGSTAD DOTFILES
 		source "$alias_file"
+		alias vimcat
 		#END TINGSTAD DOTFILES
 	EOF
     actual="$(cat $target_file)"
     rm "$target_file"
-    assertEquals "$expected" "$actual"
+    assertEquals "$expected" "$(sed '4d' $target_file)"
 }
 
 testAliasesExistingTargetFile() {

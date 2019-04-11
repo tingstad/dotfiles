@@ -39,6 +39,7 @@ add_aliases() {
         cat <<- EOF >> "$target"
 			$head
 			source "$alias_file"
+			alias vimcat="$(cd "$(dirname "$alias_file")" && pwd)/vimcat"
 			$tail
 		EOF
     fi
