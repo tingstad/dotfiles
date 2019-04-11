@@ -21,6 +21,8 @@ set foldmethod=indent   " fold by indent level
 set foldlevelstart=99   " ... but keep all folds open from start
 set ruler               " show cursor position and relative file position
 
+" nnoremap , v<Esc>O<Esc>v`<<Esc>    " insert newline above
+
 "augroup configgroup
 "    autocmd!
 "    autocmd FileType sh setlocal noexpandtab
