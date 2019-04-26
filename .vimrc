@@ -5,7 +5,7 @@ set softtabstop=4   " number of spaces in tab when editing
 set shiftwidth=4    " number of spaces in indent (><)
 set expandtab       " tabs are spaces
 set number              " show line numbers
-set relativenumber      " relative line numbers
+"set relativenumber      " relative line numbers
 set showcmd             " show command in bottom bar
 set cursorline          " highlight current line
 set showmatch           " highlight matching [{()}]
@@ -20,6 +20,8 @@ set wrapmargin=0        " do not physically break pasted text
 set foldmethod=indent   " fold by indent level
 set foldlevelstart=99   " ... but keep all folds open from start
 set ruler               " show cursor position and relative file position
+
+" nnoremap , v<Esc>O<Esc>v`<<Esc>    " insert newline above
 
 "augroup configgroup
 "    autocmd!
