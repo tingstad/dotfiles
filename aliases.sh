@@ -42,14 +42,14 @@ graph-easy() {
 unrar() {
    #docker run --privileged=true
     if [ $# -eq 1 ]; then
-        docker run --rm --network none -u "$(id -u):$(id -g)" -v $(pwd):/files maxcnunes/unrar:latest unrar e -r "$1"
+        docker run --rm --network none -u "$(id -u):$(id -g)" -v "$(pwd)":/files maxcnunes/unrar:latest unrar e -r "$1"
     else
-        docker run --rm --network none -u "$(id -u):$(id -g)" -v $(pwd):/files maxcnunes/unrar:latest unrar "$@"
+        docker run --rm --network none -u "$(id -u):$(id -g)" -v "$(pwd)":/files maxcnunes/unrar:latest unrar "$@"
     fi
 }
 
 # Only working dir supported
-alias pdftk='docker run --rm --network none -v $(pwd):/files jottr/alpine-pdftk:latest'
+alias pdftk='docker run --rm --network none -v "$(pwd)":/files jottr/alpine-pdftk:latest'
 
 # Others? netcat, socat, imagemagick, graphviz, vimcat, Gimp, browser, mplayer, Eclipse, etc.
 
