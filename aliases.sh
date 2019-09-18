@@ -19,6 +19,7 @@ alias npm='docker run -it --rm -v "$PWD":/dir -w /dir -p 127.0.0.1:8080:8080/tcp
 alias python='docker run -it --rm -v "$PWD":/dir -w /dir frolvlad/alpine-python3 python3'
 
 # Only working dir supported
+# ~/.m2/settings.xml is your friend
 alias mvn8='docker run -it --rm -v "$PWD":/dir -u "'"$user_string"'" -v "$HOME/.m2":/var/mvn/.m2 -w /dir maven:3.6.0-jdk-8-alpine mvn -Duser.home=/var/mvn -Dmaven.repo.local=/var/mvn/.m2/repository'
 
 # Only stdout output supported
