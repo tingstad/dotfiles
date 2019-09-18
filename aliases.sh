@@ -10,7 +10,7 @@ if ! docker version >/dev/null 2>&1 ;then
     return
 fi
 
-user_string="$(id -u):$(id -g)"
+user_string='$(id -u):$(id -g)'
 
 # Only working dir supported
 alias npm='docker run -it --rm -v "$PWD":/dir -w /dir -p 127.0.0.1:8080:8080/tcp node:8.15.0-alpine npm'
@@ -19,7 +19,7 @@ alias npm='docker run -it --rm -v "$PWD":/dir -w /dir -p 127.0.0.1:8080:8080/tcp
 alias python='docker run -it --rm -v "$PWD":/dir -w /dir frolvlad/alpine-python3 python3'
 
 # Only working dir supported
-alias mvn8='docker run -it --rm -v "$PWD":/dir -u "$user_string" -v "$HOME/.m2":/var/mvn/.m2 -w /dir maven:3.6.0-jdk-8-alpine mvn -Duser.home=/var/mvn -Dmaven.repo.local=/var/mvn/.m2/repository'
+alias mvn8='docker run -it --rm -v "$PWD":/dir -u "'"$user_string"'" -v "$HOME/.m2":/var/mvn/.m2 -w /dir maven:3.6.0-jdk-8-alpine mvn -Duser.home=/var/mvn -Dmaven.repo.local=/var/mvn/.m2/repository'
 
 # Only stdout output supported
 graph-easy() {
@@ -43,6 +43,7 @@ graph-easy() {
 # Only working dir supported
 unrar() {
    #docker run --privileged=true
+    local user_string="$(id -u):$(id -g)"
     if [ $# -eq 1 ]; then
         docker run --rm --network none -u "$user_string" -v "$(pwd)":/files maxcnunes/unrar:latest unrar e -r "$1"
     else
@@ -51,7 +52,7 @@ unrar() {
 }
 
 # Only working dir supported
-alias pdftk='docker run --rm --network none -u "$user_string" -v "$(pwd)":/files jottr/alpine-pdftk:latest'
+alias pdftk='docker run --rm --network none -u "'"$user_string"'" -v "$(pwd)":/files jottr/alpine-pdftk:latest'
 
 unset user_string
 
