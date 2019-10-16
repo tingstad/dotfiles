@@ -14,7 +14,7 @@ testSourceAliasesExitCode() {
 }
 
 testSourceAliasesOutput() {
-    local output=$(source "$DIR/../aliases.sh" 2>&1)
+    local output=$(source "$DIR/../aliases.sh" 2>&1 | grep -v 'No docker found')
     assertEquals "" "$output"
 }
 
