@@ -8,6 +8,8 @@ testEmptyTargetDir() {
     assertTrue "Links .gitconfig" "[ -L \"$target_dir\"/.gitconfig ]"
     assertTrue "Links .vimrc" "[ -L \"$target_dir\"/.vimrc ]"
     assertTrue "Links .tmux.conf" "[ -L \"$target_dir\"/.tmux.conf ]"
+    assertFalse "Does not link .bashrc" "[ -L \"$target_dir\"/.bashrc ]"
+    assertFalse "Does not link .travis.yml" "[ -L \"$target_dir\"/.travis.yml ]"
     rm -r "$target_dir"
 }
 

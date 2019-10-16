@@ -15,7 +15,7 @@ link_dotfiles() {
     find "$src_dir" -maxdepth 1 \
     \( -name '.*' -or -name gitignore \) \
     -type f \
-    -not -name '.*.swp' -not -name '.gitignore' -not -name .bashrc \
+    -not -name '.*.swp' -not -name '.gitignore' -not -name .bashrc -not -name .travis.yml \
     -print \
     | while read f; do
         local fil="$target_dir/$(basename "$f")"
