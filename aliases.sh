@@ -59,7 +59,11 @@ unrar() {
 # Only working dir supported
 alias pdftk='docker run --rm --network none -u "'"$user_string"'" -v "$(pwd)":/files'$vol_opt' jottr/alpine-pdftk:latest'
 
+for cmd in compare composite convert identify magick mogrify montage stream ; do
+    alias $cmd='docker run --rm --network none -u "'"$user_string"'" -v "$PWD":/dir'"$vol_opt"' -w /dir v4tech/imagemagick@sha256:959eb75b13efb41a8f37495784150574d66175adebd0c6c18216b482c574d109 '$cmd
+done
+
 unset user_string vol_opt
 
-# Others? netcat, socat, imagemagick, graphviz, vimcat, Gimp, browser, mplayer, Eclipse, etc.
+# Others? netcat, socat, graphviz, vimcat, Gimp, browser, mplayer, Eclipse, etc.
 
