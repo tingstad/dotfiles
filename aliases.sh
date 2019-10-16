@@ -10,16 +10,19 @@ if ! docker version >/dev/null 2>&1 ;then
     return
 fi
 
-user_string="$(id -u):$(id -g)"
+user_string='$(id -u):$(id -g)'
+
+vol_opt='$(selinuxenabled 2>/dev/null && echo :Z)'
 
 # Only working dir supported
-alias npm='docker run -it --rm -v "$PWD":/dir -w /dir -p 127.0.0.1:8080:8080/tcp node:8.15.0-alpine npm'
+alias npm='docker run -it --rm -v "$PWD":/dir'$vol_opt' -w /dir -p 127.0.0.1:8080:8080/tcp node:8.15.0-alpine npm'
 
 # Only working dir supported
-alias python='docker run -it --rm -v "$PWD":/dir -w /dir frolvlad/alpine-python3 python3'
+alias python='docker run -it --rm -v "$PWD":/dir'$vol_opt' -w /dir frolvlad/alpine-python3 python3'
 
 # Only working dir supported
-alias mvn8='docker run -it --rm -v "$PWD":/dir -u "$user_string" -v "$HOME/.m2":/var/mvn/.m2 -w /dir maven:3.6.0-jdk-8-alpine mvn -Duser.home=/var/mvn -Dmaven.repo.local=/var/mvn/.m2/repository'
+# ~/.m2/settings.xml is your friend
+alias mvn8='docker run -it --rm -v "$PWD":/dir'$vol_opt' -u "'"$user_string"'" -v "$HOME/.m2":/var/mvn/.m2'$vol_opt' -w /dir maven:3.6.0-jdk-8-alpine mvn -Duser.home=/var/mvn -Dmaven.repo.local=/var/mvn/.m2/repository'
 
 # Only stdout output supported
 graph-easy() {
@@ -34,7 +37,8 @@ graph-easy() {
         args[$i]="$arg"
     done
     if [ -n "$infile" ]; then
-        docker run --rm --network none -v "$infile":/input.dot:ro tsub/graph-easy "${args[@]}"
+        local vol_opt="ro$(selinuxenabled 2>/dev/null && echo ,Z)"
+        docker run --rm --network none -v "$infile":/input.dot:$vol_opt tsub/graph-easy "${args[@]}"
     else
         docker run --rm --network none -i tsub/graph-easy "$@"
     fi
@@ -43,17 +47,19 @@ graph-easy() {
 # Only working dir supported
 unrar() {
    #docker run --privileged=true
+    local user_string="$(id -u):$(id -g)"
+    local vol_opt="$(selinuxenabled 2>/dev/null && echo :Z)"
     if [ $# -eq 1 ]; then
-        docker run --rm --network none -u "$user_string" -v "$(pwd)":/files maxcnunes/unrar:latest unrar e -r "$1"
+        docker run --rm --network none -u "$user_string" -v "$(pwd)":/files$vol_opt maxcnunes/unrar:latest unrar e -r "$1"
     else
-        docker run --rm --network none -u "$user_string" -v "$(pwd)":/files maxcnunes/unrar:latest unrar "$@"
+        docker run --rm --network none -u "$user_string" -v "$(pwd)":/files$vol_opt maxcnunes/unrar:latest unrar "$@"
     fi
 }
 
 # Only working dir supported
-alias pdftk='docker run --rm --network none -u "$user_string" -v "$(pwd)":/files jottr/alpine-pdftk:latest'
+alias pdftk='docker run --rm --network none -u "'"$user_string"'" -v "$(pwd)":/files'$vol_opt' jottr/alpine-pdftk:latest'
 
-unset user_string
+unset user_string vol_opt
 
 # Others? netcat, socat, imagemagick, graphviz, vimcat, Gimp, browser, mplayer, Eclipse, etc.
 
