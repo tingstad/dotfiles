@@ -18,6 +18,7 @@
 	accept-others-rebase = "!f() { git checkout --ours   -- \"${@:-.}\" && git add -u \"${@:-.}\"; }; f"
 	accept-mine-merge    = "!f() { git checkout --ours   -- \"${@:-.}\" && git add -u \"${@:-.}\"; }; f"
 	accept-others-merge  = "!f() { git checkout --theirs -- \"${@:-.}\" && git add -u \"${@:-.}\"; }; f"
+	graph = "log --graph --oneline --decorate"
 
 [pull]
 	rebase = true
