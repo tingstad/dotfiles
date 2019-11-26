@@ -4,6 +4,9 @@ os:
   - linux
   - osx
 
+services:
+  - docker
+
 script:
   - ./test/test.sh
 

@@ -11,6 +11,11 @@ source "$DIR/test_link_dotfiles.sh"
 testSourceAliasesExitCode() {
     source "$DIR/../aliases.sh"
     assertEquals 0 $?
+    if [ "$TRAVIS_OS_NAME" = "linux" ]; then
+        assertEquals \
+            "| From | --> | To |" \
+            "$(echo 'digraph { rankdir=LR; From -> To }' | graph-easy | sed -n 2p)"
+    fi
 }
 
 testSourceAliasesOutput() {
