@@ -15,6 +15,9 @@ testSourceAliasesExitCode() {
         assertEquals \
             "| From | --> | To |" \
             "$(echo 'digraph { rankdir=LR; From -> To }' | graph-easy | sed -n 2p)"
+        assertEquals \
+            "  \"a\": {" \
+            "$(echo '{ "a": {"b":1} }' | pretty_json 2 | sed -n 2p)"
     fi
 }
 
