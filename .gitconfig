@@ -29,3 +29,5 @@
 [rebase]
 	autoSquash = true
 	autoStash = true
+[push]
+	default = current
