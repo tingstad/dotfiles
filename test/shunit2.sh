@@ -995,7 +995,7 @@ _shunit_extractTestFunctions()
 		common="\$(funcs)"
 		cd "${_script_dir}"
 		export SHUNIT_DISABLE=1
-		source "${_script_name}"
+		source "./${_script_name}" >/dev/null
 		funcs | grep -F -v "\$common" | grep '^test'
 	EOF
     unset _shunit_script_ _script_dir _script_name
