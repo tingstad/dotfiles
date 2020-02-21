@@ -3,7 +3,8 @@ set -o errexit
 
 TESTMODE="on"
 
-DIR=$(cd "$(dirname "$0")"; pwd)
+src="$(echo "${BASH_SOURCE[0]}" | grep . || echo "$0")"
+DIR="$(cd "$(dirname "$src")"; pwd)"
 
 source "$DIR/test_add_aliases.sh"
 source "$DIR/test_link_dotfiles.sh"
@@ -25,6 +26,8 @@ testSourceAliasesOutput() {
     local output=$(source "$DIR/../aliases.sh" 2>&1 | grep -v 'No docker found')
     assertEquals "" "$output"
 }
+
+return 2>/dev/null || true
 
 source "$DIR/../make.sh"
 set +o errexit
