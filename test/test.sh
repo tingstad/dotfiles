@@ -11,7 +11,7 @@ source "$DIR/test_link_dotfiles.sh"
 testSourceAliasesExitCode() {
     source "$DIR/../aliases.sh"
     assertEquals 0 $?
-    if [ "$TRAVIS_OS_NAME" = "linux" ]; then
+    if [ "$TRAVIS_OS_NAME" = "linux" ] || docker version >/dev/null  ; then
         assertEquals \
             "| From | --> | To |" \
             "$(echo 'digraph { rankdir=LR; From -> To }' | graph-easy | sed -n 2p)"
