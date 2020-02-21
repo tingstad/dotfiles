@@ -18,7 +18,10 @@ testSourceAliasesExitCode() {
             "$(echo 'digraph { rankdir=LR; From -> To }' | graph-easy | sed -n 2p)"
         assertEquals \
             "  \"a\": {" \
-            "$(echo '{ "a": {"b":1} }' | pretty_json 2 | sed -n 2p)"
+            "$(cd "$DIR"; echo '{ "a": {"b":1} }' | pretty_json 2 | sed -n 2p)"
+        assertEquals \
+            "pretty_json" \
+            "$(echo 'command -v pretty_json' | bash)"
         convert -size 1x1 canvas:red "$DIR"/img.ppm
         assertEquals \
             "PPM 1x1 1x1+0+0 16-bit" \

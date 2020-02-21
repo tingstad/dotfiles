@@ -1,3 +1,4 @@
+WD="$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd)"
 
 alias gs='git status'
 alias mci='mvn clean install'
@@ -75,15 +76,16 @@ for cmd in compare composite convert identify magick mogrify montage stream ; do
     alias $cmd='docker run --rm --network none -u "'"$user_string"'" -v "$PWD":/dir'"$vol_opt"' -w /dir v4tech/imagemagick@sha256:959eb75b13efb41a8f37495784150574d66175adebd0c6c18216b482c574d109 '$cmd
 done
 
-does_exist() {
-    command -v "$1" > /dev/null 2>&1
-}
+does_exist='>/dev/null 2>&1 command -v'
 
+source /dev/stdin <<EOF
 pretty_json() {
     local cmd=node
-    if ! does_exist "$cmd"; then cmd=node8; fi
-    "$cmd" -e "$(cat pretty-json.js)" "$@"
+    if ! $does_exist "\$cmd"; then cmd=node8; fi
+    "\$cmd" -e "$(cat "$WD"/pretty-json.js)" "\$@"
 }
+EOF
+export -f pretty_json
 
 unset user_string vol_opt
 
