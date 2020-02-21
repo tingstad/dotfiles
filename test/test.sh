@@ -26,6 +26,9 @@ testSourceAliasesExitCode() {
         assertEquals \
             "PPM 1x1 1x1+0+0 16-bit" \
             "$(identify "$DIR"/img.ppm | cut -d ' ' -f 2-5)"
+        assertEquals \
+            "v8.15.0" \
+            "$(echo 'node8 -v' | bash)"
     fi
 }
 

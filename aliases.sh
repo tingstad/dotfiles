@@ -15,14 +15,17 @@ user_string='$(id -u):$(id -g)'
 
 vol_opt='$(selinuxenabled 2>/dev/null && echo :Z)'
 
+source /dev/stdin <<EOF
 # Only working dir supported
 node8() {
     local tty=""
     if test -t 0; then
         tty="-t"
     fi
-    docker run $tty -i -a stdin -a stdout -a stderr --rm -v "$PWD":/dir'$vol_opt' -w /dir node:8.15.0-alpine node "$@"
+    docker run \$tty -i -a stdin -a stdout -a stderr --rm -v "\$PWD":/dir$vol_opt -w /dir node:8.15.0-alpine node "\$@"
 }
+EOF
+export -f node8
 
 # Only working dir supported
 alias npm='docker run -it --rm -v "$PWD":/dir'$vol_opt' -w /dir -p 127.0.0.1:8080:8080/tcp node:8.15.0-alpine npm'
