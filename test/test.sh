@@ -19,6 +19,10 @@ testSourceAliasesExitCode() {
         assertEquals \
             "  \"a\": {" \
             "$(echo '{ "a": {"b":1} }' | pretty_json 2 | sed -n 2p)"
+        convert -size 1x1 canvas:red "$DIR"/img.ppm
+        assertEquals \
+            "PPM 1x1 1x1+0+0 16-bit" \
+            "$(identify "$DIR"/img.ppm | cut -d ' ' -f 2-5)"
     fi
 }
 
