@@ -8,6 +8,13 @@ grip(){
 
 source "$my_dir"/docker_aliases.sh
 
+source /dev/stdin <<EOF
+gitlog() {
+    "$WD"/gitlog.sh "\$@"
+}
+EOF
+export -f gitlog
+
 if command -v tmux &>/dev/null `#tmux exists` \
    && [ -n "$PS1" ]            `#interactive` \
    && [[ ! "$TERM" =~ screen ]] && [[ ! "$TERM" =~ tmux ]] && [ -z "$TMUX" ]
