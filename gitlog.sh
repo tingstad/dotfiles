@@ -25,7 +25,7 @@ function main() {
         draw
         commit=$(echo "$lines" | awk "NR==$index+1 { print \$1 }")
         #tmux send-keys -t 0:"$window".1 C-z "git log $commit" Enter
-        tmux respawn-pane -t "$session":"$window".1 -k "git show $commit"
+        tmux respawn-pane -t "$session":"$window".1 -k "GIT_PAGER='less -RX -+F' git show $commit"
         read_input
     done
 }
