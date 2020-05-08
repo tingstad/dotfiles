@@ -1,4 +1,4 @@
-WD="$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd)"
+my_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd)"
 
 alias gs='git status'
 alias mci='mvn clean install'
@@ -85,7 +85,7 @@ source /dev/stdin <<EOF
 pretty_json() {
     local cmd=node
     if ! $does_exist "\$cmd"; then cmd=node8; fi
-    "\$cmd" -e "$(cat "$WD"/pretty-json.js)" "\$@"
+    "\$cmd" -e "$(cat "$my_dir"/pretty-json.js)" "\$@"
 }
 EOF
 export -f pretty_json
