@@ -27,20 +27,25 @@ link_dotfiles() {
 add_aliases() {
     local alias_file="$1"
     local target="$2"
+    local tag="# TINGSTAD DOTFILES v2"
+    local content="source \"$alias_file\" $tag"
+    # Handle v1:
     local head="#BEGIN TINGSTAD DOTFILES"
     local tail="#END TINGSTAD DOTFILES"
-    if [ -f "$target" ] && grep -q "$head" "$target"; then
+    if [ -f "$target" ] && grep -q "$head$" "$target"; then
         { rm "$target" && \
-        awk '/'"$head"'/{ skip=1; print }
-            /'"$tail"'/{ skip=0; print "source \"'"$alias_file"'\"" }
-            !skip{ print }' \
+        sed "/^$head/,/^$tail/{ /^$tail/!d; /^$tail/s|.*|$content|; }" \
         > "$target"; } < "$target"
+    # Handle v2:
+    elif [ -f "$target" ] && grep -q "$tag$" "$target"; then
+        { rm "$target" && \
+        sed "/$tag$/s|.*|$content|" \
+        > "$target"; } < "$target"
+    elif [ -f "$target" ] && grep -q "TINGSTAD DOTFILES" "$target"; then
+        echo "ERROR: Unknown TINGSTAD DOTFILES version!" &>2
+        return 1
     else
-        cat <<- EOF >> "$target"
-			$head
-			source "$alias_file"
-			$tail
-		EOF
+        echo "$content" >> "$target"
     fi
 }
 
