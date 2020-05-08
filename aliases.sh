@@ -8,3 +8,10 @@ grip(){
 
 source "$my_dir"/docker_aliases.sh
 
+if command -v tmux &>/dev/null `#tmux exists` \
+   && [ -n "$PS1" ]            `#interactive` \
+   && [[ ! "$TERM" =~ screen ]] && [[ ! "$TERM" =~ tmux ]] && [ -z "$TMUX" ]
+then
+  tmux new-session -A -s main
+fi
+
