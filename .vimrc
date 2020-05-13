@@ -25,6 +25,7 @@ set ruler               " show cursor position and relative file position
 nnoremap <Leader>v :vsplit **/*
 nnoremap <Leader>s :split **/*
 nnoremap <Leader>e :edit **/*
+nnoremap <Leader>t :tabnew **/*
 " nnoremap , v<Esc>O<Esc>v`<<Esc>    " insert newline above
 
 "augroup configgroup
