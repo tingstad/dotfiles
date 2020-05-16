@@ -20,6 +20,13 @@ node8() {
 EOF
 export -f node8
 
+if ! command -v ffmpeg &>/dev/null; then
+    ffmpeg() {
+        docker run --rm --network none -v "$PWD":/dir$vol_opt -w /dir -u "$user_string" jrottenberg/ffmpeg:3.3-alpine "$@"
+    }
+    export -f ffmpeg
+fi
+
 # Only working dir supported
 alias npm='docker run -it --rm -v "$PWD":/dir'$vol_opt' -w /dir -p 127.0.0.1:8080:8080/tcp node:8.15.0-alpine npm'
 
