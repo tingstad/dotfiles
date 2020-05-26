@@ -1,4 +1,5 @@
 syntax enable
+set background=dark " so colors are easier to read
 set encoding=utf-8
 set tabstop=4       " number of visual spaces per TAB
 set softtabstop=4   " number of spaces in tab when editing
