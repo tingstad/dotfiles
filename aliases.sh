@@ -15,3 +15,28 @@ then
   tmux new-session -t main
 fi
 
+check_updates_dotfiles() {
+    local dir="$1"
+
+    local file="$dir/$(date -I).lock"
+
+    if [ -e "$file" ]; then
+        local outdated="$(cat "$file")"
+        if [ -n "$outdated" ]; then
+            echo "$outdated"
+        fi
+        return
+    fi
+    find "$dir" -maxdepth 1 -name '*.lock' -delete
+
+    local revision=$(git ls-remote origin master | cut -f1)
+    if ! git merge-base --is-ancestor $revision master ;then
+        echo "New dotfiles version available: $revision" > "$file"
+    else
+        touch "$file"
+    fi
+    check_updates_dotfiles "$dir"
+}
+
+check_updates_dotfiles "$my_dir"
+

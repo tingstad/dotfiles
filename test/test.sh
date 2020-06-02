@@ -42,6 +42,29 @@ testSourceAliasesOutput() {
     assertEquals "" "$output"
 }
 
+testUpdateNoFile() {
+    local dir="$(mktemp -d)"
+    local file="$dir/$(date -I).lock"
+    check_updates_dotfiles "$dir"
+    assertTrue "[ -e "$file" ]"
+}
+
+testUpdateExistingFile() {
+    local dir="$(mktemp -d)"
+    local file="$dir/$(date -I).lock"
+    echo "You should update" > "$file"
+    local output=$(check_updates_dotfiles "$dir")
+    assertEquals "$output" "You should update"
+    assertTrue "[ -e "$file" ]"
+}
+
+testUpdateOldFile() {
+    local dir="$(mktemp -d)"
+    local file="$dir/$(date -I -d 'now - 1 day').lock"
+    check_updates_dotfiles "$dir"
+    assertFalse "[ -e "$file" ]"
+}
+
 return 2>/dev/null || true
 
 source "$DIR/../make.sh"
