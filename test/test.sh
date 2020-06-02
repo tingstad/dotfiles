@@ -22,7 +22,7 @@ testSourceAliasesExitCode() {
             "| From | --> | To |" \
             "$(echo 'digraph { rankdir=LR; From -> To }' | graph-easy | sed -n 2p)"
         assertEquals \
-            "  \"a\": {" \
+            '  "a": {' \
             "$(cd "$DIR"; echo '{ "a": {"b":1} }' | pretty_json 2 | sed -n 2p)"
         assertEquals \
             "pretty_json" \
