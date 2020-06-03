@@ -82,10 +82,12 @@ testAliasesExistingTargetFileUnknownVersion() {
 		after
 	EOF
     local alias_file="$DIR/../aliases.sh"
+    local err="$(mktemp)"
 
-    add_aliases "$alias_file" "$target_file"
+    add_aliases "$alias_file" "$target_file" 2>"$err"
 
     assertTrue "Should fail" "[ $? -gt 0 ]"
+    assertEquals "$(cat "$err")" "ERROR: Unknown TINGSTAD DOTFILES version!"
 }
 
 if [ -z "$TESTMODE" ]; then

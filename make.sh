@@ -42,7 +42,7 @@ add_aliases() {
         sed "/$tag$/s|.*|$content|" \
         > "$target"; } < "$target"
     elif [ -f "$target" ] && grep -q "TINGSTAD DOTFILES" "$target"; then
-        echo "ERROR: Unknown TINGSTAD DOTFILES version!" &>2
+        echo "ERROR: Unknown TINGSTAD DOTFILES version!" >&2
         return 1
     else
         echo "$content" >> "$target"
