@@ -30,12 +30,14 @@ check_updates_dotfiles() {
     find "$dir" -maxdepth 1 -name '*.lock' -delete
 
     local revision=$(git ls-remote origin master | cut -f1)
-    if ! git merge-base --is-ancestor $revision master ;then
-        echo "New dotfiles version available: $revision" > "$file"
-    else
-        touch "$file"
+    if [ -n "$revision" ]; then
+        if ! git merge-base --is-ancestor $revision master ;then
+            echo "New dotfiles version available: $revision" > "$file"
+        else
+            touch "$file"
+        fi
+        check_updates_dotfiles "$dir"
     fi
-    check_updates_dotfiles "$dir"
 }
 
 check_updates_dotfiles "$my_dir"
