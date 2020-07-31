@@ -15,7 +15,7 @@ testSourceAliasesExitCode() {
     if [ "$TRAVIS_OS_NAME" = "linux" ] || docker version >/dev/null  ; then
         assertEquals \
             "Apache Maven 3.6.0 Java version: 1.8.0 " \
-            "$(bash -c 'mvn8 -v' \
+            "$(bash -c 'mvn_8 -v' \
                 | egrep -o --color=never '(Apache|Java)[^0-9]*[0-9.]*' \
                 | tr '\n' ' ')"
         assertEquals \
