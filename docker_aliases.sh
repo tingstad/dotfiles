@@ -30,7 +30,7 @@ alias python='docker run -it --rm -v "$PWD":/dir'$vol_opt' -w /dir frolvlad/alpi
 # ~/.m2/settings.xml is your friend
 source /dev/stdin <<EOF
 # Only working dir supported
-mvn8() {
+mvn_8() {
     if [ ! -d "\$HOME/.m2" ]; then
         mkdir "\$HOME/.m2"
     fi
@@ -39,7 +39,7 @@ mvn8() {
     docker run -it --rm -v "\$PWD":/dir\$vol_opt -u "$user_string" -v "\$HOME/.m2":/var/mvn/.m2\$vol_opt -w /dir maven:3.6.0-jdk-8-alpine mvn -Duser.home=/var/mvn -Dmaven.repo.local=/var/mvn/.m2/repository "\$@"
 }
 EOF
-export -f mvn8
+export -f mvn_8
 
 # Only stdout output supported
 graph-easy() {
