@@ -34,6 +34,9 @@ testSourceAliasesExitCode() {
         assertEquals \
             "v8.15.0" \
             "$(echo 'node8 -v' | bash)"
+        assertEquals \
+            "6.14.7" \
+            "$(echo 'npx -v' | bash)"
     fi
 }
 

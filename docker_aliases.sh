@@ -83,6 +83,20 @@ for cmd in compare composite convert identify magick mogrify montage stream ; do
     alias $cmd='docker run --rm --network none -u "'"$user_string"'" -v "$PWD":/dir'"$vol_opt"' -w /dir v4tech/imagemagick@sha256:959eb75b13efb41a8f37495784150574d66175adebd0c6c18216b482c574d109 '$cmd
 done
 
+if ! >/dev/null 2>&1 command -v npx; then
+    # Only working dir supported
+    source /dev/stdin <<-EOF
+	npx() {
+	    local tty=""
+	    if test -t 0; then
+	        tty="-t"
+	    fi
+	    docker run \$tty -i -a stdin -a stdout -a stderr --rm -v "\$PWD":/dir$vol_opt -w /dir node:14.7.0-alpine3.10 npx "\$@"
+	}
+	EOF
+    export -f npx
+fi
+
 does_exist='>/dev/null 2>&1 command -v'
 
 source /dev/stdin <<EOF
