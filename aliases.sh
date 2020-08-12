@@ -10,7 +10,7 @@ source "$my_dir"/docker_aliases.sh
 
 source /dev/stdin <<EOF
 gitlog() {
-    "$WD"/gitlog.sh "\$@"
+    "$my_dir"/gitlog.sh "\$@"
 }
 EOF
 export -f gitlog
