@@ -21,7 +21,7 @@ EOF
 export -f node8
 
 # Only working dir supported
-alias npm='docker run -it --rm -v "$PWD":/dir'$vol_opt' -w /dir -p 127.0.0.1:8080:8080/tcp node:8.15.0-alpine npm'
+alias npm='docker run -it --rm -v "$PWD":/dir'$vol_opt' -w /dir -p 127.0.0.1:8080:8080/tcp node:14.7.0-alpine3.10 npm'
 
 # Only working dir supported
 alias python='docker run -it --rm -v "$PWD":/dir'$vol_opt' -w /dir frolvlad/alpine-python3 python3'
