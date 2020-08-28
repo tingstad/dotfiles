@@ -3,6 +3,9 @@ if ! docker version >/dev/null 2>&1 ;then
     echo "No docker found" >&2
     return
 fi
+if [ -z "$my_dir" ]; then
+    echo '$my_dir not set'
+fi
 
 user_string='$(id -u):$(id -g)'
 
