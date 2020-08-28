@@ -5,7 +5,10 @@ set -e
 main() {
     trap 'echo SIGINT; quit' SIGINT
     trap 'echo SIGWINCH' SIGWINCH
-    command -v tmux >/dev/null
+    command -v tmux >/dev/null || {
+        echo "tmux not found :(" >&2
+        exit 1
+    }
     if [ -z "$TMUX" ]; then
         tmux new-session -A -s datsgnitlog -n datsgnitlog"$(date +%s)" "$0"
         exit
