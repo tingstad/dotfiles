@@ -63,6 +63,9 @@ read_input() {
         '[B') index_inc ;;
         '[D') echo LEFT ;;
         '[C') echo RIGHT ;;
+        'g')  index=0 ;;
+        'G')  index=$[ $length - 1 ] ;;
+        'M')  index=$[ $[ $length - 1 ] / 2 ] ;;
         *) >&2 echo 'ERR bad input'; return ;;
     esac
 }
