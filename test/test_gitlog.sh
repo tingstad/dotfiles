@@ -15,6 +15,21 @@ test_key_j() {
     read_input <<< j
     assertEquals "j (down) should increment pointer" 2 $index
 }
+test_key_g() {
+    index=2
+    read_input <<< g
+    assertEquals "g (beginning) should reset pointer" 0 $index
+}
+test_key_G() {
+    length=20
+    read_input <<< G
+    assertEquals "G (end) should set pointer to end" 19 $index
+}
+test_key_M() {
+    length=20
+    read_input <<< M
+    assertEquals "M should set pointer to middle" 9 $index
+}
 test_key_k_at_top() {
     index=0
     read_input <<< k
