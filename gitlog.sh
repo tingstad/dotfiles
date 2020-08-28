@@ -2,7 +2,7 @@
 set -e
 
 
-function main() {
+main() {
     trap 'echo SIGINT; quit' SIGINT
     trap 'echo SIGWINCH' SIGWINCH
     command -v tmux >/dev/null
@@ -30,7 +30,7 @@ function main() {
     done
 }
 
-function draw() {
+draw() {
     clear
     echo " W E L C O M E"
     echo "$(echo "$lines" | awk "NR==$index+1 { print \$1 }")"
@@ -40,13 +40,13 @@ function draw() {
     echo -en ">"
 }
 
-function cursor_set() {
+cursor_set() {
     local row="$1"
     local col="$2"
     echo -en "\033[$row;${col}H"
 }
 
-function read_input() {
+read_input() {
     local escape_char=$(printf "\u1b")
     read -rsn1 mode # get 1 character
     if [[ $mode == $escape_char ]]; then
@@ -64,7 +64,7 @@ function read_input() {
     esac
 }
 
-function log() {
+log() {
     local from="$1"
     local length="$2"
     git log --pretty=format:'   %h %cd %s' --date=short "$from" \
@@ -72,17 +72,17 @@ function log() {
         | head -n $length
 }
 
-function index_inc() {
+index_inc() {
     if [ $index -lt $[ $length - 1 ] ]; then
         index=$[ $index + 1 ]
     fi
 }
-function index_dec() {
+index_dec() {
     if [ $index -gt 0 ]; then
         index=$[ $index - 1 ]
     fi
 }
-function quit() {
+quit() {
     clear
     tmux kill-window
     exit
