@@ -66,6 +66,7 @@ read_input() {
         'g')  index=0 ;;
         'G')  index=$[ $length - 1 ] ;;
         'M')  index=$[ $[ $length - 1 ] / 2 ] ;;
+        'l')  tmux select-pane -R ;;
         *) >&2 echo 'ERR bad input'; return ;;
     esac
 }
