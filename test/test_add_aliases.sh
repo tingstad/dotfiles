@@ -75,7 +75,7 @@ testAliasesExistingTargetFileV1() {
 }
 
 testAliasesExistingTargetFileUnknownVersion() {
-    local target_file="existing_file"
+    local target_file="existing_file" output_file="test.out"
     cat - > $target_file <<- EOF
 		before
 		some_content # TINGSTAD DOTFILES v9999
@@ -83,9 +83,11 @@ testAliasesExistingTargetFileUnknownVersion() {
 	EOF
     local alias_file="$DIR/../aliases.sh"
 
-    add_aliases "$alias_file" "$target_file"
+    add_aliases "$alias_file" "$target_file" &>"$output_file"
 
     assertTrue "Should fail" "[ $? -gt 0 ]"
+    assertEquals "ERROR: Unknown TINGSTAD DOTFILES version!" "$(cat "$output_file")"
+    rm "$target_file" "$output_file"
 }
 
 if [ -z "$TESTMODE" ]; then
