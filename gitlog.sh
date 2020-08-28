@@ -88,4 +88,6 @@ quit() {
     exit
 }
 
+return 2>/dev/null || true
+
 main "$@"

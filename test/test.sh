@@ -8,6 +8,7 @@ DIR="$(cd "$(dirname "$src")"; pwd)"
 
 source "$DIR/test_add_aliases.sh"
 source "$DIR/test_link_dotfiles.sh"
+source "$DIR/test_gitlog.sh"
 
 testSourceAliasesExitCode() {
     source "$DIR/../aliases.sh"
