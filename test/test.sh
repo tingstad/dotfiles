@@ -12,7 +12,7 @@ source "$DIR/test_link_dotfiles.sh"
 testSourceAliasesExitCode() {
     source "$DIR/../aliases.sh"
     assertEquals 0 $?
-    if [ "$TRAVIS_OS_NAME" = "linux" ] || docker version >/dev/null  ; then
+    if [ "$TRAVIS_OS_NAME" = "linux" ] || docker version >/dev/null ; then
         assertEquals \
             "Apache Maven 3.6.0 Java version: 1.8.0 " \
             "$(bash -c 'mvn_8 -v' \
