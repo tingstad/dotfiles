@@ -50,12 +50,12 @@ cursor_set() {
 }
 
 read_input() {
-    local escape_char=$(printf "\u1b")
-    read -rsn1 mode # get 1 character
-    if [[ $mode == $escape_char ]]; then
-        read -rsn2 mode # read 2 more chars
+    local escape_char=$'\033'
+    read -rsn1 key # get 1 character
+    if [ "$key" = "$escape_char" ]; then
+        read -rsn2 key # read 2 more chars
     fi
-    case $mode in
+    case $key in
         'q') quit ;;
         'k')  index_dec ;;
         '[A') index_dec ;;
