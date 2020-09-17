@@ -27,7 +27,33 @@ export -f node8
 alias npm6='docker run -it --rm -v "$PWD":/dir'$vol_opt' -w /dir -p 127.0.0.1:8080:8080/tcp node:14.7.0-alpine3.10 npm'
 
 # Only working dir supported
-alias python='docker run -it --rm -v "$PWD":/dir'$vol_opt' -w /dir frolvlad/alpine-python3 python3'
+python () {
+    local port
+    if [[ "$*" == *-m\ http.server* ]]; then
+        local found
+        for arg; do
+            [ -n "$found" ] && { port="$arg"; break; }
+            [ "$arg" = "http.server" ] && found=y
+        done
+    fi
+    local vol_opt="$(selinuxenabled 2>/dev/null && echo :Z)"
+    docker run -it --rm -v "$PWD":/dir"$vol_opt" \
+        -w /dir ${port:+ -p 127.0.0.1:$port:$port/tcp} \
+        frolvlad/alpine-python3 python3 "$@"
+}
+export -f python
+
+source /dev/stdin <<EOF
+# Only working dir supported
+http_server() {
+    if [ -z "\$1" ]; then
+        echo >&2 "Usage: http_server PORT"
+        return 1
+    fi
+    python -m http.server \$1
+}
+EOF
+export -f http_server
 
 # Only working dir supported
 # ~/.m2/settings.xml is your friend
