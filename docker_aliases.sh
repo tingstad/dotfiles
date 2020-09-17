@@ -39,7 +39,8 @@ python () {
     local vol_opt="$(selinuxenabled 2>/dev/null && echo :Z)"
     docker run -it --rm -v "$PWD":/dir"$vol_opt" \
         -w /dir ${port:+ -p 127.0.0.1:$port:$port/tcp} \
-        frolvlad/alpine-python3 python3 "$@"
+        frolvlad/alpine-python3@sha256:ae841640713bf7e11540b40b6d40614e2e8f93b6ecef201a6cec62d52be1c36d \
+        python3 "$@"
 }
 export -f python
 
