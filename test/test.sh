@@ -39,7 +39,7 @@ testSourceAliasesExitCode() {
         assertEquals \
             "6.14.7" \
             "$(echo 'npx -v' | bash)"
-        assertEquals "3.6.6" "$(bash -c 'python -V' | sed 's/[^0-9.]//g')"
+        assertEquals "3.8.3" "$(bash -c 'python -V' | sed 's/[^0-9.]//g')"
     fi
 }
 
