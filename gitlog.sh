@@ -3,6 +3,7 @@ set -e
 
 
 main() {
+    local file="${1:-.}"
     trap 'echo SIGINT; quit' SIGINT
     trap 'echo SIGWINCH' SIGWINCH
     command -v tmux >/dev/null || {
@@ -16,7 +17,7 @@ main() {
     session="$(tmux display-message -p '#S')"
     window="$(tmux display-message -p '#W')"
     if [[ "$window" != datsgnitlog* ]]; then
-        tmux new-window -n datsgnitlog"$(date +%s)" "$0"
+        tmux new-window -n datsgnitlog"$(date +%s)" "$0" "$@"
         exit
     fi
     tmux split-window -h -d
@@ -24,11 +25,11 @@ main() {
     index=0
     while true; do
         length=$[ $(tput lines) - 5 ]
-        lines="$(log "$from" $length)"
+        lines="$(log "$from" $length "$file")"
         draw
         commit=$(echo "$lines" | awk "NR==$index+1 { print \$1 }")
         #tmux send-keys -t 0:"$window".1 C-z "git log $commit" Enter
-        tmux respawn-pane -t "$session":"$window".1 -k "GIT_PAGER='less -RX -+F' git show $commit"
+        tmux respawn-pane -t "$session":"$window".1 -k "GIT_PAGER='less -RX -+F' git show $commit -- \"$file\""
         read_input
     done
 }
@@ -74,7 +75,9 @@ read_input() {
 log() {
     local from="$1"
     local length="$2"
+    local file="$3"
     git log --pretty=format:'   %h %cd %s' --date=short "$from" \
+        -- "$file" \
         | cut -c 1-$(tput cols) \
         | head -n $length
 }
