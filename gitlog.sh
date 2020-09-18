@@ -65,7 +65,7 @@ read_input() {
         '[D') echo LEFT ;;
         '[C') echo RIGHT ;;
         'g')  index=0 ;;
-        'G')  index=$[ $length - 1 ] ;;
+        'G')  index_end ;;
         'M')  index=$[ $[ $length - 1 ] / 2 ] ;;
         'l')  tmux select-pane -R ;;
         *) >&2 echo 'ERR bad input'; return ;;
@@ -82,8 +82,17 @@ log() {
         | head -n $length
 }
 
+index_end() {
+    local end=$(wc -l <<< "$lines")
+    if [ $end -lt $length ]; then
+        index=$[ $end - 1 ]
+    else
+        index=$[ $length - 1 ]
+    fi
+}
 index_inc() {
-    if [ $index -lt $[ $length - 1 ] ]; then
+    if [ $index -lt $[ $length - 1 ] \
+            -a $[ $index + 1 ] -lt $(wc -l <<< "$lines") ]; then
         index=$[ $index + 1 ]
     fi
 }
