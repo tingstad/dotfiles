@@ -39,6 +39,12 @@ test_key_M() {
     read_input <<< M
     assertEquals "M should set pointer to middle" 9 $index
 }
+test_key_M_short_end() {
+    lines="$(yes | head -n 10)"
+    length=20
+    read_input <<< M
+    assertEquals "M should set pointer to middle" 4 $index
+}
 test_key_k_at_top() {
     index=0
     read_input <<< k

@@ -82,7 +82,7 @@ log() {
         | head -n $length
 }
 index_mid() {
-    index=$[ $[ $length - 1 ] / 2 ]
+    index=$[ $(get_index_end) / 2 ]
 }
 index_end() {
     index=$(get_index_end)
