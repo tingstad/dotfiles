@@ -66,7 +66,7 @@ read_input() {
         '[C') echo RIGHT ;;
         'g')  index=0 ;;
         'G')  index_end ;;
-        'M')  index=$[ $[ $length - 1 ] / 2 ] ;;
+        'M')  index_mid ;;
         'l')  tmux select-pane -R ;;
         *) >&2 echo 'ERR bad input'; return ;;
     esac
@@ -81,7 +81,9 @@ log() {
         | cut -c 1-$(tput cols) \
         | head -n $length
 }
-
+index_mid() {
+    index=$[ $[ $length - 1 ] / 2 ]
+}
 index_end() {
     local end=$(wc -l <<< "$lines")
     if [ $end -lt $length ]; then
