@@ -85,11 +85,14 @@ index_mid() {
     index=$[ $[ $length - 1 ] / 2 ]
 }
 index_end() {
+    index=$(get_index_end)
+}
+get_index_end() {
     local end=$(wc -l <<< "$lines")
     if [ $end -lt $length ]; then
-        index=$[ $end - 1 ]
+        echo $[ $end - 1 ]
     else
-        index=$[ $length - 1 ]
+        echo $[ $length - 1 ]
     fi
 }
 index_inc() {
