@@ -64,6 +64,43 @@ test_key_j_end() {
     read_input <<< j
     assertEquals "j (down) should not increment pointer at bottom" 1 $index
 }
+test_ccut() {
+    esc="\033"
+    red="$esc[0;31m"
+    bluish="$esc[38;5;60m"
+    reset="$esc[0m"
+    str="Default ${red}RED ${bluish}FANCY${reset} Default"
+    #assertEquals "Default " "$(echo -e $str | ccut 88)"
+    assertEquals "Defa" "$(ccut 4 <<< Default)"
+    assertEquals "Defa" "$(ccut 6 <<< Defa)"
+    assertEquals "Defa" "$(echo -e $str | ccut 4)"
+    assertEquals "Default " "$(echo -e $str | ccut 8)"
+    assertEquals "$(echo -e "Default ${red}R${reset}")" "$(echo -e $str | ccut 9)"
+    assertEquals \
+        "$(echo -e "Default ${red}RED ${reset}")" \
+        "$(echo -e $str | ccut 12)"
+    assertEquals \
+        "$(echo -e "Default ${red}RED ${bluish}F${reset}")" \
+        "$(echo -e $str | ccut 13)"
+    assertEquals \
+        "$(echo -e "Default ${red}RED ${bluish}FA${reset}")" \
+        "$(echo -e $str | ccut 14)"
+    assertEquals \
+        "$(echo -e "Default ${red}RED ${bluish}FANCY${reset}")" \
+        "$(echo -e $str | ccut 17)"
+    assertEquals \
+        "$(echo -e "Default ${red}RED ${bluish}FANCY${reset} ${reset}")" \
+        "$(echo -e $str | ccut 18)"
+    assertEquals \
+        "$(echo -e "Default ${red}RED ${bluish}FANCY${reset} D${reset}")" \
+        "$(echo -e $str | ccut 19)"
+    assertEquals \
+        "$(echo -e "$str$reset")" \
+        "$(echo -e $str | ccut 99)"
+    assertEquals \
+        "$(echo -e "${red}RE$reset")" \
+        "$(echo -e "${red}RED $reset" | ccut 2)"
+}
 
 DIR=$(cd "$(dirname "$0")"; pwd)
 source "$DIR/../gitlog.sh"

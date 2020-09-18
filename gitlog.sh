@@ -109,6 +109,38 @@ quit() {
     tmux kill-window
     exit
 }
+ccut() {
+    awk -v max="$1" -v esc='\033' '{
+        str = $0
+        rest = $0
+        len = 0
+        realLen = 0
+        stripped = 0
+        while (1) {
+            match(rest, esc "\\[[0-9;]{1,}[A-Za-z]")
+            if (RLENGTH == -1) {
+                if (len == 0) {
+                    print substr($0, 1, max)
+                    exit
+                }
+                reset = (len > 0 ? (esc "[0m") : "")
+                print substr(str, 1, max + stripped) reset
+                exit
+            }
+            else if (len + RSTART > max) {
+                reset = (stripped > 0 ? (esc "[0m") : "")
+                print substr(str, 1, max + stripped) reset
+                exit
+            }
+            else {
+                stripped += RLENGTH
+                len += RSTART - 1
+                rest = substr(rest, RSTART + RLENGTH)
+            }
+        }
+        print len
+    }'
+}
 
 return 2>/dev/null || true
 
