@@ -89,11 +89,9 @@ index_end() {
 }
 get_index_end() {
     local end=$(wc -l <<< "$lines")
-    if [ $end -lt $length ]; then
-        echo $[ $end - 1 ]
-    else
-        echo $[ $length - 1 ]
-    fi
+    [ $end -lt $length ] \
+        && echo $[ $end - 1 ] \
+        || echo $[ $length - 1 ]
 }
 index_inc() {
     if [ $index -lt $[ $length - 1 ] \
