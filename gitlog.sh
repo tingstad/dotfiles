@@ -113,6 +113,9 @@ quit() {
     tmux kill-window
     exit
 }
+nocolors() {
+    sed $'s,\x1b\\[[0-9;]*[A-Za-z],,g'
+}
 ccut() {
     awk -v max="$1" -v esc='\033' '#
         # Simulates `cut -c 1-X` for text containing ANSI color codes
