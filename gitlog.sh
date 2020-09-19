@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
+# Richard H. Tingstad's git GUI
+# https://github.com/tingstad/dotfiles
 set -e
-
 
 main() {
     local file="${1:-.}"
