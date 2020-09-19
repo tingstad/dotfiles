@@ -27,6 +27,9 @@ main() {
         redraw
         commit=$(echo "$lines" | awk "NR==$index+1 { print \$1 }")
         #tmux send-keys -t 0:"$window".1 C-z "git log $commit" Enter
+        if [ $(tmux list-panes | wc -l) -lt 2 ]; then
+            tmux split-window -h -d
+        fi
         tmux respawn-pane -t "$session":"$window".1 -k "GIT_PAGER='less -RX -+F' git show $commit -- \"$file\""
         read_input
     done
