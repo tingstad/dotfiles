@@ -25,7 +25,7 @@ main() {
     index=0
     while true; do
         height=$[ $(tput lines) - 5 ]
-        lines="$(log "$from" $height "$file" | head -n $height)"
+        lines="$(log "$from" "$file" | head -n $height)"
         draw
         commit=$(echo "$lines" | awk "NR==$index+1 { print \$1 }")
         #tmux send-keys -t 0:"$window".1 C-z "git log $commit" Enter
@@ -74,8 +74,7 @@ read_input() {
 
 log() {
     local from="$1"
-    local height="$2"
-    local file="$3"
+    local file="$2"
     git log --pretty=format:'   %h %cd %s' --date=short "$from" \
         -- "$file" \
         | cut -c 1-$(tput cols)
