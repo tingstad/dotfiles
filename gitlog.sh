@@ -5,7 +5,7 @@ set -e
 main() {
     local file="${1:-.}"
     trap 'echo SIGINT; quit' SIGINT
-    trap 'echo SIGWINCH' SIGWINCH
+    trap 'redraw' SIGWINCH
     command -v tmux >/dev/null || {
         echo "tmux not found :(" >&2
         exit 1
