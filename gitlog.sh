@@ -110,27 +110,31 @@ quit() {
     exit
 }
 ccut() {
-    awk -v max="$1" -v esc='\033' '{
+    awk -v max="$1" -v esc='\033' \
+        'BEGIN {
+            pattern = esc "\\[[0-9;]*[A-Za-z]"
+            reset = (esc "[0m")
+        }
+        {
         str = $0
         rest = $0
         len = 0
-        realLen = 0
         stripped = 0
         while (1) {
-            match(rest, esc "\\[[0-9;]{1,}[A-Za-z]")
+            match(rest, pattern)
             if (RLENGTH == -1) {
                 if (len == 0) {
                     print substr($0, 1, max)
-                    exit
+                    break
                 }
-                reset = (len > 0 ? (esc "[0m") : "")
-                print substr(str, 1, max + stripped) reset
-                exit
+                suffix = (stripped > 0 ? reset : "")
+                print substr(str, 1, max + stripped) suffix
+                break
             }
             else if (len + RSTART > max) {
-                reset = (stripped > 0 ? (esc "[0m") : "")
-                print substr(str, 1, max + stripped) reset
-                exit
+                suffix = (stripped > 0 ? reset : "")
+                print substr(str, 1, max + stripped) suffix
+                break
             }
             else {
                 stripped += RLENGTH
@@ -138,7 +142,6 @@ ccut() {
                 rest = substr(rest, RSTART + RLENGTH)
             }
         }
-        print len
     }'
 }
 

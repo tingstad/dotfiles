@@ -70,12 +70,14 @@ test_ccut() {
     bluish="$esc[38;5;60m"
     reset="$esc[0m"
     str="Default ${red}RED ${bluish}FANCY${reset} Default"
-    #assertEquals "Default " "$(echo -e $str | ccut 88)"
-    assertEquals "Defa" "$(ccut 4 <<< Default)"
-    assertEquals "Defa" "$(ccut 6 <<< Defa)"
-    assertEquals "Defa" "$(echo -e $str | ccut 4)"
-    assertEquals "Default " "$(echo -e $str | ccut 8)"
-    assertEquals "$(echo -e "Default ${red}R${reset}")" "$(echo -e $str | ccut 9)"
+    assertEquals "Trunc" "$(ccut 5 <<< Truncated)"
+    assertEquals "Short" "$(ccut 6 <<< Short)"
+    assertEquals "Defau" "$(echo -e $str | ccut 5)"
+    assertEquals "Default " \
+        "$(echo -e $str | ccut 8)"
+    assertEquals \
+        "$(echo -e "Default ${red}R${reset}")" \
+        "$(echo -e $str | ccut 9)"
     assertEquals \
         "$(echo -e "Default ${red}RED ${reset}")" \
         "$(echo -e $str | ccut 12)"
@@ -100,6 +102,12 @@ test_ccut() {
     assertEquals \
         "$(echo -e "${red}RE$reset")" \
         "$(echo -e "${red}RED $reset" | ccut 2)"
+    assertEquals \
+        "$(echo -e "Minimal$esc[m r$reset")" \
+        "$(echo -e "Minimal$esc[m reset code" | ccut 9)"
+    assertEquals "Multiple lines" \
+        "$(echo -e "one\ntwo")" \
+        "$(echo -e "oneS\ntwoS" | ccut 3)"
 }
 
 DIR=$(cd "$(dirname "$0")"; pwd)
