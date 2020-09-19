@@ -24,8 +24,8 @@ main() {
     from="HEAD"
     index=0
     while true; do
-        length=$[ $(tput lines) - 5 ]
-        lines="$(log "$from" $length "$file")"
+        height=$[ $(tput lines) - 5 ]
+        lines="$(log "$from" $height "$file")"
         draw
         commit=$(echo "$lines" | awk "NR==$index+1 { print \$1 }")
         #tmux send-keys -t 0:"$window".1 C-z "git log $commit" Enter
@@ -74,12 +74,12 @@ read_input() {
 
 log() {
     local from="$1"
-    local length="$2"
+    local height="$2"
     local file="$3"
     git log --pretty=format:'   %h %cd %s' --date=short "$from" \
         -- "$file" \
         | cut -c 1-$(tput cols) \
-        | head -n $length
+        | head -n $height
 }
 index_mid() {
     index=$[ $(get_index_end) / 2 ]
@@ -89,12 +89,12 @@ index_end() {
 }
 get_index_end() {
     local end=$(wc -l <<< "$lines")
-    [ $end -lt $length ] \
+    [ $end -lt $height ] \
         && echo $[ $end - 1 ] \
-        || echo $[ $length - 1 ]
+        || echo $[ $height - 1 ]
 }
 index_inc() {
-    if [ $index -lt $[ $length - 1 ] \
+    if [ $index -lt $[ $height - 1 ] \
             -a $[ $index + 1 ] -lt $(wc -l <<< "$lines") ]; then
         index=$[ $index + 1 ]
     fi
