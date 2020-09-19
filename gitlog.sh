@@ -119,7 +119,7 @@ ccut() {
         # Richard H. Tingstad  https://github.com/tingstad/dotfiles
         BEGIN {
             pattern = esc "\\[[0-9;]*[A-Za-z]"
-            reset = (esc "[0m")
+            reset = esc "[0m"
         }
         {
         str = $0
