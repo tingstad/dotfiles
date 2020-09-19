@@ -24,9 +24,7 @@ main() {
     from="HEAD"
     index=0
     while true; do
-        height=$[ $(tput lines) - 5 ]
-        lines="$(log "$from" "$file" | head -n $height | cut -c 1-$(tput cols))"
-        draw
+        redraw
         commit=$(echo "$lines" | awk "NR==$index+1 { print \$1 }")
         #tmux send-keys -t 0:"$window".1 C-z "git log $commit" Enter
         tmux respawn-pane -t "$session":"$window".1 -k "GIT_PAGER='less -RX -+F' git show $commit -- \"$file\""
@@ -34,6 +32,11 @@ main() {
     done
 }
 
+redraw() {
+    height=$[ $(tput lines) - 5 ]
+    lines="$(log "$from" "$file" | head -n $height | cut -c 1-$(tput cols))"
+    draw
+}
 draw() {
     clear
     echo " W E L C O M E"
