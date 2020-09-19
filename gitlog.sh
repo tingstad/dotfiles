@@ -82,7 +82,8 @@ read_input() {
 log() {
     local from="$1"
     local file="$2"
-    git log --pretty=format:'   %h %cd %d %s' --date=short "$from" \
+    git log --pretty=format:'   %C(auto)%h %cd %d %s' --date=short "$from" \
+        --color=always \
         -- "$file"
 }
 index_mid() {
