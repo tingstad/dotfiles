@@ -129,10 +129,6 @@ ccut() {
         while (1) {
             match(rest, pattern)
             if (RLENGTH == -1) {
-                if (len == 0) {
-                    print substr($0, 1, max)
-                    break
-                }
                 suffix = (stripped > 0 ? reset : "")
                 print substr(str, 1, max + stripped) suffix
                 break
