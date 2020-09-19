@@ -38,7 +38,7 @@ main() {
 
 redraw() {
     height=$[ $(tput lines) - 5 ]
-    lines="$(log "$from" "$file" | head -n $height | cut -c 1-$(tput cols))"
+    lines="$(log "$from" "$file" | head -n $height | ccut $(tput cols))"
     draw
 }
 draw() {
