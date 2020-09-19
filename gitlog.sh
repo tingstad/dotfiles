@@ -114,8 +114,10 @@ quit() {
     exit
 }
 ccut() {
-    awk -v max="$1" -v esc='\033' \
-        'BEGIN {
+    awk -v max="$1" -v esc='\033' '#
+        # Simulates `cut -c 1-X` for text containing ANSI color codes
+        # Richard H. Tingstad  https://github.com/tingstad/dotfiles
+        BEGIN {
             pattern = esc "\\[[0-9;]*[A-Za-z]"
             reset = (esc "[0m")
         }
