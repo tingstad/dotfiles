@@ -64,6 +64,18 @@ test_key_j_end() {
     read_input <<< j
     assertEquals "j (down) should not increment pointer at bottom" 1 $index
 }
+test_key_f_forward() {
+    pager=('HEAD')
+    from='HEAD'
+    lines="$(seq 1 10)"
+    index=2
+    height=5
+    read_input <<< f
+    assertEquals "f should set index 0" 0 $index
+    assertEquals "f should set HEAD" 10 $from
+    assertEquals "f should set pager" 2 "${#pager[*]}"
+    assertEquals "f should set pager" 'HEAD 10' "${pager[*]}"
+}
 test_ccut() {
     esc="\033"
     red="$esc[0;31m"

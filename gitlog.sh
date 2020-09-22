@@ -23,6 +23,7 @@ main() {
     fi
     tmux split-window -h -d
     from="HEAD"
+    pager=("$from")
     index=0
     while true; do
         redraw
@@ -75,6 +76,7 @@ read_input() {
         'L')  index_end ;;
         'M')  index_mid ;;
         'l')  tmux select-pane -R ;;
+        'f')  forward_page ;;
         *) >&2 echo 'ERR bad input'; return ;;
     esac
 }
@@ -108,6 +110,11 @@ index_dec() {
     if [ $index -gt 0 ]; then
         index=$[ $index - 1 ]
     fi
+}
+forward_page() {
+    from=$(echo "$lines" | nocolors | awk "END { print \$1 }")
+    pager=("${pager[@]}" "$from")
+    index=0
 }
 quit() {
     clear
