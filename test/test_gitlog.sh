@@ -21,17 +21,17 @@ test_key_g() {
     read_input <<< g
     assertEquals "g (beginning) should reset pointer" 0 $index
 }
-test_key_G() {
+test_key_L() {
     lines="$(yes | head -n 30)"
     height=20
-    read_input <<< G
-    assertEquals "G (end) should set pointer to end" 19 $index
+    read_input <<< L
+    assertEquals "L (end) should set pointer to end" 19 $index
 }
-test_key_G_end() {
+test_key_L_end() {
     lines="$(yes | head -n 10)"
     height=20
-    read_input <<< G
-    assertEquals "G (end) should set pointer to end" 9 $index
+    read_input <<< L
+    assertEquals "L (end) should set pointer to end" 9 $index
 }
 test_key_M() {
     lines="$(yes | head -n 30)"

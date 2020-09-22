@@ -72,7 +72,7 @@ read_input() {
         '[D') echo LEFT ;;
         '[C') echo RIGHT ;;
         'g')  index=0 ;;
-        'G')  index_end ;;
+        'L')  index_end ;;
         'M')  index_mid ;;
         'l')  tmux select-pane -R ;;
         *) >&2 echo 'ERR bad input'; return ;;
