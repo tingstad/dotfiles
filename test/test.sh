@@ -13,6 +13,9 @@ source "$DIR/test_gitlog.sh"
 testSourceAliasesExitCode() {
     source "$DIR/../aliases.sh"
     assertEquals 0 $?
+    assertEquals \
+        "Should trunc" \
+        "$(bash -c 'echo "Should truncate" | ccut 12')"
     if [ "$TRAVIS_OS_NAME" = "linux" ] || docker version >/dev/null ; then
         assertEquals \
             "Apache Maven 3.6.0 Java version: 1.8.0 " \

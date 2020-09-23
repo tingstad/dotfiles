@@ -15,6 +15,10 @@ gitlog() {
 EOF
 export -f gitlog
 
+# Somewhat weird form to support Bash 3:
+source /dev/stdin <<<"$(source "$my_dir"/gitlog.sh && type ccut | sed '1d')"
+export -f ccut
+
 if [ -f ~/.git-completion.bash ]; then
   . ~/.git-completion.bash
 fi
