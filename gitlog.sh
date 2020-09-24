@@ -77,6 +77,7 @@ read_input() {
         'M')  index_mid ;;
         'l')  tmux select-pane -R ;;
         'f')  forward_page ;;
+        'r')  tmux kill-pane -t "$session":"$window".1 && tmux respawn-pane -t "$session":"$window".0 -k "git rebase -i $commit" ;;
         *) >&2 echo 'ERR bad input'; return ;;
     esac
 }
