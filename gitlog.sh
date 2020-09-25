@@ -48,7 +48,7 @@ draw() {
     local u="$esc[4m"
     clear
     echo " W E L C O M E"
-    echo "$(echo "$lines" | awk "NR==$index+1 { print \$1 }")" " Keys: j/↓, k/↑, ${u}f${reset}orward page, be${u}g${reset}inning, ${u}L${reset}ast/${u}M${reset}iddle line, ${u}r${reset}ebase, ${u}q${reset}uit"
+    echo "$(echo "$lines" | awk "NR==$index+1 { print \$1 }")" " Keys: j/↓, k/↑, ${u}f${reset}orward page, be${u}g${reset}inning, ${u}L${reset}ast/${u}M${reset}iddle line, ${u}r${reset}ebase, ${u}F${reset}ixup, ${u}q${reset}uit"
     echo ""
     echo "$lines"
     cursor_set $[ index + 4 ] 1
@@ -81,6 +81,7 @@ read_input() {
         'l')  tmux select-pane -R ;;
         'f')  forward_page ;;
         'r')  tmux kill-pane -t "$session":"$window".1 && tmux respawn-pane -t "$session":"$window".0 -k "git rebase -i $commit" ;;
+        'F')  git commit --fixup="$commit" && GIT_EDITOR=true git rebase -i "$commit"^ ;;
         *) >&2 echo 'ERR bad input'; return ;;
     esac
 }
