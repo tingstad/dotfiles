@@ -73,7 +73,6 @@ test_key_f_forward() {
     read_input <<< f
     assertEquals "f should set index 0" 0 $index
     assertEquals "f should set HEAD" 10 $from
-    assertEquals "f should set pager" 2 "${#pager[*]}"
     assertEquals "f should set pager" 'HEAD 10' "${pager[*]}"
 }
 test_ccut() {

@@ -23,7 +23,7 @@ main() {
     fi
     tmux split-window -h -d
     from="HEAD"
-    pager=("$from")
+    pager="$from"
     index=0
     while true; do
         redraw
@@ -38,8 +38,15 @@ main() {
 }
 
 redraw() {
-    height=$[ $(tput lines) - 5 ]
-    lines="$(log "$from" "$file" | head -n $height | ccut $(tput cols))"
+    local cols=$COLUMNS
+    local rows=$LINES
+    if [ -z "$cols" ]; then
+        local size=$(stty size)
+        cols=${size#* }
+        rows=${size% *}
+    fi
+    height=$(($rows - 5))
+    lines="$(log "$from" "$file" | head -n $height | ccut $cols)"
     draw
 }
 draw() {
@@ -51,7 +58,7 @@ draw() {
     echo "$(echo "$lines" | awk "NR==$index+1 { print \$1 }")" " Keys: j/↓, k/↑, ${u}f${reset}orward page, be${u}g${reset}inning, ${u}L${reset}ast/${u}M${reset}iddle line, ${u}r${reset}ebase, ${u}F${reset}ixup, ${u}q${reset}uit"
     echo ""
     echo "$lines"
-    cursor_set $[ index + 4 ] 1
+    cursor_set $((index + 4)) 1
     echo -en ">"
 }
 
@@ -94,31 +101,31 @@ log() {
         -- "$file"
 }
 index_mid() {
-    index=$[ $(get_index_end) / 2 ]
+    index=$(($(get_index_end) / 2))
 }
 index_end() {
     index=$(get_index_end)
 }
 get_index_end() {
-    local end=$(wc -l <<< "$lines")
+    local end=$(echo "$lines" | wc -l)
     [ $end -lt $height ] \
-        && echo $[ $end - 1 ] \
-        || echo $[ $height - 1 ]
+        && echo $(($end - 1)) \
+        || echo $(($height - 1))
 }
 index_inc() {
-    if [ $index -lt $[ $height - 1 ] \
-            -a $[ $index + 1 ] -lt $(wc -l <<< "$lines") ]; then
-        index=$[ $index + 1 ]
+    if [ $index -lt $(($height - 1)) \
+            -a $(($index + 1)) -lt $(echo "$lines" | wc -l) ]; then
+        index=$(($index + 1))
     fi
 }
 index_dec() {
     if [ $index -gt 0 ]; then
-        index=$[ $index - 1 ]
+        index=$(($index - 1))
     fi
 }
 forward_page() {
     from=$(echo "$lines" | nocolors | awk "END { print \$1 }")
-    pager=("${pager[@]}" "$from")
+    pager="$pager $from"
     index=0
 }
 quit() {
