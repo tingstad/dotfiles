@@ -20,7 +20,8 @@ main() {
         session="$(tmux display-message -p '#{session_id}')"
         window="$(tmux display-message -p '#{window_id}')"
         if [ -z "$DATSGNIT_INCEPTION" ]; then
-            tmux new-window -e DATSGNIT_INCEPTION=yes -n datsgnitlog"$(date +%s)" "$0" "$@"
+            local remain="$(does_exist bash && echo bash || echo sh)"
+            tmux new-window -e DATSGNIT_INCEPTION=yes -n datsgnitlog"$(date +%s)" "$0; $remain -i"
             exit
         fi
     fi
