@@ -118,9 +118,11 @@ rebase() {
         tmux kill-pane -t "$session":"$window".1 || true
     fi
     git rebase -i "$commit"
-    if [ -e .git/rebase* ]; then
-        exit
-    fi
+    for f in .git/rebase*; do
+        if [ -e "$f" ]; then
+            exit
+        fi
+    done
 }
 index_mid() {
     index=$(($(get_index_end) / 2))
