@@ -28,7 +28,7 @@ main() {
     index=0
     while true; do
         commit=$(echo "$lines" | nocolors | awk "NR==$index+1 { print \$1 }")
-        if [ -n "$TMUX" ] && [ $(tmux list-panes | wc -l) -lt 2 ]; then
+        if [ -n "$TMUX" ] && [ "$(tmux list-panes | wc -l)" -lt 2 ]; then
             tmux split-window -h -d
         fi
         [ -n "$TMUX" ] && tmux respawn-pane -t "$session":"$window".1 -k "GIT_PAGER='less -RX -+F' git show $commit -- \"$file\""
@@ -56,15 +56,15 @@ redraw() {
         echo "Unable to detect window width $cols" >&2
         exit 1
     fi
-    height=$(($rows - 5))
-    lines="$(log "$from" "$file" | head -n $height | ccut $cols)"
-    draw $cols
+    height=$((rows - 5))
+    lines="$(log "$from" "$file" | head -n $height | ccut "$cols")"
+    draw "$cols"
 }
 draw() {
     local cols="$1"
     local esc=$'\033'
-    local reset="$esc[0m"
-    local u="$esc[4m"
+    local reset="${esc}[0m"
+    local u="${esc}[4m"
     clear
     echo " W E L C O M E"
     echo "$(echo "$lines" | awk "NR==$index+1 { print \$1 }")" " Keys: j/↓, k/↑, ${u}f${reset}orward page, be${u}g${reset}inning, ${u}L${reset}ast/${u}M${reset}iddle line, ${u}r${reset}ebase, ${u}F${reset}ixup, ${u}q${reset}uit" | ccut "$cols"
@@ -77,7 +77,7 @@ draw() {
 cursor_set() {
     local row="$1"
     local col="$2"
-    printf "\033[$row;${col}H"
+    printf "\033[%s;%sH" "$row" "$col"
 }
 
 read_input() {
@@ -120,19 +120,19 @@ index_end() {
 }
 get_index_end() {
     local end=$(echo "$lines" | wc -l)
-    [ $end -lt $height ] \
-        && echo $(($end - 1)) \
-        || echo $(($height - 1))
+    [ "$end" -lt $height ] \
+        && echo $((end - 1)) \
+        || echo $((height - 1))
 }
 index_inc() {
-    if [ $index -lt $(($height - 1)) \
-            -a $(($index + 1)) -lt $(echo "$lines" | wc -l) ]; then
-        index=$(($index + 1))
+    if [ "$index" -lt $((height - 1)) ] \
+            && [ $((index + 1)) -lt "$(echo "$lines" | wc -l)" ]; then
+        index=$((index + 1))
     fi
 }
 index_dec() {
     if [ $index -gt 0 ]; then
-        index=$(($index - 1))
+        index=$((index - 1))
     fi
 }
 forward_page() {
