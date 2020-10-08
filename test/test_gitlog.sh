@@ -107,6 +107,10 @@ test_check_dependencies() {
     assertEquals "Missing dependencies: a b" "$(check_dependencies a b 2>&1)"
 }
 
+test_is_rebasing() {
+    assertFalse "is_rebasing"
+}
+
 test_is_number() {
     assertFalse "Letter" "is_number A"
     assertFalse "Empty" "is_number ''"

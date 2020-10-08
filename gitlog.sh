@@ -128,18 +128,29 @@ log() {
         --color=always \
         -- "$file"
 }
+
 rebase() {
     if [ -n "$TMUX" ]; then
         tmux kill-pane -t "$session":"$window".1 || true
     fi
+    clear
     git rebase -i --autosquash --autostash "$commit"
-    for f in .git/rebase*; do
-        if [ -e "$f" ]; then
-            exit
-        fi
-    done
+    if is_rebasing; then
+        echo "Happy rebasing :)"
+        exit
+    fi
     goto_beginning
 }
+
+is_rebasing() {
+    for f in .git/rebase*; do
+        if [ -e "$f" ]; then
+            return 0
+        fi
+    done
+    false
+}
+
 reword() {
     if [ "$index" -eq 0 ] && [ "$from" = "HEAD" ]; then
         git commit --amend
