@@ -113,6 +113,7 @@ read_input() {
         'f')  forward_page ;;
         'r')  rebase ;;
         'F')  git commit --fixup="$commit" && GIT_EDITOR=true git rebase -i "$commit"^ ;;
+        'w')  reword ;;
         *) >&2 echo 'ERR bad input'; return ;;
     esac
 }
@@ -134,6 +135,14 @@ rebase() {
             exit
         fi
     done
+    goto_beginning
+}
+reword() {
+    if [ "$index" -eq 0 ] && [ "$from" = "HEAD" ]; then
+        git commit --amend
+    else
+        GIT_SEQUENCE_EDITOR="sed -i.old 's/^pick "$commit"/r "$commit"/'" git rebase -i "$commit"^
+    fi
     goto_beginning
 }
 goto_beginning() {
