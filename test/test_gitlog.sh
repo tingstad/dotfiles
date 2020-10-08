@@ -75,6 +75,21 @@ test_key_f_forward() {
     assertEquals "f should set HEAD" 10 $from
     assertEquals "f should set pager" 'HEAD 10' "${pager[*]}"
 }
+test_is_number() {
+    assertFalse "Letter" "is_number A"
+    assertFalse "Empty" "is_number ''"
+    assertFalse "Letter digit" "is_number c4"
+    assertFalse "Digit letter" "is_number 2b"
+    assertFalse "Digit letter digit" "is_number 2o3"
+    assertFalse "Decimal" "is_number 2.3"
+    assertFalse "Punctuation" "is_number 3,"
+    assertTrue "Digit" "is_number 1"
+    assertTrue "Zero" "is_number 0"
+    assertTrue "Tens" "is_number 12"
+    assertTrue "Tens higher" "is_number 44"
+    assertTrue "Hundreds" "is_number 100"
+    assertTrue "Big number" "is_number 1234567"
+}
 test_ccut() {
     esc="\033"
     red="$esc[0;31m"

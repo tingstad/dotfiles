@@ -1,38 +1,38 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 # Richard H. Tingstad's git GUI
 # https://github.com/tingstad/dotfiles
 set -e
 
 main() {
     local file="${1:-.}"
-    trap 'quit' SIGINT
-    trap 'redraw' SIGWINCH
+    trap 'quit' INT
+    #trap 'TODO' WINCH
     command -v tmux >/dev/null || {
-        echo "tmux not found :(" >&2
-        exit 1
+        echo "Warning: tmux not found" >&2
     }
-    if [ -z "$TMUX" ]; then
-        tmux new-session -A -s datsgnitlog -n datsgnitlog"$(date +%s)" "$0"
-        exit
+    if command -v tmux >/dev/null; then
+        if [ -z "$TMUX" ]; then
+            tmux new-session -A -s datsgnitlog -n datsgnitlog"$(date +%s)" "$0" "$@"
+            exit
+        fi
+        session="$(tmux display-message -p '#{session_id}')"
+        window="$(tmux display-message -p '#{window_id}')"
+        window_name="$(tmux display-message -p '#{window_name}')"
+        if [ -z "$DATSGNIT_INCEPTION" ] && [[ "$window_name" != datsgnitlog* ]]; then
+            tmux set-environment -g DATSGNIT_INCEPTION yes \; new-window -n datsgnitlog"$(date +%s)" "$0" "$@"
+            exit
+        fi
     fi
-    session="$(tmux display-message -p '#S')"
-    window="$(tmux display-message -p '#W')"
-    if [[ "$window" != datsgnitlog* ]]; then
-        tmux new-window -n datsgnitlog"$(date +%s)" "$0" "$@"
-        exit
-    fi
-    tmux split-window -h -d
     from="HEAD"
     pager="$from"
     index=0
     while true; do
-        redraw
         commit=$(echo "$lines" | nocolors | awk "NR==$index+1 { print \$1 }")
-        #tmux send-keys -t 0:"$window".1 C-z "git log $commit" Enter
-        if [ $(tmux list-panes | wc -l) -lt 2 ]; then
+        if [ -n "$TMUX" ] && [ $(tmux list-panes | wc -l) -lt 2 ]; then
             tmux split-window -h -d
         fi
-        tmux respawn-pane -t "$session":"$window".1 -k "GIT_PAGER='less -RX -+F' git show $commit -- \"$file\""
+        [ -n "$TMUX" ] && tmux respawn-pane -t "$session":"$window".1 -k "GIT_PAGER='less -RX -+F' git show $commit -- \"$file\""
+        redraw
         read_input
     done
 }
@@ -40,22 +40,34 @@ main() {
 redraw() {
     local cols=$COLUMNS
     local rows=$LINES
+    if [ -n "$TMUX" ]; then
+        local size="$(tmux display -p '#{pane_height} #{pane_width}')"
+        if is_number "${size#* }" && is_number "${size% *}"; then
+            cols=${size#* }
+            rows=${size% *}
+        fi
+    fi
     if [ -z "$cols" ]; then
-        local size=$(stty size)
+        size=$(stty size)
         cols=${size#* }
         rows=${size% *}
     fi
+    if ! is_number "$cols"; then
+        echo "Unable to detect window width $cols" >&2
+        exit 1
+    fi
     height=$(($rows - 5))
     lines="$(log "$from" "$file" | head -n $height | ccut $cols)"
-    draw
+    draw $cols
 }
 draw() {
+    local cols="$1"
     local esc=$'\033'
     local reset="$esc[0m"
     local u="$esc[4m"
     clear
     echo " W E L C O M E"
-    echo "$(echo "$lines" | awk "NR==$index+1 { print \$1 }")" " Keys: j/↓, k/↑, ${u}f${reset}orward page, be${u}g${reset}inning, ${u}L${reset}ast/${u}M${reset}iddle line, ${u}r${reset}ebase, ${u}F${reset}ixup, ${u}q${reset}uit"
+    echo "$(echo "$lines" | awk "NR==$index+1 { print \$1 }")" " Keys: j/↓, k/↑, ${u}f${reset}orward page, be${u}g${reset}inning, ${u}L${reset}ast/${u}M${reset}iddle line, ${u}r${reset}ebase, ${u}F${reset}ixup, ${u}q${reset}uit" | ccut "$cols"
     echo ""
     echo "$lines"
     cursor_set $((index + 4)) 1
@@ -130,7 +142,8 @@ forward_page() {
 }
 quit() {
     clear
-    tmux kill-window
+    [ -n "$TMUX" ] && tmux kill-pane -t "$session":"$window".1
+    clear
     exit
 }
 nocolors() {
@@ -163,6 +176,14 @@ ccut() {
             }
         }
     }'
+}
+
+is_number() {
+    case "$1" in
+        *[!0-9]*) false ;;
+        [0-9]*) true ;;
+        *) false ;;
+    esac
 }
 
 sourced=0
