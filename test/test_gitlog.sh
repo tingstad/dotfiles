@@ -82,6 +82,12 @@ test_key_f_forward() {
     assertEquals "f should set HEAD" 10 $from
     assertEquals "f should set pager" 'HEAD 10' "${pager[*]}"
 }
+test_check_screen_size() {
+    height=""
+    width=""
+    check_screen_size
+    assertTrue "Width" "is_number $width"
+}
 test_is_number() {
     assertFalse "Letter" "is_number A"
     assertFalse "Empty" "is_number ''"

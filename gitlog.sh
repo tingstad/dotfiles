@@ -37,6 +37,11 @@ main() {
 }
 
 redraw() {
+    check_screen_size
+    lines="$(log "$from" "$file" | head -n $height | ccut "$width")"
+    draw "$width"
+}
+check_screen_size() {
     local cols=$COLUMNS
     local rows=$LINES
     if [ -n "$TMUX" ]; then
@@ -56,8 +61,7 @@ redraw() {
         exit 1
     fi
     height=$((rows - 5))
-    lines="$(log "$from" "$file" | head -n $height | ccut "$cols")"
-    draw "$cols"
+    width="$cols"
 }
 draw() {
     local cols="$1"
