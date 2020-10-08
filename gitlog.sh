@@ -99,7 +99,7 @@ read_input() {
         'M')  index_mid ;;
         'l')  tmux select-pane -R ;;
         'f')  forward_page ;;
-        'r')  tmux kill-pane -t "$session":"$window".1 && tmux respawn-pane -t "$session":"$window".0 -k "git rebase -i $commit" ;;
+        'r')  rebase ;;
         'F')  git commit --fixup="$commit" && GIT_EDITOR=true git rebase -i "$commit"^ ;;
         *) >&2 echo 'ERR bad input'; return ;;
     esac
@@ -111,6 +111,12 @@ log() {
     git log --pretty=format:'   %C(auto)%h %cd %d %s' --date=short "$from" \
         --color=always \
         -- "$file"
+}
+rebase() {
+    if [ -n "$TMUX" ]; then
+        tmux kill-pane -t "$session":"$window".1 || true
+    fi
+    git rebase -i "$commit"
 }
 index_mid() {
     index=$(($(get_index_end) / 2))
