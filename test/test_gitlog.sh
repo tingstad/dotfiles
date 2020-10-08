@@ -17,9 +17,11 @@ test_key_j() {
     assertEquals "j (down) should increment pointer" 2 $index
 }
 test_key_g() {
+    from=some_commit
     index=2
     read_input <<< g
     assertEquals "g (beginning) should reset pointer" 0 $index
+    assertEquals "g (beginning) should reset 'from'" HEAD $from
 }
 test_key_H() {
     index=2

@@ -124,6 +124,7 @@ rebase() {
     done
 }
 goto_beginning() {
+    from="HEAD"
     index=0
 }
 index_mid() {
