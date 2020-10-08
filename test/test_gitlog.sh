@@ -21,6 +21,11 @@ test_key_g() {
     read_input <<< g
     assertEquals "g (beginning) should reset pointer" 0 $index
 }
+test_key_H() {
+    index=2
+    read_input <<< H
+    assertEquals "H (Home line) should reset pointer" 0 $index
+}
 test_key_L() {
     lines="$(yes | head -n 30)"
     height=20

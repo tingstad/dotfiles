@@ -67,7 +67,7 @@ draw() {
     local u="${esc}[4m"
     clear
     echo " W E L C O M E"
-    echo "$(echo "$lines" | awk "NR==$index+1 { print \$1 }")" " Keys: j/↓, k/↑, ${u}f${reset}orward page, be${u}g${reset}inning, ${u}L${reset}ast/${u}M${reset}iddle line, ${u}r${reset}ebase, ${u}F${reset}ixup, ${u}q${reset}uit" | ccut "$cols"
+    echo "$(echo "$lines" | awk "NR==$index+1 { print \$1 }")" " Keys: j/↓, k/↑, ${u}f${reset}orward page, be${u}g${reset}inning, ${u}H${reset}ome/${u}M${reset}iddle/${u}L${reset}ast line, ${u}r${reset}ebase, ${u}F${reset}ixup, ${u}q${reset}uit" | ccut "$cols"
     echo ""
     echo "$lines"
     cursor_set $((index + 4)) 1
@@ -95,6 +95,7 @@ read_input() {
         '[D') echo LEFT ;;
         '[C') echo RIGHT ;;
         'g')  index=0 ;;
+        'H')  index=0 ;;
         'L')  index_end ;;
         'M')  index_mid ;;
         'l')  tmux select-pane -R ;;
