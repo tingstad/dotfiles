@@ -59,13 +59,13 @@ draw() {
     echo ""
     echo "$lines"
     cursor_set $((index + 4)) 1
-    echo -en ">"
+    printf ">"
 }
 
 cursor_set() {
     local row="$1"
     local col="$2"
-    echo -en "\033[$row;${col}H"
+    printf "\033[$row;${col}H"
 }
 
 read_input() {
