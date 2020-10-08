@@ -185,9 +185,7 @@ forward_page() {
     index=0
 }
 quit() {
-    clear
-    [ -n "$TMUX" ] && tmux kill-pane -t "$session":"$window".1
-    clear
+    [ -n "$TMUX" ] && tmux kill-window
     exit
 }
 nocolors() {
