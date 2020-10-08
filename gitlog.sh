@@ -122,6 +122,7 @@ rebase() {
             exit
         fi
     done
+    goto_beginning
 }
 goto_beginning() {
     from="HEAD"
