@@ -93,7 +93,7 @@ read_input() {
         '[B') index_inc ;;
         '[D') echo LEFT ;;
         '[C') echo RIGHT ;;
-        'g')  index=0 ;;
+        'g')  goto_beginning ;;
         'H')  index=0 ;;
         'L')  index_end ;;
         'M')  index_mid ;;
@@ -122,6 +122,9 @@ rebase() {
             exit
         fi
     done
+}
+goto_beginning() {
+    index=0
 }
 index_mid() {
     index=$(($(get_index_end) / 2))
