@@ -7,6 +7,7 @@ main() {
     local file="${1:-.}"
     trap 'quit' INT
     #trap 'TODO' WINCH
+    check_dependencies git awk sed wc head less
     git rev-parse #assert git repository
     command -v tmux >/dev/null || {
         echo "Warning: tmux not found" >&2
@@ -218,6 +219,19 @@ ccut() {
             }
         }
     }'
+}
+
+check_dependencies() {
+    local missing=""
+    for cmd; do
+        if ! >/dev/null 2>&1 command -v "$cmd"; then
+            missing="$missing $cmd"
+        fi
+    done
+    [ -z "$missing" ] || {
+        echo "Missing dependencies:$missing" >&2
+        false
+    }
 }
 
 is_number() {

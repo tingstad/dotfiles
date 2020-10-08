@@ -98,6 +98,15 @@ test_check_screen_size() {
     check_screen_size
     assertTrue "Width" "is_number $width"
 }
+
+test_check_dependencies() {
+    assertTrue "dependency awk should exist" "check_dependencies awk"
+    assertTrue "dependency sed should exist" "check_dependencies sed"
+    assertTrue "dependency sed+awk should exist" "check_dependencies awk sed"
+    assertFalse "dependency asdifuwe should not exist" "check_dependencies asdifuwe"
+    assertEquals "Missing dependencies: a b" "$(check_dependencies a b 2>&1)"
+}
+
 test_is_number() {
     assertFalse "Letter" "is_number A"
     assertFalse "Empty" "is_number ''"
