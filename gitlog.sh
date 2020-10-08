@@ -17,9 +17,8 @@ main() {
         fi
         session="$(tmux display-message -p '#{session_id}')"
         window="$(tmux display-message -p '#{window_id}')"
-        window_name="$(tmux display-message -p '#{window_name}')"
-        if [ -z "$DATSGNIT_INCEPTION" ] && [[ "$window_name" != datsgnitlog* ]]; then
-            tmux set-environment -g DATSGNIT_INCEPTION yes \; new-window -n datsgnitlog"$(date +%s)" "$0" "$@"
+        if [ -z "$DATSGNIT_INCEPTION" ]; then
+            tmux new-window -e DATSGNIT_INCEPTION=yes -n datsgnitlog"$(date +%s)" "$0" "$@"
             exit
         fi
     fi
