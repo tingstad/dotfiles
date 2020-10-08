@@ -112,7 +112,7 @@ read_input() {
         'l')  tmux select-pane -R ;;
         'f')  forward_page ;;
         'r')  rebase ;;
-        'F')  git commit --fixup="$commit" && GIT_EDITOR=true git rebase -i "$commit"^ ;;
+        'F')  git commit --fixup="$commit" && GIT_EDITOR=true git rebase -i --autosquash --autostash "$commit"^ ;;
         'w')  reword ;;
         *) >&2 echo 'ERR bad input'; return ;;
     esac
@@ -129,7 +129,7 @@ rebase() {
     if [ -n "$TMUX" ]; then
         tmux kill-pane -t "$session":"$window".1 || true
     fi
-    git rebase -i "$commit"
+    git rebase -i --autosquash --autostash "$commit"
     for f in .git/rebase*; do
         if [ -e "$f" ]; then
             exit
@@ -141,7 +141,7 @@ reword() {
     if [ "$index" -eq 0 ] && [ "$from" = "HEAD" ]; then
         git commit --amend
     else
-        GIT_SEQUENCE_EDITOR="sed -i.old 's/^pick "$commit"/r "$commit"/'" git rebase -i "$commit"^
+        GIT_SEQUENCE_EDITOR="sed -i.old 's/^pick "$commit"/r "$commit"/'" git rebase -i --autosquash --autostash "$commit"^
     fi
     goto_beginning
 }
