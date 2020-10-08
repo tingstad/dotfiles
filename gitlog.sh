@@ -9,10 +9,10 @@ main() {
     #trap 'TODO' WINCH
     check_dependencies git awk sed wc head less
     git rev-parse #assert git repository
-    command -v tmux >/dev/null || {
+    does_exist tmux || {
         echo "Warning: tmux not found" >&2
     }
-    if command -v tmux >/dev/null; then
+    if does_exist tmux; then
         if [ -z "$TMUX" ]; then
             tmux new-session -A -s datsgnitlog -n datsgnitlog"$(date +%s)" "$0" "$@"
             exit
@@ -223,7 +223,7 @@ ccut() {
 check_dependencies() {
     local missing=""
     for cmd; do
-        if ! >/dev/null 2>&1 command -v "$cmd"; then
+        if ! does_exist "$cmd"; then
             missing="$missing $cmd"
         fi
     done
@@ -231,6 +231,10 @@ check_dependencies() {
         echo "Missing dependencies:$missing" >&2
         false
     }
+}
+
+does_exist() {
+    >/dev/null 2>&1 command -v "$1"
 }
 
 is_number() {
