@@ -1,5 +1,15 @@
 #!/bin/bash
 
+setUp(){
+    [ -z "$TRAVIS_OS_NAME" ] \
+        && printf "\033[s" #Save cursor position
+}
+
+tearDown(){
+    [ -z "$TRAVIS_OS_NAME" ] \
+        && printf "\033[u" `#Restore cursor position` && echo
+}
+
 testThatDrawWritesHeading() {
     local contains=' W E L C O M E'
     assertEquals "$contains" "$(draw | egrep -o "$contains")"
