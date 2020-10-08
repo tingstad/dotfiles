@@ -7,6 +7,7 @@ main() {
     local file="${1:-.}"
     trap 'quit' INT
     #trap 'TODO' WINCH
+    git rev-parse #assert git repository
     command -v tmux >/dev/null || {
         echo "Warning: tmux not found" >&2
     }
