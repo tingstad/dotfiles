@@ -118,6 +118,9 @@ rebase() {
         tmux kill-pane -t "$session":"$window".1 || true
     fi
     git rebase -i "$commit"
+    if [ -e .git/rebase* ]; then
+        exit
+    fi
 }
 index_mid() {
     index=$(($(get_index_end) / 2))
