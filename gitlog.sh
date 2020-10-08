@@ -32,6 +32,7 @@ main() {
         fi
         [ -n "$TMUX" ] && tmux respawn-pane -t "$session":"$window".1 -k "GIT_PAGER='less -RX -+F' git show $commit -- \"$file\""
         redraw
+        dirty_screen=y
         read_input
     done
 }
@@ -60,10 +61,16 @@ check_screen_size() {
         echo "Unable to detect window width $cols" >&2
         exit 1
     fi
-    height=$((rows - 5))
-    width="$cols"
+    local new_height=$((rows - 5))
+    local new_width="$cols"
+    if [ "$new_height" != "$height" ] || [ "$new_width" != "$width" ]; then
+        dirty_screen=y
+        height=$((rows - 5))
+        width="$cols"
+    fi
 }
 draw() {
+    if [ "$dirty_screen" != "n" ]; then
     local cols="$1"
     local esc=$'\033'
     local reset="${esc}[0m"
@@ -73,6 +80,7 @@ draw() {
     echo "$(echo "$lines" | awk "NR==$index+1 { print \$1 }")" " Keys: j/↓, k/↑, ${u}f${reset}orward page, be${u}g${reset}inning, ${u}H${reset}ome/${u}M${reset}iddle/${u}L${reset}ast line, ${u}r${reset}ebase, ${u}F${reset}ixup, ${u}q${reset}uit" | ccut "$cols"
     echo ""
     echo "$lines"
+    fi
     cursor_set $((index + 4)) 1
     printf ">"
 }
@@ -93,7 +101,7 @@ read_input() {
         'q') quit ;;
         'k')  index_dec ;;
         '[A') index_dec ;;
-        'j')  index_inc ;;
+        'j')  clear_cursor && dirty_screen=n && index_inc ;;
         '[B') index_inc ;;
         '[D') echo LEFT ;;
         '[C') echo RIGHT ;;
@@ -137,6 +145,10 @@ index_mid() {
 }
 index_end() {
     index=$(get_index_end)
+}
+clear_cursor() {
+    cursor_set $((index + 4)) 1
+    printf " "
 }
 get_index_end() {
     local end=$(echo "$lines" | wc -l)
