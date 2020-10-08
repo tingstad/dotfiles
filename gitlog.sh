@@ -1,60 +1,83 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 # Richard H. Tingstad's git GUI
 # https://github.com/tingstad/dotfiles
 set -e
 
 main() {
     local file="${1:-.}"
-    trap 'quit' SIGINT
-    trap 'redraw' SIGWINCH
+    trap 'quit' INT
+    #trap 'TODO' WINCH
     command -v tmux >/dev/null || {
-        echo "tmux not found :(" >&2
-        exit 1
+        echo "Warning: tmux not found" >&2
     }
-    if [ -z "$TMUX" ]; then
-        tmux new-session -A -s datsgnitlog -n datsgnitlog"$(date +%s)" "$0"
-        exit
+    if command -v tmux >/dev/null; then
+        if [ -z "$TMUX" ]; then
+            tmux new-session -A -s datsgnitlog -n datsgnitlog"$(date +%s)" "$0" "$@"
+            exit
+        fi
+        session="$(tmux display-message -p '#{session_id}')"
+        window="$(tmux display-message -p '#{window_id}')"
+        window_name="$(tmux display-message -p '#{window_name}')"
+        if [ -z "$DATSGNIT_INCEPTION" ] && [[ "$window_name" != datsgnitlog* ]]; then
+            tmux set-environment -g DATSGNIT_INCEPTION yes \; new-window -n datsgnitlog"$(date +%s)" "$0" "$@"
+            exit
+        fi
     fi
-    session="$(tmux display-message -p '#S')"
-    window="$(tmux display-message -p '#W')"
-    if [[ "$window" != datsgnitlog* ]]; then
-        tmux new-window -n datsgnitlog"$(date +%s)" "$0" "$@"
-        exit
-    fi
-    tmux split-window -h -d
     from="HEAD"
+    pager="$from"
     index=0
     while true; do
-        redraw
         commit=$(echo "$lines" | nocolors | awk "NR==$index+1 { print \$1 }")
-        #tmux send-keys -t 0:"$window".1 C-z "git log $commit" Enter
-        if [ $(tmux list-panes | wc -l) -lt 2 ]; then
+        if [ -n "$TMUX" ] && [ "$(tmux list-panes | wc -l)" -lt 2 ]; then
             tmux split-window -h -d
         fi
-        tmux respawn-pane -t "$session":"$window".1 -k "GIT_PAGER='less -RX -+F' git show $commit -- \"$file\""
+        [ -n "$TMUX" ] && tmux respawn-pane -t "$session":"$window".1 -k "GIT_PAGER='less -RX -+F' git show $commit -- \"$file\""
+        redraw
         read_input
     done
 }
 
 redraw() {
-    height=$[ $(tput lines) - 5 ]
-    lines="$(log "$from" "$file" | head -n $height | ccut $(tput cols))"
-    draw
+    local cols=$COLUMNS
+    local rows=$LINES
+    if [ -n "$TMUX" ]; then
+        local size="$(tmux display -p '#{pane_height} #{pane_width}')"
+        if is_number "${size#* }" && is_number "${size% *}"; then
+            cols=${size#* }
+            rows=${size% *}
+        fi
+    fi
+    if [ -z "$cols" ]; then
+        size=$(stty size)
+        cols=${size#* }
+        rows=${size% *}
+    fi
+    if ! is_number "$cols"; then
+        echo "Unable to detect window width $cols" >&2
+        exit 1
+    fi
+    height=$((rows - 5))
+    lines="$(log "$from" "$file" | head -n $height | ccut "$cols")"
+    draw "$cols"
 }
 draw() {
+    local cols="$1"
+    local esc=$'\033'
+    local reset="${esc}[0m"
+    local u="${esc}[4m"
     clear
     echo " W E L C O M E"
-    echo "$(echo "$lines" | awk "NR==$index+1 { print \$1 }")"
+    echo "$(echo "$lines" | awk "NR==$index+1 { print \$1 }")" " Keys: j/↓, k/↑, ${u}f${reset}orward page, be${u}g${reset}inning, ${u}L${reset}ast/${u}M${reset}iddle line, ${u}r${reset}ebase, ${u}F${reset}ixup, ${u}q${reset}uit" | ccut "$cols"
     echo ""
     echo "$lines"
-    cursor_set $[ index + 4 ] 1
-    echo -en ">"
+    cursor_set $((index + 4)) 1
+    printf ">"
 }
 
 cursor_set() {
     local row="$1"
     local col="$2"
-    echo -en "\033[$row;${col}H"
+    printf "\033[%s;%sH" "$row" "$col"
 }
 
 read_input() {
@@ -72,9 +95,12 @@ read_input() {
         '[D') echo LEFT ;;
         '[C') echo RIGHT ;;
         'g')  index=0 ;;
-        'G')  index_end ;;
+        'L')  index_end ;;
         'M')  index_mid ;;
         'l')  tmux select-pane -R ;;
+        'f')  forward_page ;;
+        'r')  tmux kill-pane -t "$session":"$window".1 && tmux respawn-pane -t "$session":"$window".0 -k "git rebase -i $commit" ;;
+        'F')  git commit --fixup="$commit" && GIT_EDITOR=true git rebase -i "$commit"^ ;;
         *) >&2 echo 'ERR bad input'; return ;;
     esac
 }
@@ -87,31 +113,37 @@ log() {
         -- "$file"
 }
 index_mid() {
-    index=$[ $(get_index_end) / 2 ]
+    index=$(($(get_index_end) / 2))
 }
 index_end() {
     index=$(get_index_end)
 }
 get_index_end() {
-    local end=$(wc -l <<< "$lines")
-    [ $end -lt $height ] \
-        && echo $[ $end - 1 ] \
-        || echo $[ $height - 1 ]
+    local end=$(echo "$lines" | wc -l)
+    [ "$end" -lt $height ] \
+        && echo $((end - 1)) \
+        || echo $((height - 1))
 }
 index_inc() {
-    if [ $index -lt $[ $height - 1 ] \
-            -a $[ $index + 1 ] -lt $(wc -l <<< "$lines") ]; then
-        index=$[ $index + 1 ]
+    if [ "$index" -lt $((height - 1)) ] \
+            && [ $((index + 1)) -lt "$(echo "$lines" | wc -l)" ]; then
+        index=$((index + 1))
     fi
 }
 index_dec() {
     if [ $index -gt 0 ]; then
-        index=$[ $index - 1 ]
+        index=$((index - 1))
     fi
+}
+forward_page() {
+    from=$(echo "$lines" | nocolors | awk "END { print \$1 }")
+    pager="$pager $from"
+    index=0
 }
 quit() {
     clear
-    tmux kill-window
+    [ -n "$TMUX" ] && tmux kill-pane -t "$session":"$window".1
+    clear
     exit
 }
 nocolors() {
@@ -132,12 +164,7 @@ ccut() {
         stripped = 0
         while (1) {
             match(rest, pattern)
-            if (RLENGTH == -1) {
-                suffix = (stripped > 0 ? reset : "")
-                print substr(str, 1, max + stripped) suffix
-                break
-            }
-            else if (len + RSTART > max) {
+            if (RLENGTH == -1 || len + RSTART > max) {
                 suffix = (stripped > 0 ? reset : "")
                 print substr(str, 1, max + stripped) suffix
                 break
@@ -151,6 +178,25 @@ ccut() {
     }'
 }
 
-return 2>/dev/null || true
+is_number() {
+    case "$1" in
+        *[!0-9]*) false ;;
+        [0-9]*) true ;;
+        *) false ;;
+    esac
+}
 
-main "$@"
+sourced=0
+if [ -n "$ZSH_EVAL_CONTEXT" ]; then
+    case $ZSH_EVAL_CONTEXT in *:file) sourced=1;; esac
+elif [ -n "$KSH_VERSION" ]; then
+    [ "$(cd $(dirname -- $0) && pwd -P)/$(basename -- $0)" != "$(cd $(dirname -- ${.sh.file}) && pwd -P)/$(basename -- ${.sh.file})" ] && sourced=1
+elif [ -n "$BASH_VERSION" ]; then
+    (return 0 2>/dev/null) && sourced=1
+#else # other shells: examine for known shell binary filenames. Detects `sh` and `dash`; add additional shell filenames as needed.
+#    case ${0##*/} in sh|dash) sourced=1;; esac
+fi
+
+if [ $sourced -eq 0 ]; then
+    main "$@"
+fi

@@ -11,6 +11,8 @@ user_string='$(id -u):$(id -g)'
 
 vol_opt='$(selinuxenabled 2>/dev/null && echo :Z)'
 
+# TODO docker run --rm unguiculus/docker-jq:1.6 jq
+
 source /dev/stdin <<EOF
 # Only working dir supported
 node8() {

@@ -21,17 +21,17 @@ test_key_g() {
     read_input <<< g
     assertEquals "g (beginning) should reset pointer" 0 $index
 }
-test_key_G() {
+test_key_L() {
     lines="$(yes | head -n 30)"
     height=20
-    read_input <<< G
-    assertEquals "G (end) should set pointer to end" 19 $index
+    read_input <<< L
+    assertEquals "L (end) should set pointer to end" 19 $index
 }
-test_key_G_end() {
+test_key_L_end() {
     lines="$(yes | head -n 10)"
     height=20
-    read_input <<< G
-    assertEquals "G (end) should set pointer to end" 9 $index
+    read_input <<< L
+    assertEquals "L (end) should set pointer to end" 9 $index
 }
 test_key_M() {
     lines="$(yes | head -n 30)"
@@ -63,6 +63,32 @@ test_key_j_end() {
     height=9
     read_input <<< j
     assertEquals "j (down) should not increment pointer at bottom" 1 $index
+}
+test_key_f_forward() {
+    pager=('HEAD')
+    from='HEAD'
+    lines="$(seq 1 10)"
+    index=2
+    height=5
+    read_input <<< f
+    assertEquals "f should set index 0" 0 $index
+    assertEquals "f should set HEAD" 10 $from
+    assertEquals "f should set pager" 'HEAD 10' "${pager[*]}"
+}
+test_is_number() {
+    assertFalse "Letter" "is_number A"
+    assertFalse "Empty" "is_number ''"
+    assertFalse "Letter digit" "is_number c4"
+    assertFalse "Digit letter" "is_number 2b"
+    assertFalse "Digit letter digit" "is_number 2o3"
+    assertFalse "Decimal" "is_number 2.3"
+    assertFalse "Punctuation" "is_number 3,"
+    assertTrue "Digit" "is_number 1"
+    assertTrue "Zero" "is_number 0"
+    assertTrue "Tens" "is_number 12"
+    assertTrue "Tens higher" "is_number 44"
+    assertTrue "Hundreds" "is_number 100"
+    assertTrue "Big number" "is_number 1234567"
 }
 test_ccut() {
     esc="\033"
