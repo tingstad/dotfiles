@@ -17,9 +17,8 @@ main() {
         fi
         session="$(tmux display-message -p '#{session_id}')"
         window="$(tmux display-message -p '#{window_id}')"
-        window_name="$(tmux display-message -p '#{window_name}')"
-        if [ -z "$DATSGNIT_INCEPTION" ] && [[ "$window_name" != datsgnitlog* ]]; then
-            tmux set-environment -g DATSGNIT_INCEPTION yes \; new-window -n datsgnitlog"$(date +%s)" "$0" "$@"
+        if [ -z "$DATSGNIT_INCEPTION" ]; then
+            tmux new-window -e DATSGNIT_INCEPTION=yes -n datsgnitlog"$(date +%s)" "$0" "$@"
             exit
         fi
     fi
@@ -67,7 +66,7 @@ draw() {
     local u="${esc}[4m"
     clear
     echo " W E L C O M E"
-    echo "$(echo "$lines" | awk "NR==$index+1 { print \$1 }")" " Keys: j/↓, k/↑, ${u}f${reset}orward page, be${u}g${reset}inning, ${u}L${reset}ast/${u}M${reset}iddle line, ${u}r${reset}ebase, ${u}F${reset}ixup, ${u}q${reset}uit" | ccut "$cols"
+    echo "$(echo "$lines" | awk "NR==$index+1 { print \$1 }")" " Keys: j/↓, k/↑, ${u}f${reset}orward page, be${u}g${reset}inning, ${u}H${reset}ome/${u}M${reset}iddle/${u}L${reset}ast line, ${u}r${reset}ebase, ${u}F${reset}ixup, ${u}q${reset}uit" | ccut "$cols"
     echo ""
     echo "$lines"
     cursor_set $((index + 4)) 1
@@ -94,12 +93,13 @@ read_input() {
         '[B') index_inc ;;
         '[D') echo LEFT ;;
         '[C') echo RIGHT ;;
-        'g')  index=0 ;;
+        'g')  goto_beginning ;;
+        'H')  index=0 ;;
         'L')  index_end ;;
         'M')  index_mid ;;
         'l')  tmux select-pane -R ;;
         'f')  forward_page ;;
-        'r')  tmux kill-pane -t "$session":"$window".1 && tmux respawn-pane -t "$session":"$window".0 -k "git rebase -i $commit" ;;
+        'r')  rebase ;;
         'F')  git commit --fixup="$commit" && GIT_EDITOR=true git rebase -i "$commit"^ ;;
         *) >&2 echo 'ERR bad input'; return ;;
     esac
@@ -111,6 +111,22 @@ log() {
     git log --pretty=format:'   %C(auto)%h %cd %d %s' --date=short "$from" \
         --color=always \
         -- "$file"
+}
+rebase() {
+    if [ -n "$TMUX" ]; then
+        tmux kill-pane -t "$session":"$window".1 || true
+    fi
+    git rebase -i "$commit"
+    for f in .git/rebase*; do
+        if [ -e "$f" ]; then
+            exit
+        fi
+    done
+    goto_beginning
+}
+goto_beginning() {
+    from="HEAD"
+    index=0
 }
 index_mid() {
     index=$(($(get_index_end) / 2))
