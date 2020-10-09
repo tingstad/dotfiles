@@ -172,6 +172,16 @@ test_ccut() {
         "$(echo -e "oneS\ntwoS" | ccut 3)"
 }
 
+test_log() {
+    local git_mock=echo
+    assertEquals \
+        "log --pretty=format:   %C(auto)%h %cd %d %s --date=short HEAD --color=always -- file.txt" \
+        "$(log $git_mock HEAD file.txt)"
+    assertEquals \
+        "log --pretty=format:   %C(auto)%h %cd %d %s --date=short HEAD --color=always" \
+        "$(log $git_mock HEAD)"
+}
+
 DIR=$(cd "$(dirname "$0")"; pwd)
 source "$DIR/../gitlog.sh"
 set +o errexit

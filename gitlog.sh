@@ -4,7 +4,7 @@
 set -e
 
 main() {
-    local file="${1:-.}"
+    local file="$1"
     trap 'quit' INT
     #trap 'TODO' WINCH
     check_dependencies git awk sed wc head less
@@ -21,7 +21,7 @@ main() {
         window="$(tmux display-message -p '#{window_id}')"
         if [ -z "$DATSGNIT_INCEPTION" ]; then
             local remain="$(does_exist bash && echo bash || echo sh)"
-            tmux new-window -e DATSGNIT_INCEPTION=yes -n datsgnitlog"$(date +%s)" "$0; $remain -i"
+            tmux new-window -e DATSGNIT_INCEPTION=yes -n datsgnitlog"$(date +%s)" "$0 $@; $remain -i"
             exit
         fi
     fi
@@ -33,7 +33,7 @@ main() {
         if [ -n "$TMUX" ] && [ "$(tmux list-panes | wc -l)" -lt 2 ]; then
             tmux split-window -h -d
         fi
-        [ -n "$TMUX" ] && tmux respawn-pane -t "$session":"$window".1 -k "GIT_PAGER='less -RX -+F' git show $commit -- \"$file\""
+        [ -n "$TMUX" ] && tmux respawn-pane -t "$session":"$window".1 -k "GIT_PAGER='less -RX -+F' git show $commit ${file:+ -- \"$file\"}"
         redraw
         dirty_screen=y
         read_input
@@ -42,7 +42,7 @@ main() {
 
 redraw() {
     check_screen_size
-    lines="$(log "$from" "$file" | head -n $height | ccut "$width")"
+    lines="$(log git "$from" "$file" | head -n $height | ccut "$width")"
     draw "$width"
 }
 check_screen_size() {
@@ -123,11 +123,12 @@ read_input() {
 }
 
 log() {
-    local from="$1"
-    local file="$2"
-    git log --pretty=format:'   %C(auto)%h %cd %d %s' --date=short "$from" \
+    local git_cmd="$1"
+    local from="$2"
+    local file="$3"
+    $git_cmd log --pretty=format:'   %C(auto)%h %cd %d %s' --date=short "$from" \
         --color=always \
-        -- "$file"
+        ${file:+ -- "$file"}
 }
 
 rebase() {
