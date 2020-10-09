@@ -115,7 +115,7 @@ read_input() {
         'l')  tmux select-pane -R ;;
         'f')  forward_page ;;
         'r')  rebase ;;
-        'F')  git commit --fixup="$commit" && GIT_EDITOR=true git_rebase "$commit"^ ;;
+        'F')  fixup ;;
         'w')  reword ;;
         'e')  edit_commit ;;
         *) >&2 echo 'ERR bad input'; return ;;
@@ -129,6 +129,15 @@ log() {
     $git_cmd log --pretty=format:'   %C(auto)%h %cd %d %s' --date=short "$from" \
         --color=always \
         ${file:+ -- "$file"}
+}
+
+fixup() {
+    if [ "$index" -eq 0 ] && [ "$from" = "HEAD" ]; then
+        git commit --amend --no-edit
+    else
+        git commit --fixup="$commit" && GIT_EDITOR=true git_rebase "$commit"^
+    fi
+    goto_beginning
 }
 
 rebase() {
