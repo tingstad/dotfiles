@@ -23,7 +23,7 @@ bootstrap() {
     local file="$1"
     trap 'quit' INT
     #trap 'TODO' WINCH
-    check_dependencies git awk sed wc head less
+    check_dependencies git awk sed head less
     git rev-parse #assert git repository
     does_exist tmux || {
         echo "Warning: tmux not found" >&2
@@ -44,7 +44,7 @@ bootstrap() {
 }
 
 split_screen_if_not_split() {
-    if [ -n "$TMUX" ] && [ "$(tmux list-panes | wc -l)" -lt 2 ]; then
+    if [ -n "$TMUX" ] && [ "$(tmux list-panes | line_count)" -lt 2 ]; then
         tmux split-window -h -d
     fi
 }
@@ -211,14 +211,14 @@ clear_cursor() {
     printf " "
 }
 get_index_end() {
-    local end=$(echo "$lines" | wc -l)
+    local end=$(echo "$lines" | line_count)
     [ "$end" -lt $height ] \
         && echo $((end - 1)) \
         || echo $((height - 1))
 }
 index_inc() {
     if [ "$index" -lt $((height - 1)) ] \
-            && [ $((index + 1)) -lt "$(echo "$lines" | wc -l)" ]; then
+            && [ $((index + 1)) -lt "$(echo "$lines" | line_count)" ]; then
         index=$((index + 1))
     fi
 }
