@@ -285,6 +285,15 @@ does_exist() {
     >/dev/null 2>&1 command -v "$1"
 }
 
+line_count() {
+    local count=0
+    local line=""
+    while IFS= read -r line || [ -n "$line" ]; do
+        count=$((count+1))
+    done
+    printf '%s\n' "$count"
+}
+
 is_number() {
     case "$1" in
         *[!0-9]*) false ;;

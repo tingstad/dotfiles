@@ -111,6 +111,14 @@ test_is_rebasing() {
     assertFalse "is_rebasing"
 }
 
+test_line_count() {
+    assertEquals "1" "$(echo hei | line_count)"
+    assertEquals "0" "$(printf '' | line_count)"
+    assertEquals "2" "$(seq 1 2 | line_count)"
+    assertEquals "3" "$(printf '1\n2\n3' | line_count)"
+    assertEquals "3" "$(printf '1\n2\n3\n' | line_count)"
+}
+
 test_is_number() {
     assertFalse "Letter" "is_number A"
     assertFalse "Empty" "is_number ''"
