@@ -9,12 +9,17 @@ main() {
     from="HEAD"
     pager="$from"
     index=0
+    dirty_screen=y
     while true; do
-        commit=$(echo "$lines" | nocolors | awk "NR==$index+1 { print \$1 }")
         split_screen_if_not_split
-        [ -n "$TMUX" ] && tmux respawn-pane -t "$session":"$window".1 -k "GIT_PAGER='less -RX -+F' git show $commit ${file:+ -- \"$file\"}"
-        redraw
-        dirty_screen=y
+        check_screen_size
+        lines="$(log git "$from" "$file" | head -n $height | ccut "$width")"
+        commit=$(echo "$lines" | nocolors | awk "NR==$index+1 { print \$1 }")
+        [ -n "$TMUX" ] && [ "$commit" != "$show_commit" ] \
+            && tmux respawn-pane -t "$session":"$window".1 -k "GIT_PAGER='less -RX -+F' git show $commit ${file:+ -- \"$file\"}" \
+            && show_commit="$commit"
+        draw "$width"
+        dirty_screen=n
         read_input
     done
 }
@@ -46,12 +51,8 @@ bootstrap() {
 split_screen_if_not_split() {
     if [ -n "$TMUX" ] && [ "$(tmux list-panes | line_count)" -lt 2 ]; then
         tmux split-window -h -d
+        show_commit=""
     fi
-}
-redraw() {
-    check_screen_size
-    lines="$(log git "$from" "$file" | head -n $height | ccut "$width")"
-    draw "$width"
 }
 check_screen_size() {
     local cols=$COLUMNS
@@ -104,10 +105,12 @@ cursor_set() {
 
 read_input() {
     local escape_char=$'\033'
-    read -rsn1 key # get 1 character
+    local key=""
+    read -t 1 -rsn1 key || true # get 1 character
     if [ "$key" = "$escape_char" ]; then
         read -rsn2 key # read 2 more chars
     fi
+    dirty_screen=y #TODO remove so default is n
     case $key in
         'q') quit ;;
         'k')  index_dec ;;
@@ -126,7 +129,6 @@ read_input() {
         'F')  fixup ;;
         'w')  reword ;;
         'e')  edit_commit ;;
-        *) >&2 echo 'ERR bad input'; return ;;
     esac
 }
 
