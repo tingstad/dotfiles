@@ -11,9 +11,7 @@ main() {
     index=0
     while true; do
         commit=$(echo "$lines" | nocolors | awk "NR==$index+1 { print \$1 }")
-        if [ -n "$TMUX" ] && [ "$(tmux list-panes | wc -l)" -lt 2 ]; then
-            tmux split-window -h -d
-        fi
+        split_screen_if_not_split
         [ -n "$TMUX" ] && tmux respawn-pane -t "$session":"$window".1 -k "GIT_PAGER='less -RX -+F' git show $commit ${file:+ -- \"$file\"}"
         redraw
         dirty_screen=y
@@ -45,6 +43,11 @@ bootstrap() {
     fi
 }
 
+split_screen_if_not_split() {
+    if [ -n "$TMUX" ] && [ "$(tmux list-panes | wc -l)" -lt 2 ]; then
+        tmux split-window -h -d
+    fi
+}
 redraw() {
     check_screen_size
     lines="$(log git "$from" "$file" | head -n $height | ccut "$width")"
