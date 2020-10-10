@@ -5,6 +5,24 @@ set -e
 
 main() {
     local file="$1"
+    bootstrap "$@"
+    from="HEAD"
+    pager="$from"
+    index=0
+    while true; do
+        commit=$(echo "$lines" | nocolors | awk "NR==$index+1 { print \$1 }")
+        if [ -n "$TMUX" ] && [ "$(tmux list-panes | wc -l)" -lt 2 ]; then
+            tmux split-window -h -d
+        fi
+        [ -n "$TMUX" ] && tmux respawn-pane -t "$session":"$window".1 -k "GIT_PAGER='less -RX -+F' git show $commit ${file:+ -- \"$file\"}"
+        redraw
+        dirty_screen=y
+        read_input
+    done
+}
+
+bootstrap() {
+    local file="$1"
     trap 'quit' INT
     #trap 'TODO' WINCH
     check_dependencies git awk sed wc head less
@@ -25,19 +43,6 @@ main() {
             exit
         fi
     fi
-    from="HEAD"
-    pager="$from"
-    index=0
-    while true; do
-        commit=$(echo "$lines" | nocolors | awk "NR==$index+1 { print \$1 }")
-        if [ -n "$TMUX" ] && [ "$(tmux list-panes | wc -l)" -lt 2 ]; then
-            tmux split-window -h -d
-        fi
-        [ -n "$TMUX" ] && tmux respawn-pane -t "$session":"$window".1 -k "GIT_PAGER='less -RX -+F' git show $commit ${file:+ -- \"$file\"}"
-        redraw
-        dirty_screen=y
-        read_input
-    done
 }
 
 redraw() {
