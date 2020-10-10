@@ -1,5 +1,15 @@
 #!/bin/bash
 
+setUp(){
+    [ -z "$TRAVIS_OS_NAME" ] \
+        && printf "\033[s" #Save cursor position
+}
+
+tearDown(){
+    [ -z "$TRAVIS_OS_NAME" ] \
+        && printf "\033[u" `#Restore cursor position` && echo
+}
+
 testThatDrawWritesHeading() {
     local contains=' W E L C O M E'
     assertEquals "$contains" "$(draw | egrep -o "$contains")"
@@ -88,6 +98,19 @@ test_check_screen_size() {
     check_screen_size
     assertTrue "Width" "is_number $width"
 }
+
+test_check_dependencies() {
+    assertTrue "dependency awk should exist" "check_dependencies awk"
+    assertTrue "dependency sed should exist" "check_dependencies sed"
+    assertTrue "dependency sed+awk should exist" "check_dependencies awk sed"
+    assertFalse "dependency asdifuwe should not exist" "check_dependencies asdifuwe"
+    assertEquals "Missing dependencies: a b" "$(check_dependencies a b 2>&1)"
+}
+
+test_is_rebasing() {
+    assertFalse "is_rebasing"
+}
+
 test_is_number() {
     assertFalse "Letter" "is_number A"
     assertFalse "Empty" "is_number ''"
@@ -147,6 +170,16 @@ test_ccut() {
     assertEquals "Multiple lines" \
         "$(echo -e "one\ntwo")" \
         "$(echo -e "oneS\ntwoS" | ccut 3)"
+}
+
+test_log() {
+    local git_mock=echo
+    assertEquals \
+        "log --pretty=format:   %C(auto)%h %cd %d %s --date=short HEAD --color=always -- file.txt" \
+        "$(log $git_mock HEAD file.txt)"
+    assertEquals \
+        "log --pretty=format:   %C(auto)%h %cd %d %s --date=short HEAD --color=always" \
+        "$(log $git_mock HEAD)"
 }
 
 DIR=$(cd "$(dirname "$0")"; pwd)
