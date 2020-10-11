@@ -108,6 +108,9 @@ test_state() {
 
     set_state "$state" "index" "1"
     assertEquals "index 1"$'\n'"from HEAD" "$state"
+
+    assertEquals "1" "$(get_state 'index')"
+    assertEquals "HEAD" "$(get_state 'from')"
 }
 
 test_check_dependencies() {

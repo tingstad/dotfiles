@@ -159,6 +159,15 @@ $2 $3" ;;
     fi
 }
 
+get_state() {
+    while IFS= read -r _line; do
+        [ "${_line% *}" = "$1" ] && \
+            echo "${_line#* }"
+    done <<-EOF
+	$state
+EOF
+}
+
 log() {
     local git_cmd="$1"
     local from="$2"
