@@ -100,13 +100,14 @@ test_check_screen_size() {
 }
 
 test_state() {
-    set_state "" "index" "2"
+    state=""
+    set_state "index" "2"
     assertEquals "index 2" "$state"
 
-    set_state "$state" "from" "HEAD"
+    set_state "from" "HEAD"
     assertEquals "index 2"$'\n'"from HEAD" "$state"
 
-    set_state "$state" "index" "1"
+    set_state "index" "1"
     assertEquals "index 1"$'\n'"from HEAD" "$state"
 
     assertEquals "1" "$(get_state "$state" 'index')"

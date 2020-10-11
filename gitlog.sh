@@ -133,28 +133,27 @@ read_input() {
 }
 
 set_state() {
-    # $1: data
-    # $2: name
-    # $3: value
+    # $1: name
+    # $2: value
     local _new_state=""
     while IFS= read -r _line; do
         [ -n "$_new_state" ] && _new_state="$_new_state
 "
-        if [ "${_line% *}" = "$2" ]; then
-            _new_state="$_new_state$2 $3"
+        if [ "${_line% *}" = "$1" ]; then
+            _new_state="$_new_state$1 $2"
         else
             _new_state="$_new_state$_line"
         fi
     done <<-EOF
-	$1
+	$state
 EOF
     if [ -z "$_new_state" ]; then
-            state="$2 $3"
+            state="$1 $2"
     else
         case "$_new_state" in
-            *"$2 $3"*) state="$_new_state" ;;
+            *"$1 $2"*) state="$_new_state" ;;
             *) state="$_new_state
-$2 $3" ;;
+$1 $2" ;;
         esac
     fi
 }
