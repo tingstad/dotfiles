@@ -161,10 +161,10 @@ $2 $3" ;;
 
 get_state() {
     while IFS= read -r _line; do
-        [ "${_line% *}" = "$1" ] && \
+        [ "${_line% *}" = "$2" ] && \
             echo "${_line#* }"
     done <<-EOF
-	$state
+	$1
 EOF
 }
 
