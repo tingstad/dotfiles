@@ -132,6 +132,33 @@ read_input() {
     esac
 }
 
+set_state() {
+    # $1: data
+    # $2: name
+    # $3: value
+    local _new_state=""
+    while IFS= read -r _line; do
+        [ -n "$_new_state" ] && _new_state="$_new_state
+"
+        if [ "${_line% *}" = "$2" ]; then
+            _new_state="$_new_state$2 $3"
+        else
+            _new_state="$_new_state$_line"
+        fi
+    done <<-EOF
+	$1
+EOF
+    if [ -z "$_new_state" ]; then
+            state="$2 $3"
+    else
+        case "$_new_state" in
+            *"$2 $3"*) state="$_new_state" ;;
+            *) state="$_new_state
+$2 $3" ;;
+        esac
+    fi
+}
+
 log() {
     local git_cmd="$1"
     local from="$2"

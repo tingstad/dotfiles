@@ -99,6 +99,17 @@ test_check_screen_size() {
     assertTrue "Width" "is_number $width"
 }
 
+test_state() {
+    set_state "" "index" "2"
+    assertEquals "index 2" "$state"
+
+    set_state "$state" "from" "HEAD"
+    assertEquals "index 2"$'\n'"from HEAD" "$state"
+
+    set_state "$state" "index" "1"
+    assertEquals "index 1"$'\n'"from HEAD" "$state"
+}
+
 test_check_dependencies() {
     assertTrue "dependency awk should exist" "check_dependencies awk"
     assertTrue "dependency sed should exist" "check_dependencies sed"
