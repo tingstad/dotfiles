@@ -5,9 +5,30 @@ set -e
 
 main() {
     local file="$1"
+    bootstrap "$@"
+    from="HEAD"
+    pager="$from"
+    index=0
+    dirty_screen=y
+    while true; do
+        split_screen_if_not_split
+        check_screen_size
+        lines="$(log git "$from" "$file" | head -n $height | ccut "$width")"
+        commit=$(echo "$lines" | nocolors | awk "NR==$index+1 { print \$1 }")
+        [ -n "$TMUX" ] && [ "$commit" != "$show_commit" ] \
+            && tmux respawn-pane -t "$session":"$window".1 -k "GIT_PAGER='less -RX -+F' git show $commit ${file:+ -- \"$file\"}" \
+            && show_commit="$commit"
+        draw "$width"
+        dirty_screen=n
+        read_input
+    done
+}
+
+bootstrap() {
+    local file="$1"
     trap 'quit' INT
     #trap 'TODO' WINCH
-    check_dependencies git awk sed wc head less
+    check_dependencies git awk sed head less
     git rev-parse #assert git repository
     does_exist tmux || {
         echo "Warning: tmux not found" >&2
@@ -25,25 +46,13 @@ main() {
             exit
         fi
     fi
-    from="HEAD"
-    pager="$from"
-    index=0
-    while true; do
-        commit=$(echo "$lines" | nocolors | awk "NR==$index+1 { print \$1 }")
-        if [ -n "$TMUX" ] && [ "$(tmux list-panes | wc -l)" -lt 2 ]; then
-            tmux split-window -h -d
-        fi
-        [ -n "$TMUX" ] && tmux respawn-pane -t "$session":"$window".1 -k "GIT_PAGER='less -RX -+F' git show $commit ${file:+ -- \"$file\"}"
-        redraw
-        dirty_screen=y
-        read_input
-    done
 }
 
-redraw() {
-    check_screen_size
-    lines="$(log git "$from" "$file" | head -n $height | ccut "$width")"
-    draw "$width"
+split_screen_if_not_split() {
+    if [ -n "$TMUX" ] && [ "$(tmux list-panes | line_count)" -lt 2 ]; then
+        tmux split-window -h -d
+        show_commit=""
+    fi
 }
 check_screen_size() {
     local cols=$COLUMNS
@@ -96,10 +105,12 @@ cursor_set() {
 
 read_input() {
     local escape_char=$'\033'
-    read -rsn1 key # get 1 character
+    local key=""
+    read -t 1 -rsn1 key || true # get 1 character
     if [ "$key" = "$escape_char" ]; then
         read -rsn2 key # read 2 more chars
     fi
+    dirty_screen=y #TODO remove so default is n
     case $key in
         'q') quit ;;
         'k')  index_dec ;;
@@ -118,8 +129,42 @@ read_input() {
         'F')  fixup ;;
         'w')  reword ;;
         'e')  edit_commit ;;
-        *) >&2 echo 'ERR bad input'; return ;;
     esac
+}
+
+set_state() {
+    # $1: name
+    # $2: value
+    local _new_state=""
+    while IFS= read -r _line; do
+        [ -n "$_new_state" ] && _new_state="$_new_state
+"
+        if [ "${_line% *}" = "$1" ]; then
+            _new_state="$_new_state$1 $2"
+        else
+            _new_state="$_new_state$_line"
+        fi
+    done <<-EOF
+	$state
+EOF
+    if [ -z "$_new_state" ]; then
+            state="$1 $2"
+    else
+        case "$_new_state" in
+            *"$1 $2"*) state="$_new_state" ;;
+            *) state="$_new_state
+$1 $2" ;;
+        esac
+    fi
+}
+
+get_state() {
+    while IFS= read -r _line; do
+        [ "${_line% *}" = "$2" ] && \
+            echo "${_line#* }"
+    done <<-EOF
+	$1
+EOF
 }
 
 log() {
@@ -203,14 +248,14 @@ clear_cursor() {
     printf " "
 }
 get_index_end() {
-    local end=$(echo "$lines" | wc -l)
+    local end=$(echo "$lines" | line_count)
     [ "$end" -lt $height ] \
         && echo $((end - 1)) \
         || echo $((height - 1))
 }
 index_inc() {
     if [ "$index" -lt $((height - 1)) ] \
-            && [ $((index + 1)) -lt "$(echo "$lines" | wc -l)" ]; then
+            && [ $((index + 1)) -lt "$(echo "$lines" | line_count)" ]; then
         index=$((index + 1))
     fi
 }
@@ -275,6 +320,15 @@ check_dependencies() {
 
 does_exist() {
     >/dev/null 2>&1 command -v "$1"
+}
+
+line_count() {
+    local count=0
+    local line=""
+    while IFS= read -r line || [ -n "$line" ]; do
+        count=$((count+1))
+    done
+    printf '%s\n' "$count"
 }
 
 is_number() {

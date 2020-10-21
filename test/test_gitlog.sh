@@ -99,6 +99,21 @@ test_check_screen_size() {
     assertTrue "Width" "is_number $width"
 }
 
+test_state() {
+    state=""
+    set_state "index" "2"
+    assertEquals "index 2" "$state"
+
+    set_state "from" "HEAD"
+    assertEquals "index 2"$'\n'"from HEAD" "$state"
+
+    set_state "index" "1"
+    assertEquals "index 1"$'\n'"from HEAD" "$state"
+
+    assertEquals "1" "$(get_state "$state" 'index')"
+    assertEquals "HEAD" "$(get_state "$state" 'from')"
+}
+
 test_check_dependencies() {
     assertTrue "dependency awk should exist" "check_dependencies awk"
     assertTrue "dependency sed should exist" "check_dependencies sed"
@@ -109,6 +124,14 @@ test_check_dependencies() {
 
 test_is_rebasing() {
     assertFalse "is_rebasing"
+}
+
+test_line_count() {
+    assertEquals "1" "$(echo hei | line_count)"
+    assertEquals "0" "$(printf '' | line_count)"
+    assertEquals "2" "$(seq 1 2 | line_count)"
+    assertEquals "3" "$(printf '1\n2\n3' | line_count)"
+    assertEquals "3" "$(printf '1\n2\n3\n' | line_count)"
 }
 
 test_is_number() {
