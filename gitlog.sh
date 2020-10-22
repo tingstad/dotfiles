@@ -14,7 +14,7 @@ main() {
         split_screen_if_not_split
         check_screen_size
         lines="$(log git "$from" "$file" | head -n $height | ccut "$width")"
-        commit=$(echo "$lines" | nocolors | awk "NR==$index+1 { print \$1 }")
+        commit=$(printf "%s\n" "$lines" | nocolors | awk "NR==$index+1 { print \$1 }")
         [ -n "$TMUX" ] && [ "$commit" != "$show_commit" ] \
             && tmux respawn-pane -t "$session":"$window".1 -k "GIT_PAGER='less -RX -+F' git show $commit ${file:+ -- \"$file\"}" \
             && show_commit="$commit"
@@ -89,9 +89,9 @@ draw() {
     local u="${esc}[4m"
     clear
     echo " W E L C O M E"
-    echo "$(echo "$lines" | awk "NR==$index+1 { print \$1 }")" " Keys: j/↓, k/↑, ${u}f${reset}orward page, be${u}g${reset}inning, ${u}H${reset}ome/${u}M${reset}iddle/${u}L${reset}ast line, ${u}r${reset}ebase, ${u}F${reset}ixup, ${u}q${reset}uit" | ccut "$cols"
+    echo "$(printf "%s\n" "$lines" | awk "NR==$index+1 { print \$1 }")" " Keys: j/↓, k/↑, ${u}f${reset}orward page, be${u}g${reset}inning, ${u}H${reset}ome/${u}M${reset}iddle/${u}L${reset}ast line, ${u}r${reset}ebase, ${u}F${reset}ixup, ${u}q${reset}uit" | ccut "$cols"
     echo ""
-    echo "$lines"
+    printf "%s\n" "$lines"
     fi
     cursor_set $((index + 4)) 1
     printf ">"
@@ -255,14 +255,14 @@ clear_cursor() {
     printf " "
 }
 get_index_end() {
-    local end=$(echo "$lines" | line_count)
+    local end=$(printf "%s\n" "$lines" | line_count)
     [ "$end" -lt $height ] \
         && echo $((end - 1)) \
         || echo $((height - 1))
 }
 index_inc() {
     if [ "$index" -lt $((height - 1)) ] \
-            && [ $((index + 1)) -lt "$(echo "$lines" | line_count)" ]; then
+            && [ $((index + 1)) -lt "$(printf "%s\n" "$lines" | line_count)" ]; then
         index=$((index + 1))
     fi
 }
@@ -272,7 +272,7 @@ index_dec() {
     fi
 }
 forward_page() {
-    from=$(echo "$lines" | nocolors | awk "END { print \$1 }")
+    from=$(printf "%s\n" "$lines" | nocolors | awk "END { print \$1 }")
     pager="$pager $from"
     index=0
 }
