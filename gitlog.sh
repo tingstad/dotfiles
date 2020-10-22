@@ -133,7 +133,9 @@ read_input() {
 }
 
 set_state() {
-    while [ -n "$1" ]; do
+    while [ "$#" -gt 0 ]; do
+        [ -z "$1" ] && \
+            continue
         local _new_state=""
         while read _line; do
             for _word in $_line; do
