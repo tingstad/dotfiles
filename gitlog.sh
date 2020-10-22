@@ -133,35 +133,37 @@ read_input() {
 }
 
 set_state() {
-    # $1: name
-    # $2: value
     local _new_state=""
-    while IFS= read -r _line; do
-        [ -n "$_new_state" ] && _new_state="$_new_state
-"
-        if [ "${_line% *}" = "$1" ]; then
-            _new_state="$_new_state$1 $2"
-        else
-            _new_state="$_new_state$_line"
-        fi
+    while read _line; do
+        for _word in $_line; do
+            if [ "${_word%:*}" = "${1%:*}" ]; then
+                _new_state="$1
+$_new_state"
+            elif [ -n "$_word" ]; then
+                _new_state="$_word
+$_new_state"
+            fi
+        done
     done <<-EOF
 	$state
 EOF
     if [ -z "$_new_state" ]; then
-            state="$1 $2"
+        state="$1"
     else
         case "$_new_state" in
-            *"$1 $2"*) state="$_new_state" ;;
-            *) state="$_new_state
-$1 $2" ;;
+            *"$1"*) state="$_new_state" ;;
+            *) state="$1
+$_new_state" ;;
         esac
     fi
 }
 
 get_state() {
+    # $1: state
+    # $2: name
     while IFS= read -r _line; do
-        [ "${_line% *}" = "$2" ] && \
-            echo "${_line#* }"
+        [ "${_line%:*}" = "$2" ] && \
+            echo "${_line#*:}"
     done <<-EOF
 	$1
 EOF

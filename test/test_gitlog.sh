@@ -101,14 +101,14 @@ test_check_screen_size() {
 
 test_state() {
     state=""
-    set_state "index" "2"
-    assertEquals "index 2" "$state"
+    set_state "index:2"
+    assertEquals "index:2" "$state"
 
-    set_state "from" "HEAD"
-    assertEquals "index 2"$'\n'"from HEAD" "$state"
+    set_state "from:HEAD"
+    assertEquals "from:HEAD index:2 " "$(echo "$state" | sort | grep . | tr '\n' ' ')"
 
-    set_state "index" "1"
-    assertEquals "index 1"$'\n'"from HEAD" "$state"
+    set_state "index:1"
+    assertEquals "from:HEAD index:1 " "$(echo "$state" | sort | grep . | tr '\n' ' ')"
 
     assertEquals "1" "$(get_state "$state" 'index')"
     assertEquals "HEAD" "$(get_state "$state" 'from')"
