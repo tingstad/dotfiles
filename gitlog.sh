@@ -133,29 +133,32 @@ read_input() {
 }
 
 set_state() {
-    local _new_state=""
-    while read _line; do
-        for _word in $_line; do
-            if [ "${_word%:*}" = "${1%:*}" ]; then
-                _new_state="$1
+    while [ -n "$1" ]; do
+        local _new_state=""
+        while read _line; do
+            for _word in $_line; do
+                if [ "${_word%:*}" = "${1%:*}" ]; then
+                    _new_state="$1
 $_new_state"
-            elif [ -n "$_word" ]; then
-                _new_state="$_word
+                elif [ -n "$_word" ]; then
+                    _new_state="$_word
 $_new_state"
-            fi
-        done
-    done <<-EOF
-	$state
+                fi
+            done
+        done <<-EOF
+		$state
 EOF
-    if [ -z "$_new_state" ]; then
-        state="$1"
-    else
-        case "$_new_state" in
-            *"$1"*) state="$_new_state" ;;
-            *) state="$1
+        if [ -z "$_new_state" ]; then
+            state="$1"
+        else
+            case "$_new_state" in
+                *"$1"*) state="$_new_state" ;;
+                *) state="$1
 $_new_state" ;;
-        esac
-    fi
+            esac
+        fi
+        shift
+    done
 }
 
 get_state() {
