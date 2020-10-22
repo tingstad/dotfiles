@@ -139,7 +139,7 @@ set_state() {
         local _new_state=""
         while read _line; do
             for _word in $_line; do
-                if [ "${_word%:*}" = "${1%:*}" ]; then
+                if [ "${_word%=*}" = "${1%=*}" ]; then
                     _new_state="$1
 $_new_state"
                 elif [ -n "$_word" ]; then
@@ -167,8 +167,8 @@ get_state() {
     # $1: state
     # $2: name
     while IFS= read -r _line; do
-        [ "${_line%:*}" = "$2" ] && \
-            echo "${_line#*:}"
+        [ "${_line%=*}" = "$2" ] && \
+            echo "${_line#*=}"
     done <<-EOF
 	$1
 EOF
