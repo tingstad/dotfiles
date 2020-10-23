@@ -137,7 +137,7 @@ set_state() {
         [ -z "$1" ] && \
             continue
         local _new_state=""
-        while read _line; do
+        while read -r _line; do
             for _word in $_line; do
                 if [ "${_word%=*}" = "${1%=*}" ]; then
                     _new_state="$1
