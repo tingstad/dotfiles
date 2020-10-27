@@ -200,6 +200,16 @@ test_ccut() {
         "$(echo -e "oneS\ntwoS" | ccut 3)"
 }
 
+test_nocolors() {
+    esc="\033"
+    red="$esc[0;31m"
+    bluish="$esc[38;5;60m"
+    reset="$esc[0m"
+    str="Default ${red}RED ${bluish}FANCY${reset} Default"
+    assertEquals "Default RED FANCY Default" \
+        "$(printf "$str" | nocolors)"
+}
+
 test_log() {
     local git_mock=echo
     assertEquals \
