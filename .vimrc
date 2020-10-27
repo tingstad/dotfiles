@@ -22,6 +22,7 @@ set foldmethod=indent   " fold by indent level
 set foldlevelstart=99   " ... but keep all folds open from start
 set ruler               " show cursor position and relative file position
 
+nnoremap <space><space> :set hlsearch!<cr>
 " default leader is \  Change with: let mapleader = ","
 nnoremap <Leader>v :vsplit **/*
 nnoremap <Leader>s :split **/*
