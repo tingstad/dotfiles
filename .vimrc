@@ -8,7 +8,7 @@ set expandtab       " tabs are spaces
 "set number              " show line numbers
 "set relativenumber      " relative line numbers
 set showcmd             " show command in bottom bar
-set cursorline          " highlight current line
+"set cursorline          " highlight current line
 set showmatch           " highlight matching [{()}]
 set incsearch           " search as characters are entered
 set hlsearch            " highlight matches
