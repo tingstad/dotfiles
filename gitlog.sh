@@ -281,8 +281,33 @@ quit() {
     exit
 }
 nocolors() {
-    sed $'s,\x1b\\[[0-9;]*[A-Za-z],,g'
+    _line=""
+    while IFS= read -r _line || [ -n "$_line" ]; do
+        nocolors_line "$_line"
+    done
 }
+# sed $'s,\x1b\\[[0-9;]*[A-Za-z],,g'
+nocolors_line() {
+    _rest="$1"
+    _result=""
+    while true; do
+        _byte="$(printf %.1s "$_rest")" # read 1 byte
+        _code="$(printf "%d" "'$_byte")"
+        _char="$(expr " $_rest" : " \(.\).*")"
+        _rest="${_rest#?}"
+        if [ "$_code" = "27" ] # 27 = ESC
+        then
+            _ansi="$(expr "$_rest" : "\(\[[0-9;]*[A-Za-z]\)")"
+            _rest="${_rest##$_ansi}"
+            continue
+        else
+            _result="$_result$_char"
+        fi
+        [ -z "$_rest" ] && break
+    done
+    printf "%s\n" "$_result"
+}
+
 ccut() {
     awk -v max="$1" -v esc='\033' '#
         # Simulates `cut -c 1-X` for text containing ANSI color codes

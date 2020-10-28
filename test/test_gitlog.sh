@@ -205,9 +205,21 @@ test_nocolors() {
     red="$esc[0;31m"
     bluish="$esc[38;5;60m"
     reset="$esc[0m"
-    str="Default ${red}RED ${bluish}FANCY${reset} Default"
-    assertEquals "Default RED FANCY Default" \
+    str="Default↓ is ${red}RED ${bluish}FANCY${reset} Default"
+    assertEquals \
+        "newline \\n escaped" \
+        "$(printf "%s" "newline \\n escaped" | nocolors)"
+    assertEquals "Default↓ is RED FANCY Default" \
         "$(printf "$str" | nocolors)"
+    assertEquals \
+        "This has no control codes" \
+        "$(printf "This has no control codes" | nocolors)"
+    assertEquals \
+        "$(printf "one\ntwo")" \
+        "$(printf "one\ntw${red}o" | nocolors)"
+    assertEquals \
+        "RE" \
+        "$(printf "${red}RE$reset" | nocolors)"
 }
 
 test_log() {
