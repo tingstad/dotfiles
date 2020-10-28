@@ -293,20 +293,20 @@ nocolors() {
 nocolors_line() {
     _rest="$1"
     _result=""
-    while true; do
+    while [ -n "$_rest" ]; do
         _byte="$(printf %.1s "$_rest")" # read 1 byte
-        _code="$(printf "%d" "'$_byte")"
+        _code="$(printf %d "'$_byte")"
         _char="$(expr " $_rest" : " \(.\).*")"
         _rest="${_rest#?}"
         if [ "$_code" = "27" ] # 27 = ESC
         then
-            _ansi="$(expr "$_rest" : "\(\[[0-9;]*[A-Za-z]\)")"
-            _rest="${_rest##$_ansi}"
-            continue
-        else
-            _result="$_result$_char"
+            _ansi="$(expr " $_rest" : " \(\[[0-9;]*[A-Za-z]\)")"
+            if [ -n "$_ansi" ]; then
+                _rest="${_rest##$_ansi}"
+                continue
+            fi
         fi
-        [ -z "$_rest" ] && break
+        _result="$_result$_char"
     done
     printf "%s\n" "$_result"
 }

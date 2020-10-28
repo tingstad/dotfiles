@@ -201,6 +201,8 @@ test_ccut() {
 }
 
 test_nocolors() {
+    unset BASH_VERSION
+    assertEquals "" "$BASH_VERSION"
     esc="\033"
     red="$esc[0;31m"
     bluish="$esc[38;5;60m"
