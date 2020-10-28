@@ -281,12 +281,15 @@ quit() {
     exit
 }
 nocolors() {
-    _line=""
-    while IFS= read -r _line || [ -n "$_line" ]; do
-        nocolors_line "$_line"
-    done
+    if [ -n "$BASH_VERSION" ]; then
+        sed $'s,\x1b\\[[0-9;]*[A-Za-z],,g'
+    else
+        _line=""
+        while IFS= read -r _line || [ -n "$_line" ]; do
+            nocolors_line "$_line"
+        done
+    fi
 }
-# sed $'s,\x1b\\[[0-9;]*[A-Za-z],,g'
 nocolors_line() {
     _rest="$1"
     _result=""
