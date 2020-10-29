@@ -293,6 +293,10 @@ nocolors() {
 nocolors_line() {
     _rest="$1"
     _result=""
+    case "$_rest" in
+        *[*) true ;;
+        *) _result="$_rest"; _rest="" ;; #skip loop if no [
+    esac
     while [ -n "$_rest" ]; do
         _byte="$(printf %.1s "$_rest")" # read 1 byte
         _code="$(printf %d "'$_byte")"
