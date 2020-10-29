@@ -200,9 +200,18 @@ test_ccut() {
         "$(echo -e "oneS\ntwoS" | ccut 3)"
 }
 
-test_nocolors() {
+test_nocolors_bash() {
+    assertTrue '[ -n "$BASH_VERSION" ]'
+    assert_nocolors
+}
+
+test_nocolors_nobash() {
     unset BASH_VERSION
     assertEquals "" "$BASH_VERSION"
+    assert_nocolors
+}
+
+assert_nocolors() {
     esc="\033"
     red="$esc[0;31m"
     bluish="$esc[38;5;60m"
