@@ -300,8 +300,9 @@ nocolors_line() {
     while [ -n "$_rest" ]; do
         _byte="$(printf %.1s "$_rest")" # read 1 byte
         _code="$(printf %d "'$_byte")"
-        _char="$(expr " $_rest" : " \(.\).*")"
-        _rest="${_rest#?}"
+        _tail="${_rest#?}"
+        _char="${_rest%%$_tail}"
+        _rest="${_tail}"
         if [ "$_code" = "27" ] # 27 = ESC
         then
             _ansi="$(expr " $_rest" : " \(\[[0-9;]*[A-Za-z]\)")"
