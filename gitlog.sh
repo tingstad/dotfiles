@@ -49,7 +49,9 @@ bootstrap() {
 }
 
 split_screen_if_not_split() {
-    if [ -n "$TMUX" ] && [ "$(tmux list-panes | line_count)" -lt 2 ]; then
+    if [ -n "$TMUX" ] \
+    && [ "$(tmux display-message -p '#{window_id}')" = "$window" ] \
+    && [ "$(tmux list-panes | line_count)" -lt 2 ]; then
         tmux split-window -h -d
         show_commit=""
     fi
