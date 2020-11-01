@@ -201,17 +201,16 @@ test_ccut() {
 }
 
 test_nocolors_bash() {
-    assertTrue '[ -n "$BASH_VERSION" ]'
-    assert_nocolors
+    assertTrue "[ 'A' = $'\x41' ]"
+    assert_nocolors nocolors
 }
 
-test_nocolors_nobash() {
-    unset BASH_VERSION
-    assertEquals "" "$BASH_VERSION"
-    assert_nocolors
+test_nocolors_posix() {
+    assert_nocolors nocolors_posix
 }
 
 assert_nocolors() {
+    local cmd="$1"
     esc="\033"
     red="$esc[0;31m"
     bluish="$esc[38;5;60m"
@@ -219,18 +218,18 @@ assert_nocolors() {
     str="Default↓ is ${red}RED ${bluish}FANCY${reset} Default"
     assertEquals \
         "newline \\n escaped" \
-        "$(printf "%s" "newline \\n escaped" | nocolors)"
+        "$(printf "%s" "newline \\n escaped" | $cmd)"
     assertEquals "Default↓ is RED FANCY Default" \
-        "$(printf "$str" | nocolors)"
+        "$(printf "$str" | $cmd)"
     assertEquals \
         "This has no control codes" \
-        "$(printf "This has no control codes" | nocolors)"
+        "$(printf "This has no control codes" | $cmd)"
     assertEquals \
         "$(printf "one\ntwo")" \
-        "$(printf "one\ntw${red}o" | nocolors)"
+        "$(printf "one\ntw${red}o" | $cmd)"
     assertEquals \
         "RE" \
-        "$(printf "${red}RE$reset" | nocolors)"
+        "$(printf "${red}RE$reset" | $cmd)"
 }
 
 test_log() {

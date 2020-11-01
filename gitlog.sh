@@ -278,19 +278,27 @@ forward_page() {
     pager="$pager $from"
     index=0
 }
+
 quit() {
     [ -n "$TMUX" ] && tmux kill-window
     exit
 }
+
 nocolors() {
-    if [ -n "$BASH_VERSION" ]; then
+    # shellcheck disable=SC2039
+    if [ 'A' = $'\x41' ] 2>/dev/null # Attempt to check support for $'..' (ANSI-C Quoting)
+    then                             # Should be supported by most modern shells
         sed $'s,\x1b\\[[0-9;]*[A-Za-z],,g'
     else
-        _line=""
-        while IFS= read -r _line || [ -n "$_line" ]; do
-            nocolors_line "$_line"
-        done
+        nocolors_posix
     fi
+}
+
+nocolors_posix() {
+    _line=""
+    while IFS= read -r _line || [ -n "$_line" ]; do
+        nocolors_line "$_line"
+    done
 }
 nocolors_line() {
     _rest="$1"
