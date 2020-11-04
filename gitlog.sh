@@ -13,7 +13,7 @@ main() {
     while true; do
         split_screen_if_not_split
         check_screen_size
-        lines="$(log git "$from" "$file" | head -n $height | ccut "$width")"
+        lines="$(log git "$from" "$file" | head -n "$height" | ccut "$width")"
         commit=$(printf "%s\n" "$lines" | nocolors | awk "NR==$index+1 { print \$1 }")
         [ -n "$TMUX" ] && [ "$commit" != "$show_commit" ] \
             && tmux respawn-pane -t "$session":"$window".1 -k "GIT_PAGER='less -RX -+F' git show $commit ${file:+ -- \"$file\"}" \
@@ -42,7 +42,7 @@ bootstrap() {
         window="$(tmux display-message -p '#{window_id}')"
         if [ -z "$DATSGNIT_INCEPTION" ]; then
             local remain="$(does_exist bash && echo bash || echo sh)"
-            tmux new-window -e DATSGNIT_INCEPTION=yes -n datsgnitlog"$(date +%s)" "$0 $@; $remain -i"
+            tmux new-window -e DATSGNIT_INCEPTION=yes -n datsgnitlog"$(date +%s)" "$0 $*; $remain -i"
             exit
         fi
     fi
@@ -86,9 +86,8 @@ check_screen_size() {
 draw() {
     if [ "$dirty_screen" != "n" ]; then
     local cols="$1"
-    local esc=$'\033'
-    local reset="${esc}[0m"
-    local u="${esc}[4m"
+    local reset="\033[0m"
+    local u="\033[4m"
     clear
     echo " W E L C O M E"
     echo "$(printf "%s\n" "$lines" | awk "NR==$index+1 { print \$1 }")" " Keys: j/↓, k/↑, ${u}f${reset}orward page, be${u}g${reset}inning, ${u}H${reset}ome/${u}M${reset}iddle/${u}L${reset}ast line, ${u}r${reset}ebase, ${u}F${reset}ixup, ${u}q${reset}uit" | ccut "$cols"
@@ -106,10 +105,10 @@ cursor_set() {
 }
 
 read_input() {
-    local escape_char=$'\033'
+    local escape="27"
     local key=""
     read -t 1 -rsn1 key || true # get 1 character
-    if [ "$key" = "$escape_char" ]; then
+    if [ "$(printf %d "'$key")" = "$escape" ]; then
         read -rsn2 key # read 2 more chars
     fi
     dirty_screen=y #TODO remove so default is n
@@ -231,7 +230,7 @@ edit_commit() {
     fi
     clear
     if [ "$index" -gt 0 ] || [ "$from" != "HEAD" ]; then
-        GIT_SEQUENCE_EDITOR="sed -i.old 's/^pick "$commit"/e "$commit"/'" git_rebase "$commit"^
+        GIT_SEQUENCE_EDITOR="sed -i.old 's/^pick ""$commit""/e "$commit"/'" git_rebase "$commit"^
     fi
     echo "Happy editing :)"
     exit
