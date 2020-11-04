@@ -1,10 +1,10 @@
-#!/usr/bin/env sh
-# Richard H. Tingstad's git GUI
+#!/bin/sh
+# Richard H. Tingstad's Git UI
 # https://github.com/tingstad/dotfiles
 set -e
 
 main() {
-    local file="$1"
+    file="$1"
     bootstrap "$@"
     from="HEAD"
     pager="$from"
@@ -16,7 +16,8 @@ main() {
         lines="$(log git "$from" "$file" | head -n "$height" | ccut "$width")"
         commit=$(printf "%s\n" "$lines" | nocolors | awk "NR==$index+1 { print \$1 }")
         [ -n "$TMUX" ] && [ "$commit" != "$show_commit" ] \
-            && tmux respawn-pane -t "$session":"$window".1 -k "GIT_PAGER='less -RX -+F' git show $commit ${file:+ -- \"$file\"}" \
+            && tmux respawn-pane -t "$session":"$window".1 \
+                -k "GIT_PAGER='less -RX -+F' git show $commit ${file:+ -- \"$file\"}" \
             && show_commit="$commit"
         draw "$width"
         dirty_screen=n
@@ -25,7 +26,6 @@ main() {
 }
 
 bootstrap() {
-    local file="$1"
     trap 'quit' INT
     #trap 'TODO' WINCH
     check_dependencies git awk sed head less
@@ -41,8 +41,8 @@ bootstrap() {
         session="$(tmux display-message -p '#{session_id}')"
         window="$(tmux display-message -p '#{window_id}')"
         if [ -z "$DATSGNIT_INCEPTION" ]; then
-            local remain="$(does_exist bash && echo bash || echo sh)"
-            tmux new-window -e DATSGNIT_INCEPTION=yes -n datsgnitlog"$(date +%s)" "$0 $*; $remain -i"
+            _remain="$(does_exist bash && echo bash || echo sh)"
+            tmux new-window -e DATSGNIT_INCEPTION=yes -n datsgnitlog"$(date +%s)" "$0 $*; $_remain -i"
             exit
         fi
     fi
