@@ -135,6 +135,20 @@ test_full_state() {
     assertEquals "100" "$(get_state "$expected" height)"
 }
 
+test_diff_state() {
+    set_state one=1 index=3 two=2
+    assertTrue  "diff state state" 'diff_state "$state" "$state"'
+    prev="$state"
+    set_state index=4
+    assertTrue  "diff prev prev"   'diff_state "$prev" "$prev"'
+    assertFalse "diff state prev"  'diff_state "$prev" "$state"'
+    assertTrue  "diff one"         'diff_state "$prev" "$state" one'
+    assertTrue  "diff one two"     'diff_state "$prev" "$state" one two'
+    assertFalse "diff index"       'diff_state "$prev" "$state" index'
+    assertFalse "diff one index"   'diff_state "$prev" "$state" one index'
+    assertFalse "diff index one"   'diff_state "$prev" "$state" index one'
+}
+
 test_check_dependencies() {
     assertTrue "dependency awk should exist" "check_dependencies awk"
     assertTrue "dependency sed should exist" "check_dependencies sed"

@@ -15,13 +15,12 @@ main() {
         split_screen_if_not_split
         check_screen_size
         state="$(full_state)"
-        _params="from height width"
-        [ "$(get_state "$state" $_params)" != "$(get_state "$prev_state" $_params)" ] \
+        ! diff_state "$state" "$prev_state" from height width \
             && _dirty_git=true || _dirty_git=false
         if [ $_dirty_git = true ]; then
             lines="$(log git "$from" "$file" | head -n "$height" | ccut "$width")"
         fi
-        if [ $_dirty_git = true ] || [ "$(get_state "$state" index)" != "$(get_state "$prev_state" index)" ]; then
+        if [ $_dirty_git = true ] || ! diff_state "$state" "$prev_state" index; then
             commit=$(printf "%s\n" "$lines" | nocolors | awk "NR==$index+1 { print \$1 }")
         fi
         [ -n "$TMUX" ] && [ "$commit" != "$show_commit" ] \
@@ -172,6 +171,17 @@ $_new_state" ;;
         fi
         shift
     done
+}
+
+diff_state() {
+    _state1="$1"; shift
+    _state2="$1"; shift
+    if [ $# -eq 0 ]; then
+        [ "$_state1" = "$_state2" ]
+    else
+        # shellcheck disable=SC2048,SC2086
+        [ "$(get_state "$_state1" $*)" = "$(get_state "$_state2" $*)" ]
+    fi
 }
 
 get_state() {
