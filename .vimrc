@@ -14,7 +14,7 @@ set incsearch           " search as characters are entered
 set hlsearch            " highlight matches
 set matchpairs+=<:>,«:»,‹:›,‘:’,“:”,⟨:⟩,⟪:⟫
 set autoread            " detect changed file and read (load) it
-set listchars=tab:>-    " show tab as >---
+set listchars=tab:>·    " show tab as >···
 set list
 set textwidth=0         " do not physically break long lines
 set wrapmargin=0        " do not physically break pasted text
