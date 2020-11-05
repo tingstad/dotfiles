@@ -119,6 +119,21 @@ test_state() {
     assertEquals "2" "$(get_state "$state" 'two')"
 }
 
+test_full_state() {
+    from=FROM
+    index=4
+    height=100
+    width=80
+    read -r -d '' expected <<- EOF
+		from=FROM
+		index=4
+		height=100
+		width=80
+		EOF
+    assertEquals "$expected" "$(full_state)"
+    assertEquals "100" "$(get_state "$expected" height)"
+}
+
 test_check_dependencies() {
     assertTrue "dependency awk should exist" "check_dependencies awk"
     assertTrue "dependency sed should exist" "check_dependencies sed"

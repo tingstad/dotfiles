@@ -175,6 +175,15 @@ get_state() {
 EOF
 }
 
+full_state() {
+    cat <<EOF
+from=$from
+index=$index
+height=$height
+width=$width
+EOF
+}
+
 log() {
     local git_cmd="$1"
     local from="$2"
