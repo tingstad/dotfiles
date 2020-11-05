@@ -176,12 +176,12 @@ EOF
 }
 
 full_state() {
-    cat <<EOF
-from=$from
-index=$index
-height=$height
-width=$width
-EOF
+    printf "\
+from=%s
+index=%s
+height=%s
+width=%s
+" "$from" "$index" "$height" "$width"
 }
 
 log() {
