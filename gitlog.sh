@@ -10,17 +10,27 @@ main() {
     pager="$from"
     index=0
     dirty_screen=y
+    prev_state=""
     while true; do
         split_screen_if_not_split
         check_screen_size
-        lines="$(log git "$from" "$file" | head -n "$height" | ccut "$width")"
-        commit=$(printf "%s\n" "$lines" | nocolors | awk "NR==$index+1 { print \$1 }")
+        state="$(full_state)"
+        _params="from height width"
+        [ "$(get_state "$state" $_params)" != "$(get_state "$prev_state" $_params)" ] \
+            && _dirty_git=true || _dirty_git=false
+        if [ $_dirty_git = true ]; then
+            lines="$(log git "$from" "$file" | head -n "$height" | ccut "$width")"
+        fi
+        if [ $_dirty_git = true ] || [ "$(get_state "$state" index)" != "$(get_state "$prev_state" index)" ]; then
+            commit=$(printf "%s\n" "$lines" | nocolors | awk "NR==$index+1 { print \$1 }")
+        fi
         [ -n "$TMUX" ] && [ "$commit" != "$show_commit" ] \
             && tmux respawn-pane -t "$session":"$window".1 \
                 -k "GIT_PAGER='less -RX -+F' git show $commit ${file:+ -- \"$file\"}" \
             && show_commit="$commit"
         draw "$width"
         dirty_screen=n
+        prev_state="$state"
         read_input
     done
 }
