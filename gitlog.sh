@@ -165,14 +165,26 @@ $_new_state" ;;
 }
 
 get_state() {
+    _state="$1"
+    shift
+    while [ "$#" -gt 0 ]; do
+        [ -z "$1" ] && \
+            continue
+        get_state_value "$_state" "$1"
+        shift
+    done
+}
+
+get_state_value() {
     # $1: state
     # $2: name
     while IFS= read -r _line; do
         [ "${_line%=*}" = "$2" ] && \
-            echo "${_line#*=}"
+            printf "%s" "${_line#*=}"
     done <<-EOF
 	$1
 EOF
+    printf "\n"
 }
 
 full_state() {

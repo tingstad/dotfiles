@@ -117,6 +117,7 @@ test_state() {
     assertEquals "3" "$(get_state "$state" 'index')"
     assertEquals "1" "$(get_state "$state" 'one')"
     assertEquals "2" "$(get_state "$state" 'two')"
+    assertEquals $'1\n2' "$(get_state "$state" one two)"
 }
 
 test_full_state() {
