@@ -10,12 +10,11 @@ main() {
     pager="$from"
     index=0
     dirty_screen=y
-    prev_state=""
     while true; do
         split_screen_if_not_split
         check_screen_size
-        state="$(full_state)"
-        ! diff_state "$state" "$prev_state" from height width \
+        set_state from="$from" index="$index" height="$height" width="$width"
+        [ "$(get_state "$state" dirty_git)" = true ] || ! diff_state "$state" "$prev_state" from height width \
             && _dirty_git=true || _dirty_git=false
         if [ $_dirty_git = true ]; then
             lines="$(log git "$from" "$file" | head -n "$height" | ccut "$width")"
@@ -29,6 +28,7 @@ main() {
             && show_commit="$commit"
         draw "$width"
         dirty_screen=n
+        set_state dirty_git=false
         prev_state="$state"
         read_input
     done
@@ -233,6 +233,7 @@ fixup() {
     else
         git commit --fixup="$commit" && GIT_EDITOR=true git_rebase "$commit"^
     fi
+    set_state dirty_git=true
     goto_beginning
 }
 
@@ -246,6 +247,7 @@ rebase() {
         echo "Happy rebasing :)"
         exit
     fi
+    set_state dirty_git=true
     goto_beginning
 }
 
@@ -264,6 +266,7 @@ reword() {
     else
         GIT_SEQUENCE_EDITOR="sed -i.old 's/^pick "$commit"/r "$commit"/'" git_rebase "$commit"^
     fi
+    set_state dirty_git=true
     goto_beginning
 }
 
