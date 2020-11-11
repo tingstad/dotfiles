@@ -128,7 +128,7 @@ read_input() {
         'j')  clear_cursor && dirty_screen=n && index_inc ;;
         '[B') index_inc ;;
         '[D') echo LEFT ;;
-        '[C') echo RIGHT ;;
+        '[C') tmux select-pane -R ;;
         'g')  goto_beginning ;;
         'H')  index=0 ;;
         'L')  index_end ;;
