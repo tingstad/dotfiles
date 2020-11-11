@@ -199,8 +199,10 @@ get_state_value() {
     # $1: state
     # $2: name
     while IFS= read -r _line; do
-        [ "${_line%=*}" = "$2" ] && \
+        [ "${_line%=*}" = "$2" ] && {
             printf "%s" "${_line#*=}"
+            break
+        }
     done <<-EOF
 	$1
 EOF
