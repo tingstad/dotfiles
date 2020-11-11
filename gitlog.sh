@@ -138,6 +138,7 @@ read_input() {
         'r')  rebase ;;
         'F')  fixup ;;
         'w')  reword ;;
+        'v')  revert ;;
         'e')  edit_commit ;;
     esac
 }
@@ -266,6 +267,12 @@ reword() {
     else
         GIT_SEQUENCE_EDITOR="sed -i.old 's/^pick "$commit"/r "$commit"/'" git_rebase "$commit"^
     fi
+    set_state dirty_git=true
+    goto_beginning
+}
+
+revert() {
+    git revert "$commit"
     set_state dirty_git=true
     goto_beginning
 }
