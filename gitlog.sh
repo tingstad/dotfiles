@@ -360,8 +360,7 @@ nocolors_line() {
         *) _result="$_rest"; _rest="" ;; #skip loop if no [
     esac
     while [ -n "$_rest" ]; do
-        _byte="$(printf %.1s "$_rest")" # read 1 byte
-        _code="$(printf %d "'$_byte")"
+        _code="$(printf %d "'$_rest")"
         _tail="${_rest#?}"
         _char="${_rest%%$_tail}"
         _rest="${_tail}"
