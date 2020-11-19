@@ -21,14 +21,22 @@ set wrapmargin=0        " do not physically break pasted text
 set foldmethod=indent   " fold by indent level
 set foldlevelstart=99   " ... but keep all folds open from start
 set ruler               " show cursor position and relative file position
+"set visualbell          " do not beep
 
-nnoremap <space><space> :set hlsearch!<cr>
 " default leader is \  Change with: let mapleader = ","
+map <space> <Leader>
+nnoremap <Leader><space> :set hlsearch!<cr>
 nnoremap <Leader>v :vsplit **/*
 nnoremap <Leader>s :split **/*
 nnoremap <Leader>e :edit **/*
 nnoremap <Leader>t :tabnew **/*
-" nnoremap , v<Esc>O<Esc>v`<<Esc>    " insert newline above
+nnoremap <Leader>w :w<cr>
+" insert newline above:
+nnoremap <Leader>O v<Esc>O<Esc>`<
+" insert newline below:
+nnoremap <Leader>o v<Esc>o<Esc>`<
+" insert space:
+nnoremap <Leader>i i<Space><Esc>l
 
 "augroup configgroup
 "    autocmd!
