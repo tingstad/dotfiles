@@ -97,7 +97,7 @@ draw() {
     local cols="$1"
     local reset="\033[0m"
     local u="\033[4m"
-    clear
+    printf "\033c" #clear
     printf " W E L C O M E %s\n" "$(printf '%s\n' "$lines" | awk "NR==$index+1 { print \$1 }")"
     printf "Keys: j/↓, k/↑, " # length: 16
     # shellcheck disable=SC2059
