@@ -267,7 +267,7 @@ reword() {
     if [ "$index" -eq 0 ] && [ "$from" = "HEAD" ]; then
         git commit --amend
     else
-        GIT_SEQUENCE_EDITOR="sed -i.old 's/^pick "$commit"/r "$commit"/'" git_rebase "$commit"^
+        GIT_SEQUENCE_EDITOR="sed -i.old 's/^pick ""$commit""/r ""$commit""/'" git_rebase "$commit"^
     fi
     set_state dirty_git=true
     goto_beginning
@@ -285,7 +285,7 @@ edit_commit() {
     fi
     clear
     if [ "$index" -gt 0 ] || [ "$from" != "HEAD" ]; then
-        GIT_SEQUENCE_EDITOR="sed -i.old 's/^pick ""$commit""/e "$commit"/'" git_rebase "$commit"^
+        GIT_SEQUENCE_EDITOR="sed -i.old 's/^pick ""$commit""/e ""$commit""/'" git_rebase "$commit"^
     fi
     printf "Happy editing :)"
     exit
