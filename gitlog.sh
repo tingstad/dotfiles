@@ -81,7 +81,7 @@ check_screen_size() {
         rows=${size% *}
     fi
     if ! is_number "$cols"; then
-        printf "Unable to detect window width $cols" >&2
+        printf "Unable to detect window width %s\n" "$cols" >&2
         exit 1
     fi
     local new_height=$((rows - 5))
@@ -100,6 +100,7 @@ draw() {
     clear
     printf " W E L C O M E %s\n" "$(printf '%s\n' "$lines" | awk "NR==$index+1 { print \$1 }")"
     printf "Keys: j/↓, k/↑, " # length: 16
+    # shellcheck disable=SC2059
     printf "${u}f${reset}orward page, be${u}g${reset}inning, ${u}H${reset}ome/${u}M${reset}iddle/${u}L${reset}ast line, ${u}r${reset}ebase, ${u}F${reset}ixup, ${u}q${reset}uit" | ccut "$(( cols - 16 ))"
     printf '\n'
     printf "%s\n" "$lines"
@@ -312,8 +313,8 @@ clear_cursor() {
 get_index_end() {
     local end=$(printf "%s\n" "$lines" | line_count)
     [ "$end" -lt $height ] \
-        && printf $((end - 1)) \
-        || printf $((height - 1))
+        && printf "%s" $((end - 1)) \
+        || printf "%s" $((height - 1))
 }
 index_inc() {
     if [ "$index" -lt $((height - 1)) ] \
@@ -415,7 +416,7 @@ check_dependencies() {
         fi
     done
     [ -z "$missing" ] || {
-        printf "Missing dependencies:$missing" >&2
+        printf "Missing dependencies:%s" "$missing" >&2
         false
     }
 }
