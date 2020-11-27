@@ -66,42 +66,42 @@ split_screen_if_not_split() {
     fi
 }
 check_screen_size() {
-    local cols=$COLUMNS
-    local rows=$LINES
+    _cols=$COLUMNS
+    _rows=$LINES
     if [ -n "$TMUX" ]; then
-        local size="$(tmux display -p '#{pane_height} #{pane_width}')"
-        if is_number "${size#* }" && is_number "${size% *}"; then
-            cols=${size#* }
-            rows=${size% *}
+        _size="$(tmux display -p '#{pane_height} #{pane_width}')"
+        if is_number "${_size#* }" && is_number "${_size% *}"; then
+            _cols=${_size#* }
+            _rows=${_size% *}
         fi
     fi
-    if [ -z "$cols" ]; then
-        size=$(stty size)
-        cols=${size#* }
-        rows=${size% *}
+    if [ -z "$_cols" ]; then
+        _size=$(stty size)
+        _cols=${_size#* }
+        _rows=${_size% *}
     fi
-    if ! is_number "$cols"; then
-        printf "Unable to detect window width %s\n" "$cols" >&2
+    if ! is_number "$_cols"; then
+        printf "Unable to detect window width %s\n" "$_cols" >&2
         exit 1
     fi
-    local new_height=$((rows - 5))
-    local new_width="$cols"
-    if [ "$new_height" != "$height" ] || [ "$new_width" != "$width" ]; then
+    _new_height=$((_rows - 5))
+    _new_width="$_cols"
+    if [ "$_new_height" != "$height" ] || [ "$_new_width" != "$width" ]; then
         dirty_screen=y
-        height=$((rows - 5))
-        width="$cols"
+        height=$((_rows - 5))
+        width="$_cols"
     fi
 }
 draw() {
     if [ "$dirty_screen" != "n" ]; then
-    local cols="$1"
-    local reset="\033[0m"
-    local u="\033[4m"
+    _cols="$1"
+    _reset="\033[0m"
+    _u="\033[4m"
     printf "\033c" #clear
     printf " W E L C O M E %s\n" "$(printf '%s\n' "$lines" | awk "NR==$index+1 { print \$1 }")"
     printf "Keys: j/↓, k/↑, " # length: 16
     # shellcheck disable=SC2059
-    printf "${u}f${reset}orward page, be${u}g${reset}inning, ${u}H${reset}ome/${u}M${reset}iddle/${u}L${reset}ast line, ${u}r${reset}ebase, ${u}F${reset}ixup, ${u}q${reset}uit" | ccut "$(( cols - 16 ))"
+    printf "${_u}f${_reset}orward page, be${_u}g${_reset}inning, ${_u}H${_reset}ome/${_u}M${_reset}iddle/${_u}L${_reset}ast line, ${_u}r${_reset}ebase, ${_u}F${_reset}ixup, ${_u}q${_reset}uit" | ccut "$(( _cols - 16 ))"
     printf '\n'
     printf "%s\n" "$lines"
     fi
@@ -110,20 +110,20 @@ draw() {
 }
 
 cursor_set() {
-    local row="$1"
-    local col="$2"
-    printf "\033[%s;%sH" "$row" "$col"
+    _row="$1"
+    _col="$2"
+    printf "\033[%s;%sH" "$_row" "$_col"
 }
 
 read_input() {
-    local escape="27"
-    local key=""
-    read -t 1 -rsn1 key || true # get 1 character
-    if [ "$(printf %d "'$key")" = "$escape" ]; then
-        read -rsn2 key # read 2 more chars
+    _escape="27"
+    _key=""
+    read -t 1 -rsn1 _key || true # get 1 character
+    if [ "$(printf %d "'$_key")" = "$_escape" ]; then
+        read -rsn2 _key # read 2 more chars
     fi
     dirty_screen=y #TODO remove so default is n
-    case $key in
+    case $_key in
         'q') quit ;;
         'k')  index_dec ;;
         '[A') index_dec ;;
@@ -149,7 +149,7 @@ set_state() {
     while [ "$#" -gt 0 ]; do
         [ -z "$1" ] && \
             continue
-        local _new_state=""
+        _new_state=""
         while read -r _line; do
             for _word in $_line; do
                 if [ "${_word%=*}" = "${1%=*}" ]; then
@@ -222,12 +222,12 @@ width=%s
 }
 
 log() {
-    local git_cmd="$1"
-    local from="$2"
-    local file="$3"
-    $git_cmd log --pretty=format:'   %C(auto)%h %cd %d %s' --date=short "$from" \
+    _git_cmd="$1"
+    _from="$2"
+    _file="$3"
+    $_git_cmd log --pretty=format:'   %C(auto)%h %cd %d %s' --date=short "$_from" \
         --color=always \
-        ${file:+ -- "$file"}
+        ${_file:+ -- "$_file"}
 }
 
 fixup() {
@@ -311,9 +311,9 @@ clear_cursor() {
     printf " "
 }
 get_index_end() {
-    local end=$(printf "%s\n" "$lines" | line_count)
-    [ "$end" -lt $height ] \
-        && printf "%s" $((end - 1)) \
+    _end=$(printf "%s\n" "$lines" | line_count)
+    [ "$_end" -lt $height ] \
+        && printf "%s" $((_end - 1)) \
         || printf "%s" $((height - 1))
 }
 index_inc() {
@@ -409,14 +409,14 @@ ccut() {
 }
 
 check_dependencies() {
-    local missing=""
+    _missing=""
     for cmd; do
         if ! does_exist "$cmd"; then
-            missing="$missing $cmd"
+            _missing="$_missing $cmd"
         fi
     done
-    [ -z "$missing" ] || {
-        printf "Missing dependencies:%s" "$missing" >&2
+    [ -z "$_missing" ] || {
+        printf "Missing dependencies:%s" "$_missing" >&2
         false
     }
 }
@@ -426,12 +426,12 @@ does_exist() {
 }
 
 line_count() {
-    local count=0
-    local line=""
-    while IFS= read -r line || [ -n "$line" ]; do
-        count=$((count+1))
+    _count=0
+    _line=""
+    while IFS= read -r _line || [ -n "$_line" ]; do
+        _count=$((_count+1))
     done
-    printf '%s\n' "$count"
+    printf '%s\n' "$_count"
 }
 
 is_number() {
