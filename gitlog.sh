@@ -40,7 +40,7 @@ bootstrap() {
     check_dependencies git awk sed head less
     git rev-parse #assert git repository
     does_exist tmux || {
-        echo "Warning: tmux not found" >&2
+        printf "Warning: tmux not found" >&2
     }
     if does_exist tmux; then
         if [ -z "$TMUX" ]; then
@@ -50,7 +50,7 @@ bootstrap() {
         session="$(tmux display-message -p '#{session_id}')"
         window="$(tmux display-message -p '#{window_id}')"
         if [ -z "$DATSGNIT_INCEPTION" ]; then
-            _remain="$(does_exist bash && echo bash || echo sh)"
+            _remain="$(does_exist bash && printf bash || printf sh)"
             tmux new-window -e DATSGNIT_INCEPTION=yes -n datsgnitlog"$(date +%s)" "$0 $*; $_remain -i"
             exit
         fi
@@ -81,7 +81,7 @@ check_screen_size() {
         rows=${size% *}
     fi
     if ! is_number "$cols"; then
-        echo "Unable to detect window width $cols" >&2
+        printf "Unable to detect window width $cols" >&2
         exit 1
     fi
     local new_height=$((rows - 5))
@@ -127,7 +127,7 @@ read_input() {
         '[A') index_dec ;;
         'j')  clear_cursor && dirty_screen=n && index_inc ;;
         '[B') index_inc ;;
-        '[D') echo LEFT ;;
+        '[D') printf LEFT ;;
         '[C') tmux select-pane -R ;;
         'g')  goto_beginning ;;
         'H')  index=0 ;;
@@ -245,7 +245,7 @@ rebase() {
     clear
     git_rebase "$commit"
     if is_rebasing; then
-        echo "Happy rebasing :)"
+        printf "Happy rebasing :)"
         exit
     fi
     set_state dirty_git=true
@@ -285,7 +285,7 @@ edit_commit() {
     if [ "$index" -gt 0 ] || [ "$from" != "HEAD" ]; then
         GIT_SEQUENCE_EDITOR="sed -i.old 's/^pick ""$commit""/e "$commit"/'" git_rebase "$commit"^
     fi
-    echo "Happy editing :)"
+    printf "Happy editing :)"
     exit
 }
 
@@ -311,8 +311,8 @@ clear_cursor() {
 get_index_end() {
     local end=$(printf "%s\n" "$lines" | line_count)
     [ "$end" -lt $height ] \
-        && echo $((end - 1)) \
-        || echo $((height - 1))
+        && printf $((end - 1)) \
+        || printf $((height - 1))
 }
 index_inc() {
     if [ "$index" -lt $((height - 1)) ] \
@@ -414,7 +414,7 @@ check_dependencies() {
         fi
     done
     [ -z "$missing" ] || {
-        echo "Missing dependencies:$missing" >&2
+        printf "Missing dependencies:$missing" >&2
         false
     }
 }
