@@ -35,6 +35,7 @@ main() {
 }
 
 bootstrap() {
+    save_tty_settings
     trap 'quit' INT
     #trap 'TODO' WINCH
     check_dependencies git awk sed head less
@@ -82,7 +83,7 @@ check_screen_size() {
     fi
     if ! is_number "$_cols"; then
         printf "Unable to detect window width %s\n" "$_cols" >&2
-        exit 1
+        quit 1
     fi
     _new_height=$((_rows - 5))
     _new_width="$_cols"
@@ -118,9 +119,9 @@ cursor_set() {
 read_input() {
     _escape="27"
     _key=""
-    read -t 1 -rsn1 _key || true # get 1 character
+    _key="$(read_char 1 10)" # get 1 character
     if [ "$(printf %d "'$_key")" = "$_escape" ]; then
-        read -rsn2 _key # read 2 more chars
+        _key="$(read_char 2)" # read 2 more chars
     fi
     dirty_screen=y #TODO remove so default is n
     case $_key in
@@ -143,6 +144,11 @@ read_input() {
         'v')  revert ;;
         'e')  edit_commit ;;
     esac
+}
+
+read_char() { # $1:chars #2:timeout?
+    stty -icanon -echo ${2:+min 0 time $2}
+    dd bs=1 count="$1" 2>/dev/null
 }
 
 set_state() {
@@ -248,6 +254,7 @@ rebase() {
     git_rebase "$commit"
     if is_rebasing; then
         printf "Happy rebasing :)"
+        restore_tty_settings
         exit
     fi
     set_state dirty_git=true
@@ -288,6 +295,7 @@ edit_commit() {
         GIT_SEQUENCE_EDITOR="sed -i.old 's/^pick ""$commit""/e ""$commit""/'" git_rebase "$commit"^
     fi
     printf "Happy editing :)"
+    restore_tty_settings
     exit
 }
 
@@ -334,8 +342,17 @@ forward_page() {
 }
 
 quit() {
+    restore_tty_settings
     [ -n "$TMUX" ] && tmux kill-window
-    exit
+    exit "$1"
+}
+
+save_tty_settings() {
+    saved_tty_settings="$(stty -g)"
+}
+
+restore_tty_settings() {
+    stty "$saved_tty_settings"
 }
 
 nocolors() {
