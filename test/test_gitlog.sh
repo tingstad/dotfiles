@@ -101,17 +101,52 @@ test_check_screen_size() {
 
 test_state() {
     state=""
-    set_state "index" "2"
-    assertEquals "index 2" "$state"
+    set_state "index=2"
+    assertEquals "index=2" "$state"
 
-    set_state "from" "HEAD"
-    assertEquals "index 2"$'\n'"from HEAD" "$state"
+    set_state "from=HEAD"
+    assertEquals "from=HEAD index=2 " "$(echo "$state" | sort | grep . | tr '\n' ' ')"
 
-    set_state "index" "1"
-    assertEquals "index 1"$'\n'"from HEAD" "$state"
+    set_state "index=1"
+    assertEquals "from=HEAD index=1 " "$(echo "$state" | sort | grep . | tr '\n' ' ')"
 
     assertEquals "1" "$(get_state "$state" 'index')"
     assertEquals "HEAD" "$(get_state "$state" 'from')"
+
+    set_state one=1 index=3 two=2
+    assertEquals "3" "$(get_state "$state" 'index')"
+    assertEquals "1" "$(get_state "$state" 'one')"
+    assertEquals "2" "$(get_state "$state" 'two')"
+    assertEquals $'1\n2' "$(get_state "$state" one two)"
+}
+
+test_full_state() {
+    from=FROM
+    index=4
+    height=100
+    width=80
+    read -r -d '' expected <<- EOF
+		from=FROM
+		index=4
+		height=100
+		width=80
+		EOF
+    assertEquals "$expected" "$(full_state)"
+    assertEquals "100" "$(get_state "$expected" height)"
+}
+
+test_diff_state() {
+    set_state one=1 index=3 two=2
+    assertTrue  "diff state state" 'diff_state "$state" "$state"'
+    prev="$state"
+    set_state index=4
+    assertTrue  "diff prev prev"   'diff_state "$prev" "$prev"'
+    assertFalse "diff state prev"  'diff_state "$prev" "$state"'
+    assertTrue  "diff one"         'diff_state "$prev" "$state" one'
+    assertTrue  "diff one two"     'diff_state "$prev" "$state" one two'
+    assertFalse "diff index"       'diff_state "$prev" "$state" index'
+    assertFalse "diff one index"   'diff_state "$prev" "$state" one index'
+    assertFalse "diff index one"   'diff_state "$prev" "$state" index one'
 }
 
 test_check_dependencies() {
@@ -193,6 +228,38 @@ test_ccut() {
     assertEquals "Multiple lines" \
         "$(echo -e "one\ntwo")" \
         "$(echo -e "oneS\ntwoS" | ccut 3)"
+}
+
+test_nocolors_bash() {
+    assertTrue "[ 'A' = $'\x41' ]"
+    assert_nocolors nocolors
+}
+
+test_nocolors_posix() {
+    assert_nocolors nocolors_posix
+}
+
+assert_nocolors() {
+    local cmd="$1"
+    esc="\033"
+    red="$esc[0;31m"
+    bluish="$esc[38;5;60m"
+    reset="$esc[0m"
+    str="Default↓ is ${red}RED ${bluish}FANCY${reset} Default"
+    assertEquals \
+        "newline \\n escaped" \
+        "$(printf "%s" "newline \\n escaped" | $cmd)"
+    assertEquals "Default↓ is RED FANCY Default" \
+        "$(printf "$str" | $cmd)"
+    assertEquals \
+        "This has no control codes" \
+        "$(printf "This has no control codes" | $cmd)"
+    assertEquals \
+        "$(printf "one\ntwo")" \
+        "$(printf "one\ntw${red}o" | $cmd)"
+    assertEquals \
+        "RE" \
+        "$(printf "${red}RE$reset" | $cmd)"
 }
 
 test_log() {

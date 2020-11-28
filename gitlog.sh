@@ -1,10 +1,10 @@
-#!/usr/bin/env sh
-# Richard H. Tingstad's git GUI
+#!/bin/sh
+# Richard H. Tingstad's Git UI
 # https://github.com/tingstad/dotfiles
 set -e
 
 main() {
-    local file="$1"
+    file="$1"
     bootstrap "$@"
     from="HEAD"
     pager="$from"
@@ -13,25 +13,35 @@ main() {
     while true; do
         split_screen_if_not_split
         check_screen_size
-        lines="$(log git "$from" "$file" | head -n $height | ccut "$width")"
-        commit=$(echo "$lines" | nocolors | awk "NR==$index+1 { print \$1 }")
+        set_state from="$from" index="$index" height="$height" width="$width"
+        [ "$(get_state "$state" dirty_git)" = true ] || ! diff_state "$state" "$prev_state" from height width \
+            && _dirty_git=true || _dirty_git=false
+        if [ $_dirty_git = true ]; then
+            lines="$(log git "$from" "$file" | head -n "$height" | ccut "$width")"
+        fi
+        if [ $_dirty_git = true ] || ! diff_state "$state" "$prev_state" index; then
+            commit=$(printf "%s\n" "$lines" | nocolors | awk "NR==$index+1 { print \$1 }")
+        fi
         [ -n "$TMUX" ] && [ "$commit" != "$show_commit" ] \
-            && tmux respawn-pane -t "$session":"$window".1 -k "GIT_PAGER='less -RX -+F' git show $commit ${file:+ -- \"$file\"}" \
+            && tmux respawn-pane -t "$session":"$window".1 \
+                -k "GIT_PAGER='less -RX -+F' git show $commit ${file:+ -- \"$file\"}" \
             && show_commit="$commit"
         draw "$width"
         dirty_screen=n
+        set_state dirty_git=false
+        prev_state="$state"
         read_input
     done
 }
 
 bootstrap() {
-    local file="$1"
+    save_tty_settings
     trap 'quit' INT
     #trap 'TODO' WINCH
     check_dependencies git awk sed head less
     git rev-parse #assert git repository
     does_exist tmux || {
-        echo "Warning: tmux not found" >&2
+        printf "Warning: tmux not found" >&2
     }
     if does_exist tmux; then
         if [ -z "$TMUX" ]; then
@@ -41,84 +51,87 @@ bootstrap() {
         session="$(tmux display-message -p '#{session_id}')"
         window="$(tmux display-message -p '#{window_id}')"
         if [ -z "$DATSGNIT_INCEPTION" ]; then
-            local remain="$(does_exist bash && echo bash || echo sh)"
-            tmux new-window -e DATSGNIT_INCEPTION=yes -n datsgnitlog"$(date +%s)" "$0 $@; $remain -i"
+            _remain="$(does_exist bash && printf bash || printf sh)"
+            tmux new-window -e DATSGNIT_INCEPTION=yes -n datsgnitlog"$(date +%s)" "$0 $*; $_remain -i"
             exit
         fi
     fi
 }
 
 split_screen_if_not_split() {
-    if [ -n "$TMUX" ] && [ "$(tmux list-panes | line_count)" -lt 2 ]; then
+    if [ -n "$TMUX" ] \
+    && [ "$(tmux display-message -p '#{window_id}')" = "$window" ] \
+    && [ "$(tmux list-panes | line_count)" -lt 2 ]; then
         tmux split-window -h -d
         show_commit=""
     fi
 }
 check_screen_size() {
-    local cols=$COLUMNS
-    local rows=$LINES
+    _cols=$COLUMNS
+    _rows=$LINES
     if [ -n "$TMUX" ]; then
-        local size="$(tmux display -p '#{pane_height} #{pane_width}')"
-        if is_number "${size#* }" && is_number "${size% *}"; then
-            cols=${size#* }
-            rows=${size% *}
+        _size="$(tmux display -p '#{pane_height} #{pane_width}')"
+        if is_number "${_size#* }" && is_number "${_size% *}"; then
+            _cols=${_size#* }
+            _rows=${_size% *}
         fi
     fi
-    if [ -z "$cols" ]; then
-        size=$(stty size)
-        cols=${size#* }
-        rows=${size% *}
+    if [ -z "$_cols" ]; then
+        _size=$(stty size)
+        _cols=${_size#* }
+        _rows=${_size% *}
     fi
-    if ! is_number "$cols"; then
-        echo "Unable to detect window width $cols" >&2
-        exit 1
+    if ! is_number "$_cols"; then
+        printf "Unable to detect window width %s\n" "$_cols" >&2
+        quit 1
     fi
-    local new_height=$((rows - 5))
-    local new_width="$cols"
-    if [ "$new_height" != "$height" ] || [ "$new_width" != "$width" ]; then
+    _new_height=$((_rows - 5))
+    _new_width="$_cols"
+    if [ "$_new_height" != "$height" ] || [ "$_new_width" != "$width" ]; then
         dirty_screen=y
-        height=$((rows - 5))
-        width="$cols"
+        height=$((_rows - 5))
+        width="$_cols"
     fi
 }
 draw() {
     if [ "$dirty_screen" != "n" ]; then
-    local cols="$1"
-    local esc=$'\033'
-    local reset="${esc}[0m"
-    local u="${esc}[4m"
-    clear
-    echo " W E L C O M E"
-    echo "$(echo "$lines" | awk "NR==$index+1 { print \$1 }")" " Keys: j/↓, k/↑, ${u}f${reset}orward page, be${u}g${reset}inning, ${u}H${reset}ome/${u}M${reset}iddle/${u}L${reset}ast line, ${u}r${reset}ebase, ${u}F${reset}ixup, ${u}q${reset}uit" | ccut "$cols"
-    echo ""
-    echo "$lines"
+    _cols="$1"
+    _reset="\033[0m"
+    _u="\033[4m"
+    printf "\033c" #clear
+    printf " W E L C O M E %s\n" "$(printf '%s\n' "$lines" | awk "NR==$index+1 { print \$1 }")"
+    printf "Keys: j/↓, k/↑, " # length: 16
+    # shellcheck disable=SC2059
+    printf "${_u}f${_reset}orward page, be${_u}g${_reset}inning, ${_u}H${_reset}ome/${_u}M${_reset}iddle/${_u}L${_reset}ast line, ${_u}r${_reset}ebase, ${_u}F${_reset}ixup, ${_u}q${_reset}uit" | ccut "$(( _cols - 16 ))"
+    printf '\n'
+    printf "%s\n" "$lines"
     fi
     cursor_set $((index + 4)) 1
     printf ">"
 }
 
 cursor_set() {
-    local row="$1"
-    local col="$2"
-    printf "\033[%s;%sH" "$row" "$col"
+    _row="$1"
+    _col="$2"
+    printf "\033[%s;%sH" "$_row" "$_col"
 }
 
 read_input() {
-    local escape_char=$'\033'
-    local key=""
-    read -t 1 -rsn1 key || true # get 1 character
-    if [ "$key" = "$escape_char" ]; then
-        read -rsn2 key # read 2 more chars
+    _escape="27"
+    _key=""
+    _key="$(read_char 1 10)" # get 1 character
+    if [ "$(printf %d "'$_key")" = "$_escape" ]; then
+        _key="$(read_char 2)" # read 2 more chars
     fi
     dirty_screen=y #TODO remove so default is n
-    case $key in
+    case $_key in
         'q') quit ;;
         'k')  index_dec ;;
         '[A') index_dec ;;
         'j')  clear_cursor && dirty_screen=n && index_inc ;;
         '[B') index_inc ;;
-        '[D') echo LEFT ;;
-        '[C') echo RIGHT ;;
+        '[D') printf LEFT ;;
+        '[C') tmux select-pane -R ;;
         'g')  goto_beginning ;;
         'H')  index=0 ;;
         'L')  index_end ;;
@@ -128,52 +141,99 @@ read_input() {
         'r')  rebase ;;
         'F')  fixup ;;
         'w')  reword ;;
+        'v')  revert ;;
         'e')  edit_commit ;;
     esac
 }
 
+read_char() { # $1:chars #2:timeout?
+    stty -icanon -echo ${2:+min 0 time $2}
+    dd bs=1 count="$1" 2>/dev/null
+}
+
 set_state() {
-    # $1: name
-    # $2: value
-    local _new_state=""
-    while IFS= read -r _line; do
-        [ -n "$_new_state" ] && _new_state="$_new_state
-"
-        if [ "${_line% *}" = "$1" ]; then
-            _new_state="$_new_state$1 $2"
-        else
-            _new_state="$_new_state$_line"
-        fi
-    done <<-EOF
-	$state
+    while [ "$#" -gt 0 ]; do
+        [ -z "$1" ] && \
+            continue
+        _new_state=""
+        while read -r _line; do
+            for _word in $_line; do
+                if [ "${_word%=*}" = "${1%=*}" ]; then
+                    _new_state="$1
+$_new_state"
+                elif [ -n "$_word" ]; then
+                    _new_state="$_word
+$_new_state"
+                fi
+            done
+        done <<-EOF
+		$state
 EOF
-    if [ -z "$_new_state" ]; then
-            state="$1 $2"
+        if [ -z "$_new_state" ]; then
+            state="$1"
+        else
+            case "$_new_state" in
+                *"$1"*) state="$_new_state" ;;
+                *) state="$1
+$_new_state" ;;
+            esac
+        fi
+        shift
+    done
+}
+
+diff_state() {
+    _state1="$1"; shift
+    _state2="$1"; shift
+    if [ $# -eq 0 ]; then
+        [ "$_state1" = "$_state2" ]
     else
-        case "$_new_state" in
-            *"$1 $2"*) state="$_new_state" ;;
-            *) state="$_new_state
-$1 $2" ;;
-        esac
+        # shellcheck disable=SC2048,SC2086
+        [ "$(get_state "$_state1" $*)" = "$(get_state "$_state2" $*)" ]
     fi
 }
 
 get_state() {
+    _state="$1"
+    shift
+    while [ "$#" -gt 0 ]; do
+        [ -z "$1" ] && \
+            continue
+        get_state_value "$_state" "$1"
+        shift
+    done
+}
+
+get_state_value() {
+    # $1: state
+    # $2: name
     while IFS= read -r _line; do
-        [ "${_line% *}" = "$2" ] && \
-            echo "${_line#* }"
+        [ "${_line%=*}" = "$2" ] && {
+            printf "%s" "${_line#*=}"
+            break
+        }
     done <<-EOF
 	$1
 EOF
+    printf "\n"
+}
+
+full_state() {
+    printf "\
+from=%s
+index=%s
+height=%s
+width=%s
+" "$from" "$index" "$height" "$width"
 }
 
 log() {
-    local git_cmd="$1"
-    local from="$2"
-    local file="$3"
-    $git_cmd log --pretty=format:'   %C(auto)%h %cd %d %s' --date=short "$from" \
+    _git_cmd="$1"
+    _from="$2"
+    _file="$3"
+    $_git_cmd log --pretty=format:'   %C(auto)%h %cd %d %s' --date=short "$_from" \
         --color=always \
-        ${file:+ -- "$file"}
+        ${_file:+ -- "$_file"}
 }
 
 fixup() {
@@ -182,6 +242,7 @@ fixup() {
     else
         git commit --fixup="$commit" && GIT_EDITOR=true git_rebase "$commit"^
     fi
+    set_state dirty_git=true
     goto_beginning
 }
 
@@ -192,9 +253,11 @@ rebase() {
     clear
     git_rebase "$commit"
     if is_rebasing; then
-        echo "Happy rebasing :)"
+        printf "Happy rebasing :)"
+        restore_tty_settings
         exit
     fi
+    set_state dirty_git=true
     goto_beginning
 }
 
@@ -211,8 +274,15 @@ reword() {
     if [ "$index" -eq 0 ] && [ "$from" = "HEAD" ]; then
         git commit --amend
     else
-        GIT_SEQUENCE_EDITOR="sed -i.old 's/^pick "$commit"/r "$commit"/'" git_rebase "$commit"^
+        GIT_SEQUENCE_EDITOR="sed -i.old 's/^pick ""$commit""/r ""$commit""/'" git_rebase "$commit"^
     fi
+    set_state dirty_git=true
+    goto_beginning
+}
+
+revert() {
+    git revert "$commit"
+    set_state dirty_git=true
     goto_beginning
 }
 
@@ -222,9 +292,10 @@ edit_commit() {
     fi
     clear
     if [ "$index" -gt 0 ] || [ "$from" != "HEAD" ]; then
-        GIT_SEQUENCE_EDITOR="sed -i.old 's/^pick "$commit"/e "$commit"/'" git_rebase "$commit"^
+        GIT_SEQUENCE_EDITOR="sed -i.old 's/^pick ""$commit""/e ""$commit""/'" git_rebase "$commit"^
     fi
-    echo "Happy editing :)"
+    printf "Happy editing :)"
+    restore_tty_settings
     exit
 }
 
@@ -248,14 +319,14 @@ clear_cursor() {
     printf " "
 }
 get_index_end() {
-    local end=$(echo "$lines" | line_count)
-    [ "$end" -lt $height ] \
-        && echo $((end - 1)) \
-        || echo $((height - 1))
+    _end=$(printf "%s\n" "$lines" | line_count)
+    [ "$_end" -lt $height ] \
+        && printf "%s" $((_end - 1)) \
+        || printf "%s" $((height - 1))
 }
 index_inc() {
     if [ "$index" -lt $((height - 1)) ] \
-            && [ $((index + 1)) -lt "$(echo "$lines" | line_count)" ]; then
+            && [ $((index + 1)) -lt "$(printf "%s\n" "$lines" | line_count)" ]; then
         index=$((index + 1))
     fi
 }
@@ -265,17 +336,66 @@ index_dec() {
     fi
 }
 forward_page() {
-    from=$(echo "$lines" | nocolors | awk "END { print \$1 }")
+    from=$(printf "%s\n" "$lines" | nocolors | awk "END { print \$1 }")
     pager="$pager $from"
     index=0
 }
+
 quit() {
+    restore_tty_settings
     [ -n "$TMUX" ] && tmux kill-window
-    exit
+    exit "$1"
 }
+
+save_tty_settings() {
+    saved_tty_settings="$(stty -g)"
+}
+
+restore_tty_settings() {
+    stty "$saved_tty_settings"
+}
+
 nocolors() {
-    sed $'s,\x1b\\[[0-9;]*[A-Za-z],,g'
+    # shellcheck disable=SC2039
+    if [ 'A' = $'\x41' ] 2>/dev/null # Attempt to check support for $'..' (ANSI-C Quoting)
+    then                             # Should be supported by most modern shells
+        sed $'s,\x1b\\[[0-9;]*[A-Za-z],,g'
+    else
+        nocolors_posix
+    fi
 }
+
+nocolors_posix() {
+    _line=""
+    while IFS= read -r _line || [ -n "$_line" ]; do
+        nocolors_line "$_line"
+    done
+}
+nocolors_line() {
+    _rest="$1"
+    _result=""
+    case "$_rest" in
+        *[*) true ;;
+        *) _result="$_rest"; _rest="" ;; #skip loop if no [
+    esac
+    while [ -n "$_rest" ]; do
+        _code="$(printf %d "'$_rest")"
+        _tail="${_rest#?}"
+        _char="${_rest%%$_tail}"
+        _rest="${_tail}"
+        if [ "$_code" = "27" ] # 27 = ESC
+        then
+            _ansi="$(expr " $_rest" : " \(\[[0-9;]*[A-Za-z]\)")"
+            if [ -n "$_ansi" ]; then
+                _rest="${_rest##$_ansi}"
+                continue
+            fi
+        fi
+        _result="$_result$_char"
+    done
+    printf "%s\n" "$_result"
+}
+
 ccut() {
     awk -v max="$1" -v esc='\033' '#
         # Simulates `cut -c 1-X` for text containing ANSI color codes
@@ -306,14 +426,14 @@ ccut() {
 }
 
 check_dependencies() {
-    local missing=""
+    _missing=""
     for cmd; do
         if ! does_exist "$cmd"; then
-            missing="$missing $cmd"
+            _missing="$_missing $cmd"
         fi
     done
-    [ -z "$missing" ] || {
-        echo "Missing dependencies:$missing" >&2
+    [ -z "$_missing" ] || {
+        printf "Missing dependencies:%s" "$_missing" >&2
         false
     }
 }
@@ -323,12 +443,12 @@ does_exist() {
 }
 
 line_count() {
-    local count=0
-    local line=""
-    while IFS= read -r line || [ -n "$line" ]; do
-        count=$((count+1))
+    _count=0
+    _line=""
+    while IFS= read -r _line || [ -n "$_line" ]; do
+        _count=$((_count+1))
     done
-    printf '%s\n' "$count"
+    printf '%s\n' "$_count"
 }
 
 is_number() {
@@ -339,17 +459,8 @@ is_number() {
     esac
 }
 
-sourced=0
-if [ -n "$ZSH_EVAL_CONTEXT" ]; then
-    case $ZSH_EVAL_CONTEXT in *:file) sourced=1;; esac
-elif [ -n "$KSH_VERSION" ]; then
-    [ "$(cd $(dirname -- $0) && pwd -P)/$(basename -- $0)" != "$(cd $(dirname -- ${.sh.file}) && pwd -P)/$(basename -- ${.sh.file})" ] && sourced=1
-elif [ -n "$BASH_VERSION" ]; then
-    (return 0 2>/dev/null) && sourced=1
-#else # other shells: examine for known shell binary filenames. Detects `sh` and `dash`; add additional shell filenames as needed.
-#    case ${0##*/} in sh|dash) sourced=1;; esac
+if [ -n "$BASH_VERSION" ]; then
+    return 0 2>/dev/null || true
 fi
 
-if [ $sourced -eq 0 ]; then
-    main "$@"
-fi
+main "$@"
