@@ -10,7 +10,6 @@ fi
 user_string='$(id -u):$(id -g)'
 
 vol_opt='$(selinuxenabled 2>/dev/null && echo :Z)'
-vol_op2='$(selinuxenabled 2>/dev/null && echo ,Z)'
 
 # TODO docker run --rm unguiculus/docker-jq:1.6 jq
 
@@ -28,7 +27,22 @@ export -f node8
 
 # Only working dir supported
 alias npm6='docker run -it --rm -v "$PWD":/dir'$vol_opt' -w /dir -p 127.0.0.1:8080:8080/tcp node:14.7.0-alpine3.10 npm'
-alias shellcheck='docker run --rm -v "$PWD:/mnt:ro'$vol_op2'" --network none koalaman/shellcheck:stable'
+
+# Only one file supported
+shellcheck() {
+    local last_arg="${@:$#}"
+    file=""
+    if [ -e "$last_arg" ]; then
+        file="$(cd "$(dirname "$last_arg")"; pwd -P)/$(basename "$last_arg")"
+        set -- "${@:1:$#-1}"
+    fi
+    local vol_opt="$(selinuxenabled 2>/dev/null && echo ,Z)"
+    docker run --rm --network none \
+        ${file:+ -v "$file":/mnt/script:ro$vol_opt} \
+        koalaman/shellcheck:stable \
+        "$@" ${file:+script}
+}
+export -f shellcheck
 
 # Only working dir supported
 python () {

@@ -17,6 +17,10 @@ testSourceAliasesExitCode() {
         "Should trunc" \
         "$(bash -c 'echo "Should truncate" | ccut 12')"
     if [ "$TRAVIS_OS_NAME" = "linux" ] || docker version >/dev/null ; then
+        assertEquals "ShellCheck - shell script analysis tool" \
+                     "$(shellcheck -V | sed '2,$d')"
+        shellcheck "$DIR/../gitlog.sh"
+        assertTrue "ShellCheck passed ($?)" "[ $? -eq 0 ]"
         assertEquals \
             "Apache Maven 3.6.0 Java version: 1.8.0 " \
             "$(bash -c 'mvn_8 -v' \
