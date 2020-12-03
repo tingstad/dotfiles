@@ -20,7 +20,7 @@ main() {
             lines="$(log git "$from" "$file" | head -n "$height" | ccut "$width")"
         fi
         if [ $_dirty_git = true ] || ! diff_state "$state" "$prev_state" index; then
-            commit=$(printf "%s\n" "$lines" | nocolors | awk "NR==$index+1 { print \$1 }")
+            commit=$(printf "%s\n" "$lines" | awk "NR==$index+1 { print \$1 }" | nocolors)
         fi
         [ -n "$TMUX" ] && [ "$commit" != "$show_commit" ] \
             && tmux respawn-pane -t "$session":"$window".1 \
@@ -336,7 +336,7 @@ index_dec() {
     fi
 }
 forward_page() {
-    from=$(printf "%s\n" "$lines" | nocolors | awk "END { print \$1 }")
+    from=$(printf "%s\n" "$lines" | awk "END { print \$1 }" | nocolors)
     pager="$pager $from"
     index=0
 }
