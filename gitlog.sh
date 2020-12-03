@@ -381,7 +381,7 @@ nocolors_line() {
     while [ -n "$_rest" ]; do
         _code="$(printf %d "'$_rest")"
         _tail="${_rest#?}"
-        _char="${_rest%%$_tail}"
+        _char="${_rest%%"$_tail"}"
         _rest="${_tail}"
         if [ "$_code" = "27" ] # 27 = ESC
         then
