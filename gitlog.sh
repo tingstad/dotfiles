@@ -70,7 +70,7 @@ check_screen_size() {
     _cols=$COLUMNS
     _rows=$LINES
     if [ -n "$TMUX" ]; then
-        _size="$(tmux display -p '#{pane_height} #{pane_width}')"
+        _size="$(tmux display -t "$session":"$window".0 -p '#{pane_height} #{pane_width}')"
         if is_number "${_size#* }" && is_number "${_size% *}"; then
             _cols=${_size#* }
             _rows=${_size% *}
