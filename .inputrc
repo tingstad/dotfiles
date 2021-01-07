@@ -10,5 +10,8 @@ set show-all-if-ambiguous On
 set show-all-if-unmodified On
 set visible-stats On
 
-set editing-mode vi
+#set editing-mode vi
+
+"\C-a":beginning-of-line
+"\ee":'æ'
 
