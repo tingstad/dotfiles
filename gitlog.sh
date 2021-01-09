@@ -102,7 +102,7 @@ draw() {
     printf " W E L C O M E %s\n" "$(printf '%s\n' "$lines" | awk "NR==$index+1 { print \$1 }")"
     printf "Keys: j/↓, k/↑, " # length: 16
     # shellcheck disable=SC2059
-    printf "${_u}f${_reset}orward page, be${_u}g${_reset}inning, ${_u}H${_reset}ome/${_u}M${_reset}iddle/${_u}L${_reset}ast line, ${_u}r${_reset}ebase, ${_u}F${_reset}ixup, ${_u}q${_reset}uit" | ccut "$(( _cols - 16 ))"
+    printf "${_u}f${_reset}orward page, be${_u}g${_reset}inning, ${_u}H${_reset}ome/${_u}M${_reset}iddle/${_u}L${_reset}ast line, ${_u}r${_reset}ebase, ${_u}F${_reset}ixup, ${_u}q${_reset}uit" | ccut "$((_cols - 16))"
     printf '\n'
     printf "%s\n" "$lines"
     fi
@@ -143,12 +143,63 @@ read_input() {
         'w')  reword ;;
         'v')  revert ;;
         'e')  edit_commit ;;
+        'a')  about ;;
     esac
 }
 
 read_char() { # $1:chars #2:timeout?
     stty -icanon -echo ${2:+min 0 time $2}
     dd bs=1 count="$1" 2>/dev/null
+}
+
+about() {
+    _col=1
+    while [ $_col -le "$width" ]; do
+        _row=1
+        while [ $_row -le $height ]; do
+            cursor_set $_row $_col
+            printf "%s" " "
+            _row=$((_row + 1))
+        done
+        if [ "$(random 0 4)" -lt 1 ]; then delay 1; fi
+        _col=$((_col + 1))
+    done
+
+    _col=3
+    _row=5
+    _rest="Presented by:"
+    while [ -n "$_rest" ]; do
+        _tail="${_rest#?}"
+        _char="${_rest%%"$_tail"}"
+        _rest="${_tail}"
+        cursor_set $_row $_col
+        printf "%s" "$_char"
+        delay 1
+        _col=$((_col + 1))
+        if [ "$_char" = ":" ]; then
+            _row=$((_row + 1))
+            _rest="Richard Tingstad"
+        fi
+    done
+    _count=5
+    while [ $_count -gt 0 ]; do
+        cursor_set 8 7
+        printf "%s" $_count
+        sleep 1
+        _count=$((_count - 1))
+    done
+}
+
+delay() {
+    if [ "$1" -lt 1 ]; then
+        return
+    fi
+    stty -icanon -echo min 0 time "$1"
+    dd bs=1 count=1 2>/dev/null
+}
+
+random() {
+    awk -v min="$1" -v max="$2" 'BEGIN{srand(); print int(min+rand()*(max-min+1))}'
 }
 
 set_state() {
