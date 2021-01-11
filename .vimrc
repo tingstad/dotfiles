@@ -38,6 +38,15 @@ nnoremap <Leader>o v<Esc>o<Esc>`<
 " insert space:
 nnoremap <Leader>i i<Space><Esc>l
 
+"<Esc> = Alt
+inoremap <Esc>a å
+inoremap <Esc>A Å
+inoremap <Esc>' æ
+inoremap <Esc>" Æ
+inoremap <Esc>o ø
+"<Esc>O interferes with arrow keys, and I cannot get <Esc>O<nop> working
+inoremap <Esc>: Ø
+
 "augroup configgroup
 "    autocmd!
 "    autocmd FileType sh setlocal noexpandtab

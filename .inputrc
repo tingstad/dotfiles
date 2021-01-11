@@ -13,5 +13,10 @@ set visible-stats On
 #set editing-mode vi
 
 "\C-a":beginning-of-line
-"\ee":'æ'
+"\e'":'æ'
+"\e\"":'Æ'
+"\eo":'ø'
+"\eO":'Ø'
+"\ea":'å'
+"\eA":'Å'
 
