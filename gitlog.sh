@@ -14,7 +14,7 @@ main() {
         split_screen_if_not_split
         check_screen_size
         set_state from="$from" index="$index" height="$height" width="$width"
-        [ "$(get_state "$state" dirty_git)" = true ] || ! diff_state "$state" "$prev_state" from height width \
+        [ "$(get_state "$state" dirty_git)" = true ] || ! diff_state "$state" "$prev_state" from height \
             && _dirty_git=true || _dirty_git=false
         if [ $_dirty_git = true ]; then
             lines="$(log git "$from" "$file" | head -n "$height" | ccut "$width")"
