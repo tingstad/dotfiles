@@ -395,7 +395,7 @@ forward_page() {
 quit() {
     restore_tty_settings
     [ -n "$TMUX" ] && tmux kill-window
-    exit "$1"
+    exit "${1:-0}"
 }
 
 save_tty_settings() {
