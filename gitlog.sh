@@ -20,6 +20,7 @@ main() {
             lines="$(log git "$from" "$file" | head -n "$height" | ccut "$width")"
         fi
         if [ $_dirty_git = true ] || ! diff_state "$state" "$prev_state" index; then
+            dirty_screen=y
             commit=$(printf "%s\n" "$lines" | awk "NR==$index+1 { print \$1 }" | nocolors)
         fi
         [ -n "$TMUX" ] && [ "$commit" != "$show_commit" ] \
@@ -123,7 +124,6 @@ read_input() {
     if [ "$(printf %d "'$_key")" = "$_escape" ]; then
         _key="$(read_char 2)" # read 2 more chars
     fi
-    dirty_screen=y #TODO remove so default is n
     case $_key in
         'q') quit ;;
         'k')  index_dec ;;
@@ -143,7 +143,7 @@ read_input() {
         'w')  reword ;;
         'v')  revert ;;
         'e')  edit_commit ;;
-        'a')  about ;;
+        'a')  about && dirty_screen=y ;;
     esac
 }
 
