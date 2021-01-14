@@ -304,7 +304,7 @@ rebase() {
     clear
     git_rebase "$commit"
     if is_rebasing; then
-        printf "Happy rebasing :)"
+        printf "Happy rebasing :)\n"
         restore_tty_settings
         exit
     fi
@@ -345,7 +345,7 @@ edit_commit() {
     if [ "$index" -gt 0 ] || [ "$from" != "HEAD" ]; then
         GIT_SEQUENCE_EDITOR="sed -i.old 's/^pick ""$commit""/e ""$commit""/'" git_rebase "$commit"^
     fi
-    printf "Happy editing :)"
+    printf "Happy editing :)\n"
     restore_tty_settings
     exit
 }
