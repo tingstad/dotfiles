@@ -14,10 +14,15 @@ main() {
         split_screen_if_not_split
         check_screen_size
         set_state from="$from" index="$index" height="$height" width="$width"
-        [ "$(get_state "$state" dirty_git)" = true ] || ! diff_state "$state" "$prev_state" from height \
+        [ "$(get_state "$state" dirty_git)" = true ] \
+            || ! diff_state "$state" "$prev_state" from \
+            || [ "$(get_state "$prev_state" height)" -lt "$height" ] \
             && _dirty_git=true || _dirty_git=false
         if [ $_dirty_git = true ]; then
-            lines="$(log git "$from" "$file" | head -n "$height" | ccut "$width")"
+            _gitlog="$(log git "$from" "$file" | head -n $((height*4)))"
+        fi
+        if [ $_dirty_git = true ] || ! diff_state "$state" "$prev_state" height width; then
+            lines="$(printf "%s\n" "$_gitlog" | head -n "$height" | ccut "$width")"
         fi
         if [ $_dirty_git = true ] || ! diff_state "$state" "$prev_state" index; then
             dirty_screen=y
