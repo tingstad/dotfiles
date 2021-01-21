@@ -23,6 +23,8 @@ set foldlevelstart=99   " ... but keep all folds open from start
 set ruler               " show cursor position and relative file position
 "set visualbell          " do not beep
 
+set timeout timeoutlen=1000 ttimeoutlen=50
+
 " default leader is \  Change with: let mapleader = ","
 map <space> <Leader>
 nnoremap <Leader><space> :set hlsearch!<cr>
