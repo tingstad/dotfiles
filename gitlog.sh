@@ -375,14 +375,14 @@ clear_cursor() {
     printf " "
 }
 get_index_end() {
-    _end=$(printf "%s\n" "$lines" | line_count)
+    _end=$(line_count "$lines")
     [ "$_end" -lt $height ] \
         && printf "%s" $((_end - 1)) \
         || printf "%s" $((height - 1))
 }
 index_inc() {
     if [ "$index" -lt $((height - 1)) ] \
-            && [ $((index + 1)) -lt "$(printf "%s\n" "$lines" | line_count)" ]; then
+            && [ $((index + 1)) -lt "$(line_count "$lines")" ]; then
         index=$((index + 1))
     fi
 }
@@ -499,6 +499,17 @@ does_exist() {
 }
 
 line_count() {
+    if [ -z "${1+x}" ]; then
+        line_count_stdin
+    elif [ -z "$1" ]; then
+        printf '%s\n' 0
+    else
+        line_count_stdin <<EOF
+$1
+EOF
+    fi
+}
+line_count_stdin() {
     _count=0
     _line=""
     while IFS= read -r _line || [ -n "$_line" ]; do

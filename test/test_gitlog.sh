@@ -168,6 +168,13 @@ test_line_count() {
     assertEquals "3" "$(printf '1\n2\n3' | line_count)"
     assertEquals "3" "$(printf '1\n2\n3\n' | line_count)"
 }
+test_line_count_with_argument() {
+    assertEquals "1" "$(line_count "hei")"
+    assertEquals "0" "$(line_count "")"
+    assertEquals "2" "$(line_count "$(seq 1 2)")"
+    assertEquals "3" "$(line_count "$(printf '1\n2\n3')")"
+    assertEquals "3" "$(line_count "$(printf '1\n2\n3\n')")"
+}
 
 test_is_number() {
     assertFalse "Letter" "is_number A"
