@@ -26,9 +26,9 @@ main() {
         fi
         if [ $_dirty_git = true ] || ! diff_state "$state" "$prev_state" index; then
             commit=$(printf "%s\n" "$lines" | awk "NR==$index+1 { print \$1 }" | nocolors)
-        fi
-        if [ $_dirty_git = true ]; then
-            dirty_screen=y
+            if [ $_dirty_git = true ]; then
+                dirty_screen=y
+            fi
         fi
         [ -n "$TMUX" ] && [ "$commit" != "$show_commit" ] \
             && tmux respawn-pane -t "$session":"$window".1 \
