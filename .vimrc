@@ -40,6 +40,11 @@ nnoremap <Leader>o v<Esc>o<Esc>`<
 " insert space:
 nnoremap <Leader>i i<Space><Esc>l
 
+" insert one letter (<Esc> = Alt):
+nnoremap <Leader>a a<Space><Esc>r
+nnoremap <Leader>i i<Space><Esc>r
+nnoremap <Leader>A A<Space><Esc>r
+
 "<Esc> = Alt
 inoremap <Esc>a å
 inoremap <Esc>A Å
