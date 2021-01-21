@@ -28,10 +28,10 @@ set timeout timeoutlen=1000 ttimeoutlen=50
 " default leader is \  Change with: let mapleader = ","
 map <space> <Leader>
 nnoremap <Leader><space> :set hlsearch!<cr>
-nnoremap <Leader>v :vsplit **/*
-nnoremap <Leader>s :split **/*
-nnoremap <Leader>e :edit **/*
-nnoremap <Leader>t :tabnew **/*
+nnoremap <Leader>v :vsplit <C-r>=expand("%:p:h")<Enter>/**/*
+nnoremap <Leader>s :split <C-r>=expand("%:p:h")<Enter>/**/*
+nnoremap <Leader>e :edit <C-r>=expand("%:p:h")<Enter>/**/*
+nnoremap <Leader>t :tabnew <C-r>=expand("%:p:h")<Enter>/**/*
 nnoremap <Leader>w :w<cr>
 " insert newline above:
 nnoremap <Leader>O v<Esc>O<Esc>`<
