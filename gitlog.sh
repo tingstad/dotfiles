@@ -299,7 +299,9 @@ fixup() {
         git commit --fixup="$commit" && GIT_EDITOR=true git_rebase "$commit"^
     fi
     set_state dirty_git=true
-    goto_beginning
+    if [ "$from" != "HEAD" ]; then
+        goto_beginning
+    fi
 }
 
 rebase() {
@@ -333,7 +335,9 @@ reword() {
         GIT_SEQUENCE_EDITOR="sed -i.old 's/^pick ""$commit""/r ""$commit""/'" git_rebase "$commit"^
     fi
     set_state dirty_git=true
-    goto_beginning
+    if [ "$from" != "HEAD" ]; then
+        goto_beginning
+    fi
 }
 
 revert() {
