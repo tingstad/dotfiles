@@ -51,8 +51,9 @@ inoremap <Esc>A Å
 inoremap <Esc>' æ
 inoremap <Esc>" Æ
 inoremap <Esc>o ø
-"<Esc>O interferes with arrow keys, and I cannot get <Esc>O<nop> working
-inoremap <Esc>: Ø
+inoremap <Esc>O Ø
+"<Esc>O interferes with arrow keys, but this helps:
+inoremap <Esc>OD <Left>
 
 "augroup configgroup
 "    autocmd!
