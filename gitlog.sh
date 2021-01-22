@@ -26,11 +26,12 @@ main() {
         fi
         if [ $_dirty_git = true ] || ! diff_state "$state" "$prev_state" index; then
             commit=$(printf "%s\n" "$lines" | awk "NR==$index+1 { print \$1 }" | nocolors)
-            if [ $_dirty_git = true ]; then
-                dirty_screen=y
-            else
+            if ! [ $_dirty_git = true ]; then
                 clear_cursor "$(get_state_value "$prev_state" index)"
             fi
+        fi
+        if [ $_dirty_git = true ] || ! diff_state "$state" "$prev_state" width height; then
+            dirty_screen=y
         fi
         [ -n "$TMUX" ] && [ "$commit" != "$show_commit" ] \
             && tmux respawn-pane -t "$session":"$window".1 \
@@ -98,7 +99,6 @@ check_screen_size() {
     _new_height=$((_rows - 5))
     _new_width="$_cols"
     if [ "$_new_height" != "$height" ] || [ "$_new_width" != "$width" ]; then
-        dirty_screen=y
         height=$((_rows - 5))
         width="$_cols"
     fi
