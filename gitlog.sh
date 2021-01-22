@@ -411,6 +411,7 @@ forward_page() {
 quit() {
     restore_tty_settings
     [ -n "$TMUX" ] && tmux kill-window
+    cursor_set $((height + 4)) 1
     exit "${1:-0}"
 }
 
