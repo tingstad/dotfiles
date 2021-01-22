@@ -376,11 +376,11 @@ index_mid() {
     index=$(($(get_index_end) / 2))
 }
 index_end() {
-    clear_cursor
+    clear_cursor "$index"
     index=$(get_index_end)
 }
 clear_cursor() {
-    cursor_set $((index + 4)) 1
+    cursor_set $((${1:-$index} + 4)) 1
     printf " "
 }
 get_index_end() {
