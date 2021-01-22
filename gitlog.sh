@@ -28,6 +28,8 @@ main() {
             commit=$(printf "%s\n" "$lines" | awk "NR==$index+1 { print \$1 }" | nocolors)
             if [ $_dirty_git = true ]; then
                 dirty_screen=y
+            else
+                clear_cursor "$(get_state_value "$prev_state" index)"
             fi
         fi
         [ -n "$TMUX" ] && [ "$commit" != "$show_commit" ] \
@@ -140,7 +142,7 @@ read_input() {
         '[D') printf LEFT ;;
         '[C') tmux select-pane -R ;;
         'g')  goto_beginning ;;
-        'H')  clear_cursor && index=0 ;;
+        'H')  index=0 ;;
         'L')  index_end ;;
         'M')  index_mid ;;
         'l')  tmux select-pane -R ;;
@@ -366,17 +368,14 @@ git_rebase() {
 }
 
 goto_beginning() {
-    clear_cursor
     from="HEAD"
     index=0
 }
 
 index_mid() {
-    clear_cursor
     index=$(($(get_index_end) / 2))
 }
 index_end() {
-    clear_cursor "$index"
     index=$(get_index_end)
 }
 clear_cursor() {
@@ -390,14 +389,12 @@ get_index_end() {
         || printf "%s" $((height - 1))
 }
 index_inc() {
-    clear_cursor
     if [ "$index" -lt $((height - 1)) ] \
             && [ $((index + 1)) -lt "$(line_count "$lines")" ]; then
         index=$((index + 1))
     fi
 }
 index_dec() {
-    clear_cursor
     if [ $index -gt 0 ]; then
         index=$((index - 1))
     fi
