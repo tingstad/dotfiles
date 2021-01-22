@@ -14,18 +14,29 @@ testThatDrawWritesHeading() {
     local contains=' W E L C O M E'
     assertEquals "$contains" "$(draw | egrep -o "$contains")"
 }
+
 test_key_k() {
+    read -r -d '' lines <<- EOF
+	  * db334c1 2021-01-21  Commit 1
+	  * db334c0 2021-01-20  Commit 0
+	EOF
     index=1
     read_input <<< k
     assertEquals "k (up) should decrement pointer" 0 $index
 }
+
 test_key_j() {
-    lines="$(yes | head)"
+    read -r -d '' lines <<- EOF
+	  * db334c3 2021-01-23  Commit 3
+	  * db334c2 2021-01-22  Commit 2
+	  * db334c1 2021-01-21  Commit 1
+	EOF
     index=1
     height=3
     read_input <<< j
     assertEquals "j (down) should increment pointer" 2 $index
 }
+
 test_key_g() {
     from=some_commit
     index=2
@@ -33,65 +44,102 @@ test_key_g() {
     assertEquals "g (beginning) should reset pointer" 0 $index
     assertEquals "g (beginning) should reset 'from'" HEAD $from
 }
+
 test_key_H() {
+    read -r -d '' lines <<- EOF
+	  * db334c3 2021-01-23  Commit 3
+	  * db334c2 2021-01-22  Commit 2
+	  * db334c1 2021-01-21  Commit 1
+	EOF
     index=2
     read_input <<< H
     assertEquals "H (Home line) should reset pointer" 0 $index
 }
+
 test_key_L() {
-    lines="$(yes | head -n 30)"
-    height=20
+    lines=""
+    for i in {1..9}; do
+        lines="$(printf '%s\n%s' "  * db334c$i 2021-01-2$i  Commit $i" "$lines")"
+    done
+    height=7
     read_input <<< L
-    assertEquals "L (end) should set pointer to end" 19 $index
+    assertEquals "L (end) should set pointer to end" 6 $index
 }
+
 test_key_L_end() {
-    lines="$(yes | head -n 10)"
+    lines=""
+    for i in {0..9}; do
+        lines="$(printf '%s\n%s' "  * db334c$i 2021-01-2$i  Commit $i" "$lines")"
+    done
     height=20
     read_input <<< L
     assertEquals "L (end) should set pointer to end" 9 $index
 }
+
 test_key_M() {
-    lines="$(yes | head -n 30)"
+    lines=""
+    for i in {1..30}; do
+        lines="$(printf '  * db334%02d 2021-01-01  Commit %d\n%s' $i $i "$lines")"
+    done
     height=20
     read_input <<< M
     assertEquals "M should set pointer to middle" 9 $index
 }
+
 test_key_M_short_end() {
-    lines="$(yes | head -n 10)"
+    lines=""
+    for i in {1..10}; do
+        lines="$(printf '  * db334%02d 2021-01-01  Commit %d\n%s' $i $i "$lines")"
+    done
     height=20
     read_input <<< M
     assertEquals "M should set pointer to middle" 4 $index
 }
+
 test_key_k_at_top() {
     index=0
     read_input <<< k
     assertEquals "k (up) should not decrement pointer at start" 0 $index
 }
+
 test_key_j_bottom() {
-    lines="$(yes | head)"
+    read -r -d '' lines <<- EOF
+	  * db334c3 2021-01-23  Commit 3
+	  * db334c2 2021-01-22  Commit 2
+	  * db334c1 2021-01-21  Commit 1
+	EOF
     index=1
     height=2
     read_input <<< j
     assertEquals "j (down) should not increment pointer at bottom" 1 $index
 }
+
 test_key_j_end() {
-    lines="$(yes | head -n 2)"
+    read -r -d '' lines <<- EOF
+	  * db334c2 2021-01-22  Commit 2
+	  * db334c1 2021-01-21  Commit 1
+	EOF
     index=1
     height=9
     read_input <<< j
     assertEquals "j (down) should not increment pointer at bottom" 1 $index
 }
+
 test_key_f_forward() {
     pager=('HEAD')
     from='HEAD'
-    lines="$(seq 1 10)"
+    lines=""
+    for i in {1..10}; do
+        lines="$(printf '  * 00000%02d 2021-01-01  Commit %d\n%s' $i $i "$lines")"
+    done
     index=2
     height=5
     read_input <<< f
     assertEquals "f should set index 0" 0 $index
-    assertEquals "f should set HEAD" 10 $from
-    assertEquals "f should set pager" 'HEAD 10' "${pager[*]}"
+    assertEquals "f should set HEAD" 0000001 $from
+    assertEquals "f should set pager" 'HEAD 0000001' "${pager[*]}"
 }
+
 test_check_screen_size() {
     height=""
     width=""
@@ -272,10 +320,10 @@ assert_nocolors() {
 test_log() {
     local git_mock=echo
     assertEquals \
-        "log --pretty=format:   %C(auto)%h %cd %d %s --date=short HEAD --color=always -- file.txt" \
+        "log --pretty=format:  * %C(auto)%h %cd %d %s --date=short HEAD --color=always -- file.txt" \
         "$(log $git_mock HEAD file.txt)"
     assertEquals \
-        "log --pretty=format:   %C(auto)%h %cd %d %s --date=short HEAD --color=always" \
+        "log --pretty=format:  * %C(auto)%h %cd %d %s --date=short HEAD --color=always" \
         "$(log $git_mock HEAD)"
 }
 

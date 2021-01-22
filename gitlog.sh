@@ -25,7 +25,7 @@ main() {
             lines="$(printf "%s\n" "$_gitlog" | head -n "$height" | ccut "$width")"
         fi
         if [ $_dirty_git = true ] || ! diff_state "$state" "$prev_state" index; then
-            commit=$(printf "%s\n" "$lines" | awk "NR==$index+1 { print \$1 }" | nocolors)
+            commit=$(printf "%s\n" "$lines" | awk "NR==$index+1 { print \$2 }" | nocolors)
             if ! [ $_dirty_git = true ]; then
                 clear_cursor "$(get_state_value "$prev_state" index)"
             fi
@@ -109,7 +109,7 @@ draw() {
     _reset="\033[0m"
     _u="\033[4m"
     printf "\033c" #clear
-    printf " W E L C O M E %s\n" "$(printf '%s\n' "$lines" | awk "NR==$index+1 { print \$1 }")"
+    printf " W E L C O M E %s\n" "$(printf '%s\n' "$lines" | awk "NR==$index+1 { print \$2 }")"
     printf "Keys: j/↓, k/↑, " # length: 16
     # shellcheck disable=SC2059
     printf "${_u}f${_reset}orward page, be${_u}g${_reset}inning, ${_u}H${_reset}ome/${_u}M${_reset}iddle/${_u}L${_reset}ast line, ${_u}r${_reset}ebase, ${_u}F${_reset}ixup, ${_u}q${_reset}uit" | ccut "$((_cols - 16))"
@@ -291,7 +291,7 @@ log() {
     _git_cmd="$1"
     _from="$2"
     _file="$3"
-    $_git_cmd log --pretty=format:'   %C(auto)%h %cd %d %s' --date=short "$_from" \
+    $_git_cmd log --pretty=format:'  * %C(auto)%h %cd %d %s' --date=short "$_from" \
         --color=always \
         ${_file:+ -- "$_file"}
 }
@@ -399,8 +399,9 @@ index_dec() {
         index=$((index - 1))
     fi
 }
+
 forward_page() {
-    from=$(printf "%s\n" "$lines" | awk "END { print \$1 }" | nocolors)
+    from=$(printf "%s\n" "$lines" | awk "END { print \$2 }" | nocolors)
     pager="$pager $from"
     index=0
 }
