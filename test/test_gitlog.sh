@@ -37,6 +37,22 @@ test_key_j() {
     assertEquals "j (down) should increment pointer" 2 $index
 }
 
+test_key_j_k_graph() {
+    read -r -d '' lines <<- EOF
+	  *   db334c3 2021-01-23  Commit 3
+	  |\ 
+	  | * db334c2 2021-01-22  Commit 2
+	  |/
+	  *   db334c1 2021-01-21  Commit 1
+	EOF
+    height=5
+    index=0
+    read_input <<< j
+    assertEquals "increment index graph" 2 $index
+    read_input <<< j
+    assertEquals "increment index graph" 4 $index
+}
+
 test_key_g() {
     from=some_commit
     index=2

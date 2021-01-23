@@ -388,12 +388,27 @@ get_index_end() {
         && printf "%s" $((_end - 1)) \
         || printf "%s" $((height - 1))
 }
+
 index_inc() {
     if [ "$index" -lt $((height - 1)) ] \
             && [ $((index + 1)) -lt "$(line_count "$lines")" ]; then
-        index=$((index + 1))
+        _i=0
+        while IFS= read -r _line; do
+            case $_line in
+                *\**) _is_commit=true ;;
+                *) _is_commit=false ;;
+            esac
+            if [ $_is_commit = true ] && [ $_i -gt "$index" ]; then
+                index=$_i
+                break
+            fi
+            _i=$((_i + 1))
+        done <<-EOF
+		$lines
+		EOF
     fi
 }
+
 index_dec() {
     if [ $index -gt 0 ]; then
         index=$((index - 1))
