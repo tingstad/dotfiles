@@ -336,10 +336,10 @@ assert_nocolors() {
 test_log() {
     local git_mock=echo
     assertEquals \
-        "log --pretty=format:  * %C(auto)%h %cd %d %s --date=short HEAD --color=always -- file.txt" \
+        "log --pretty=format:* %C(auto)%h %cd %d %s --date=short HEAD --color=always -- file.txt" \
         "$(log $git_mock HEAD file.txt)"
     assertEquals \
-        "log --pretty=format:  * %C(auto)%h %cd %d %s --date=short HEAD --color=always" \
+        "log --pretty=format:* %C(auto)%h %cd %d %s --date=short HEAD --color=always" \
         "$(log $git_mock HEAD)"
 }
 

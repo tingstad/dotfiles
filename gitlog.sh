@@ -22,7 +22,7 @@ main() {
             _gitlog="$(log git "$from" "$file" | head -n $((height*4)))"
         fi
         if [ $_dirty_git = true ] || ! diff_state "$state" "$prev_state" height width; then
-            lines="$(printf "%s\n" "$_gitlog" | head -n "$height" | ccut "$width")"
+            lines="$(printf "%s\n" "$_gitlog" | head -n "$height" | awk '{print "  " $0}' | ccut "$width")"
         fi
         if [ $_dirty_git = true ] || ! diff_state "$state" "$prev_state" index; then
             commit=$(printf "%s\n" "$lines" | awk "NR==$index+1 { print \$2 }" | nocolors)
@@ -291,7 +291,7 @@ log() {
     _git_cmd="$1"
     _from="$2"
     _file="$3"
-    $_git_cmd log --pretty=format:'  * %C(auto)%h %cd %d %s' --date=short "$_from" \
+    $_git_cmd log --pretty=format:'* %C(auto)%h %cd %d %s' --date=short "$_from" \
         --color=always \
         ${_file:+ -- "$_file"}
 }
