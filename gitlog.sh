@@ -414,13 +414,13 @@ index_dec() {
         _i=0
         _max=$index
         while IFS= read -r _line; do
+            if [ $_i -ge "$index" ]; then
+                break
+            fi
             case $_line in
                 *\**) _is_commit=true ;;
                 *) _is_commit=false ;;
             esac
-            if [ $_i -ge "$index" ]; then
-                break
-            fi
             if [ $_is_commit = true ]; then
                 _max=$_i
             fi
