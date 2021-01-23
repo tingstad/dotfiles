@@ -394,13 +394,15 @@ index_inc() {
             && [ $((index + 1)) -lt "$(line_count "$lines")" ]; then
         _i=0
         while IFS= read -r _line; do
-            case $_line in
-                *\**) _is_commit=true ;;
-                *) _is_commit=false ;;
-            esac
-            if [ $_is_commit = true ] && [ $_i -gt "$index" ]; then
-                index=$_i
-                break
+            if [ $_i -gt "$index" ]; then
+                case $_line in
+                    *\**) _is_commit=true ;;
+                    *) _is_commit=false ;;
+                esac
+                if [ $_is_commit = true ]; then
+                    index=$_i
+                    break
+                fi
             fi
             _i=$((_i + 1))
         done <<-EOF
