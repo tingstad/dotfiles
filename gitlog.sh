@@ -421,6 +421,9 @@ index_dec() {
             if [ $_is_commit = true ] && [ $_i -lt "$index" ]; then
                 _max=$_i
             fi
+            if [ $_i -ge "$index" ]; then
+                break
+            fi
             _i=$((_i + 1))
         done <<-EOF
 		$lines
