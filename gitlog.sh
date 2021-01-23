@@ -411,7 +411,21 @@ index_inc() {
 
 index_dec() {
     if [ $index -gt 0 ]; then
-        index=$((index - 1))
+        _i=0
+        _max=$index
+        while IFS= read -r _line; do
+            case $_line in
+                *\**) _is_commit=true ;;
+                *) _is_commit=false ;;
+            esac
+            if [ $_is_commit = true ] && [ $_i -lt "$index" ]; then
+                _max=$_i
+            fi
+            _i=$((_i + 1))
+        done <<-EOF
+		$lines
+		EOF
+        index=$_max
     fi
 }
 

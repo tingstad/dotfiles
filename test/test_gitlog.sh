@@ -51,6 +51,10 @@ test_key_j_k_graph() {
     assertEquals "increment index graph" 2 $index
     read_input <<< j
     assertEquals "increment index graph" 4 $index
+    read_input <<< k
+    assertEquals "decrement index graph" 2 $index
+    read_input <<< k
+    assertEquals "decrement index graph" 0 $index
 }
 
 test_key_g() {
