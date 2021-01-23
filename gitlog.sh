@@ -418,11 +418,11 @@ index_dec() {
                 *\**) _is_commit=true ;;
                 *) _is_commit=false ;;
             esac
-            if [ $_is_commit = true ] && [ $_i -lt "$index" ]; then
-                _max=$_i
-            fi
             if [ $_i -ge "$index" ]; then
                 break
+            fi
+            if [ $_is_commit = true ]; then
+                _max=$_i
             fi
             _i=$((_i + 1))
         done <<-EOF
