@@ -487,7 +487,11 @@ forward_page() {
 }
 
 get_commit() {
-    awk "NR==$index+1 { print \$2 }"
+    line_at $index | awk '{ print $2 }'
+}
+
+line_at() {
+    awk "NR==$1+1 { print }"
 }
 
 quit() {

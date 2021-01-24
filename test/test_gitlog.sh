@@ -263,6 +263,10 @@ test_get_commit() {
     assertEquals "abcd" "$(echo "  * abcd commit message" | get_commit)"
 }
 
+test_line_at() {
+    assertEquals "4" "$(seq 0 9 | line_at 4)"
+}
+
 test_is_rebasing() {
     assertFalse "is_rebasing"
 }
