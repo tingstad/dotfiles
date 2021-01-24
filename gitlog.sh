@@ -31,7 +31,7 @@ main() {
             fi
         fi
         if [ $_dirty_git = true ] || [ "$(get_state "$prev_state" index)" != "$index" ]; then
-            commit=$(get_commit "$index" | nocolors)
+            commit=$(get_commit "$index")
             if ! [ $_dirty_git = true ]; then
                 clear_cursor "$(get_state_value "$prev_state" index)"
             fi
@@ -485,13 +485,13 @@ forward_page() {
     if [ "$(line_count "$lines")" -lt $height ]; then
         return
     fi
-    from=$(get_commit "$(get_index_end)" | nocolors)
+    from=$(get_commit "$(get_index_end)")
     pager="$pager $from"
     index=0
 }
 
 get_commit() {
-    printf '%s\n' "$lines" | line_at "${1:-$index}" | awk '{ print $2 }'
+    printf '%s\n' "$lines" | line_at "${1:-$index}" | awk '{ print $2 }' | nocolors
 }
 
 line_at() {
