@@ -31,7 +31,7 @@ main() {
             fi
         fi
         if [ $_dirty_git = true ] || [ "$(get_state "$prev_state" index)" != "$index" ]; then
-            commit=$(get_commit | nocolors)
+            commit=$(get_commit "$index" | nocolors)
             if ! [ $_dirty_git = true ]; then
                 clear_cursor "$(get_state_value "$prev_state" index)"
             fi
