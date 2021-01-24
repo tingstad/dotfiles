@@ -23,6 +23,11 @@ main() {
         fi
         if [ $_dirty_git = true ] || ! diff_state "$state" "$prev_state" height width; then
             lines="$(printf "%s\n" "$_gitlog" | head -n "$height" | awk '{print "  " $0}' | ccut "$width")"
+            _end=$(get_index_end)
+            if [ $index -gt "$_end" ]; then
+                index=$_end
+                set_state index="$index"
+            fi
         fi
         if [ $_dirty_git = true ] || ! diff_state "$state" "$prev_state" index; then
             commit=$(printf "%s\n" "$lines" | awk "NR==$index+1 { print \$2 }" | nocolors)
