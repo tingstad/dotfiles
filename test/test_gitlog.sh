@@ -96,22 +96,50 @@ test_key_L_end() {
 }
 
 test_key_M() {
-    lines=""
-    for i in {1..20}; do
-        lines="$(printf '  * db334%02d 2021-01-01  Commit %d\n%s' $i $i "$lines")"
-    done
+    read -r -d '' lines <<- EOF
+	  * db334c3 2021-01-23  Commit 3 index0
+	  * db334c2 2021-01-22  Commit 2 index1
+	  * db334c1 2021-01-21  Commit 1 index2
+	EOF
     read_input <<< M
-    assertEquals "M should set pointer to middle" 9 $index
+    assertEquals "M should set pointer to middle" 1 $index
 }
 
-test_key_M_short_end() {
-    lines=""
-    for i in {1..10}; do
-        lines="$(printf '  * db334%02d 2021-01-01  Commit %d\n%s' $i $i "$lines")"
-    done
-    height=20
-    read_input <<< M
-    assertEquals "M should set pointer to middle" 4 $index
+test_index_mid_even() {
+    read -r -d '' lines <<- EOF
+	  * db334c3 2021-01-23  Commit 3 index0
+	  * db334c2 2021-01-22  Commit 2 index1
+	  * db334c1 2021-01-21  Commit 1 index2
+	  * db334c0 2021-01-20  Commit 0 index3
+	EOF
+    index_mid
+    assertEquals 2 $index
+}
+
+test_index_mid_graph() {
+    read -r -d '' lines <<- EOF
+	  *   db334c4 2021-01-24  Commit 4 index0
+	  *   db334c3 2021-01-23  Commit 3 index1
+	  |\ 
+	  | * db334c2 2021-01-22  Commit 2 index3
+	  |/
+	  *   db334c1 2021-01-21  Commit 1 index5
+	EOF
+    index_mid
+    assertEquals "should set index" 3 $index
+}
+
+test_index_mid_graph_above() {
+    read -r -d '' lines <<- EOF
+	  *   db334c3 2021-01-23  Commit 3 index0
+	  |\ 
+	  | * db334c2 2021-01-22  Commit 2 index2
+	  |/
+	  *   db334c1 2021-01-21  Commit 1 index4
+	  *   db334c0 2021-01-20  Commit 0 index5
+	EOF
+    index_mid
+    assertEquals "should set index" 2 $index
 }
 
 test_key_k_at_top() {

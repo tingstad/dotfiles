@@ -373,11 +373,40 @@ goto_beginning() {
 }
 
 index_mid() {
-    index=$(($(get_index_end) / 2))
+    _middle=$(($(line_count "$lines") / 2))
+    _above=0
+    _i=0
+    while IFS= read -r _line; do
+        case $_line in
+            *\**) _is_commit=true ;;
+            *) _is_commit=false ;;
+        esac
+        if [ $_is_commit = true ]; then
+            if [ $_i -lt $_middle ]; then
+                _above=$_i
+            elif [ $_i -gt $_middle ]; then
+                if [ $((_i - _middle)) -lt $((_middle - _above)) ]; then
+                    index=$_i
+                else
+                    index=$_above
+                fi
+                return
+            else
+                index=$_i
+                return
+            fi
+        fi
+        _i=$((_i + 1))
+    done <<EOF
+$lines
+EOF
+    index=$_above
 }
+
 index_end() {
     index=$(get_index_end)
 }
+
 clear_cursor() {
     cursor_set $((${1:-$index} + 4)) 1
     printf " "
