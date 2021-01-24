@@ -251,6 +251,13 @@ test_check_dependencies() {
     assertEquals "Missing dependencies: a b" "$(check_dependencies a b 2>&1)"
 }
 
+test_get_index_end() {
+    lines="* abcd Single commit"
+    assertEquals "0" "$(get_index_end)"
+    lines="$(printf '0 \n 1_*_commit \n 2 \n 3_*_commit \n 4 \n')"
+    assertEquals "3" "$(get_index_end)"
+}
+
 test_is_rebasing() {
     assertFalse "is_rebasing"
 }
