@@ -486,6 +486,10 @@ forward_page() {
     index=0
 }
 
+get_commit() {
+    awk "NR==$index+1 { print \$2 }"
+}
+
 quit() {
     restore_tty_settings
     [ -n "$TMUX" ] && tmux kill-window

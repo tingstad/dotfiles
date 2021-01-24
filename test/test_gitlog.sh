@@ -258,6 +258,11 @@ test_get_index_end() {
     assertEquals "3" "$(get_index_end)"
 }
 
+test_get_commit() {
+    index=0
+    assertEquals "abcd" "$(echo "  * abcd commit message" | get_commit)"
+}
+
 test_is_rebasing() {
     assertFalse "is_rebasing"
 }
