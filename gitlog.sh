@@ -481,13 +481,13 @@ EOF
 }
 
 forward_page() {
-    from=$(printf "%s\n" "$lines" | awk "END { print \$2 }" | nocolors)
+    from=$(get_commit "$(get_index_end)" | nocolors)
     pager="$pager $from"
     index=0
 }
 
 get_commit() {
-    printf '%s\n' "$lines" | line_at $index | awk '{ print $2 }'
+    printf '%s\n' "$lines" | line_at "${1:-$index}" | awk '{ print $2 }'
 }
 
 line_at() {

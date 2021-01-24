@@ -248,7 +248,17 @@ test_get_index_end() {
 test_get_commit() {
     index=0
     lines="  * abcd commit message"
-    assertEquals "abcd" "$(get_commit)"
+    read -r -d '' lines <<- EOF
+	  * 617c03  Commit 3 index0
+	  * 617c02  Commit 2 index1
+	  * 617c01  Commit 1 index2
+	EOF
+    assertEquals "617c03" "$(get_commit)"
+    assertEquals "617c03" "$(get_commit 0)"
+    assertEquals "617c02" "$(get_commit 1)"
+    assertEquals "617c01" "$(get_commit 2)"
+    index=1
+    assertEquals "617c02" "$(get_commit)"
 }
 
 test_line_at() {
