@@ -382,11 +382,23 @@ clear_cursor() {
     cursor_set $((${1:-$index} + 4)) 1
     printf " "
 }
+
 get_index_end() {
-    _end=$(line_count "$lines")
-    [ "$_end" -lt $height ] \
-        && printf "%s" $((_end - 1)) \
-        || printf "%s" $((height - 1))
+        _i=0
+        _max=0
+        while IFS= read -r _line; do
+            case $_line in
+                *\**) _is_commit=true ;;
+                *) _is_commit=false ;;
+            esac
+            if [ $_is_commit = true ]; then
+                _max=$_i
+            fi
+            _i=$((_i + 1))
+        done <<-EOF
+		$lines
+		EOF
+    printf "%s" $_max
 }
 
 index_inc() {

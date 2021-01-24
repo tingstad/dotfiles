@@ -78,10 +78,9 @@ test_key_H() {
 
 test_key_L() {
     lines=""
-    for i in {1..9}; do
+    for i in {0..6}; do
         lines="$(printf '%s\n%s' "  * db334c$i 2021-01-2$i  Commit $i" "$lines")"
     done
-    height=7
     read_input <<< L
     assertEquals "L (end) should set pointer to end" 6 $index
 }
@@ -98,10 +97,9 @@ test_key_L_end() {
 
 test_key_M() {
     lines=""
-    for i in {1..30}; do
+    for i in {1..20}; do
         lines="$(printf '  * db334%02d 2021-01-01  Commit %d\n%s' $i $i "$lines")"
     done
-    height=20
     read_input <<< M
     assertEquals "M should set pointer to middle" 9 $index
 }
