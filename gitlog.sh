@@ -491,7 +491,21 @@ forward_page() {
 }
 
 get_commit() {
-    printf '%s\n' "$lines" | line_at "${1:-$index}" | awk '{ print $2 }' | nocolors
+    _line="$(printf '%s\n' "$lines" | line_at "${1:-$index}")"
+    set -f
+    # shellcheck disable=2086
+    set -- $_line
+    {
+    for _w in "$@"; do
+        case "$_w" in
+            *[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]*)
+                printf '%b' "$_w"
+                break
+            ;;
+        esac
+    done
+    set +f
+    } | nocolors
 }
 
 line_at() {

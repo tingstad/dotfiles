@@ -257,6 +257,11 @@ test_get_commit() {
 	  * 617c03  Commit 3 index0
 	  * 617c02  Commit 2 index1
 	  * 617c01  Commit 1 index2
+	  *   f00c03 foo
+	  |\ 
+	  | | * 844c05 bar
+	  | |/
+	  \033[32m|\033[m * \033[33m8a2c07\033[m Color
 	EOF
     assertEquals "617c03" "$(get_commit)"
     assertEquals "617c03" "$(get_commit 0)"
@@ -264,6 +269,9 @@ test_get_commit() {
     assertEquals "617c01" "$(get_commit 2)"
     index=1
     assertEquals "617c02" "$(get_commit)"
+    assertEquals "f00c03" "$(get_commit 3)"
+    assertEquals "844c05" "$(get_commit 5)"
+    assertEquals "8a2c07" "$(get_commit 7)"
 }
 
 test_line_at() {
