@@ -21,7 +21,7 @@ test_key_k() {
 	  * db334c0 2021-01-20  Commit 0
 	EOF
     index=1
-    read_input <<< k
+    index_dec
     assertEquals "k (up) should decrement pointer" 0 $index
 }
 
@@ -32,8 +32,7 @@ test_key_j() {
 	  * db334c1 2021-01-21  Commit 1
 	EOF
     index=1
-    height=3
-    read_input <<< j
+    index_inc
     assertEquals "j (down) should increment pointer" 2 $index
 }
 
@@ -45,22 +44,21 @@ test_key_j_k_graph() {
 	  |/
 	  *   db334c1 2021-01-21  Commit 1
 	EOF
-    height=5
     index=0
-    read_input <<< j
+    index_inc
     assertEquals "increment index graph" 2 $index
-    read_input <<< j
+    index_inc
     assertEquals "increment index graph" 4 $index
-    read_input <<< k
+    index_dec
     assertEquals "decrement index graph" 2 $index
-    read_input <<< k
+    index_dec
     assertEquals "decrement index graph" 0 $index
 }
 
 test_key_g() {
     from=some_commit
     index=2
-    read_input <<< g
+    goto_beginning
     assertEquals "g (beginning) should reset pointer" 0 $index
     assertEquals "g (beginning) should reset 'from'" HEAD $from
 }
@@ -76,32 +74,22 @@ test_key_H() {
     assertEquals "H (Home line) should reset pointer" 0 $index
 }
 
-test_key_L() {
+test_index_end() {
     lines=""
     for i in {0..6}; do
         lines="$(printf '%s\n%s' "  * db334c$i 2021-01-2$i  Commit $i" "$lines")"
     done
-    read_input <<< L
-    assertEquals "L (end) should set pointer to end" 6 $index
+    index_end
+    assertEquals "should set pointer to end" 6 $index
 }
 
-test_key_L_end() {
-    lines=""
-    for i in {0..9}; do
-        lines="$(printf '%s\n%s' "  * db334c$i 2021-01-2$i  Commit $i" "$lines")"
-    done
-    height=20
-    read_input <<< L
-    assertEquals "L (end) should set pointer to end" 9 $index
-}
-
-test_key_M() {
+test_index_mid() {
     read -r -d '' lines <<- EOF
 	  * db334c3 2021-01-23  Commit 3 index0
 	  * db334c2 2021-01-22  Commit 2 index1
 	  * db334c1 2021-01-21  Commit 1 index2
 	EOF
-    read_input <<< M
+    index_mid
     assertEquals "M should set pointer to middle" 1 $index
 }
 
@@ -142,13 +130,13 @@ test_index_mid_graph_above() {
     assertEquals "should set index" 2 $index
 }
 
-test_key_k_at_top() {
+test_index_dec_at_top() {
     index=0
-    read_input <<< k
+    index_dec
     assertEquals "k (up) should not decrement pointer at start" 0 $index
 }
 
-test_key_j_bottom() {
+test_index_inc_bottom() {
     read -r -d '' lines <<- EOF
 	  * db334c3 2021-01-23  Commit 3
 	  * db334c2 2021-01-22  Commit 2
@@ -156,22 +144,22 @@ test_key_j_bottom() {
 	EOF
     index=1
     height=2
-    read_input <<< j
+    index_inc
     assertEquals "j (down) should not increment pointer at bottom" 1 $index
 }
 
-test_key_j_end() {
+test_index_inc_end() {
     read -r -d '' lines <<- EOF
 	  * db334c2 2021-01-22  Commit 2
 	  * db334c1 2021-01-21  Commit 1
 	EOF
     index=1
     height=9
-    read_input <<< j
+    index_inc
     assertEquals "j (down) should not increment pointer at bottom" 1 $index
 }
 
-test_key_f_forward() {
+test_forward_page() {
     pager=('HEAD')
     from='HEAD'
     lines=""
@@ -179,8 +167,7 @@ test_key_f_forward() {
         lines="$(printf '  * 00000%02d 2021-01-01  Commit %d\n%s' $i $i "$lines")"
     done
     index=2
-    height=5
-    read_input <<< f
+    forward_page
     assertEquals "f should set index 0" 0 $index
     assertEquals "f should set HEAD" 0000001 $from
     assertEquals "f should set pager" 'HEAD 0000001' "${pager[*]}"
