@@ -18,24 +18,25 @@ main() {
             || ! diff_state "$state" "$prev_state" from \
             || [ "$(get_state "$prev_state" height)" -lt "$height" ] \
             && _dirty_git=true || _dirty_git=false
+        ! diff_state "$state" "$prev_state" height width \
+            && _resized=true || _resized=false
         if [ $_dirty_git = true ]; then
             _gitlog="$(log git "$from" "$file" | head -n $((height*4)))"
         fi
-        if [ $_dirty_git = true ] || ! diff_state "$state" "$prev_state" height width; then
+        if [ $_dirty_git = true ] || [ $_resized = true ]; then
             lines="$(printf "%s\n" "$_gitlog" | head -n "$height" | awk '{print "  " $0}' | ccut "$width")"
             _end=$(get_index_end)
             if [ $index -gt "$_end" ]; then
                 index=$_end
-                set_state index="$index"
             fi
         fi
-        if [ $_dirty_git = true ] || ! diff_state "$state" "$prev_state" index; then
+        if [ $_dirty_git = true ] || [ "$(get_state "$prev_state" index)" != "$index" ]; then
             commit=$(get_commit | nocolors)
             if ! [ $_dirty_git = true ]; then
                 clear_cursor "$(get_state_value "$prev_state" index)"
             fi
         fi
-        if [ $_dirty_git = true ] || ! diff_state "$state" "$prev_state" width height; then
+        if [ $_dirty_git = true ] || [ $_resized = true ]; then
             dirty_screen=y
         fi
         [ -n "$TMUX" ] && [ "$commit" != "$show_commit" ] \
