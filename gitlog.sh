@@ -481,6 +481,9 @@ EOF
 }
 
 forward_page() {
+    if [ "$(line_count "$lines")" -lt $height ]; then
+        return
+    fi
     from=$(get_commit "$(get_index_end)" | nocolors)
     pager="$pager $from"
     index=0

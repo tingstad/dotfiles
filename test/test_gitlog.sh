@@ -167,10 +167,15 @@ test_forward_page() {
         lines="$(printf '  * 00000%02d 2021-01-01  Commit %d\n%s' $i $i "$lines")"
     done
     index=2
+    height=7
     forward_page
     assertEquals "f should set index 0" 0 $index
     assertEquals "f should set HEAD" 0000001 $from
     assertEquals "f should set pager" 'HEAD 0000001' "${pager[*]}"
+    from=HEAD
+    height=20
+    forward_page
+    assertEquals "should do nothing if last page" HEAD $from
 }
 
 test_check_screen_size() {
