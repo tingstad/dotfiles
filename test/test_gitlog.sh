@@ -260,7 +260,8 @@ test_get_index_end() {
 
 test_get_commit() {
     index=0
-    assertEquals "abcd" "$(echo "  * abcd commit message" | get_commit)"
+    lines="  * abcd commit message"
+    assertEquals "abcd" "$(get_commit)"
 }
 
 test_line_at() {

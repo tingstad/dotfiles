@@ -30,7 +30,7 @@ main() {
             fi
         fi
         if [ $_dirty_git = true ] || ! diff_state "$state" "$prev_state" index; then
-            commit=$(printf "%s\n" "$lines" | awk "NR==$index+1 { print \$2 }" | nocolors)
+            commit=$(get_commit | nocolors)
             if ! [ $_dirty_git = true ]; then
                 clear_cursor "$(get_state_value "$prev_state" index)"
             fi
@@ -487,7 +487,7 @@ forward_page() {
 }
 
 get_commit() {
-    line_at $index | awk '{ print $2 }'
+    printf '%s\n' "$lines" | line_at $index | awk '{ print $2 }'
 }
 
 line_at() {
