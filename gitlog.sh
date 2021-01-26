@@ -296,7 +296,7 @@ log() {
     _git_cmd="$1"
     _from="$2"
     _file="$3"
-    $_git_cmd log --pretty=format:'* %C(auto)%h %cd %d %s' --date=short "$_from" \
+    $_git_cmd log --graph --pretty=format:'%C(auto)%h %cd %d %s' --date=short "$_from" \
         --color=always \
         ${_file:+ -- "$_file"}
 }
