@@ -8,6 +8,19 @@ grip(){
 
 source "$my_dir"/docker_aliases.sh
 
+if [ "${BASH_VERSION%%.*}" -ge 5 ] \
+|| { \
+    [ "${BASH_VERSION%%.*}" -eq 4 ] \
+    && [[ "${BASH_VERSION#${BASH_VERSION%%.*}.}" == [3-9]* ]]
+}
+then # 4.3 and later
+    export HISTSIZE=-1
+    export HISTFILESIZE=-1
+else
+    export HISTSIZE=
+    export HISTFILESIZE=
+fi
+
 source /dev/stdin <<EOF
 gitlog() {
     "$my_dir"/gitlog.sh "\$@"

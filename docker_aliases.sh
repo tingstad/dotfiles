@@ -44,6 +44,24 @@ shellcheck() {
 }
 export -f shellcheck
 
+# Only one file supported
+yq() {
+    local last_arg="${@:$#}"
+    file=""
+    if [ -e "$last_arg" ]; then
+        filename="$(basename "$last_arg")"
+        file="$(cd "$(dirname "$last_arg")"; pwd -P)/$filename"
+        set -- "${@:1:$#-1}"
+    fi
+    local vol_opt="$(selinuxenabled 2>/dev/null && echo :Z)"
+    docker run --rm --network none \
+        ${file:+ -v "$file":/workdir/"$filename"$vol_opt} \
+        mikefarah/yq:4.4.1 \
+        "$@" ${file:+"$filename"}
+}
+export -f yq
+
+
 # Only working dir supported
 python () {
     local port
