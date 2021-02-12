@@ -101,8 +101,8 @@ mvn_8() {
         mkdir "\$HOME/.m2"
     fi
     local vol_opt="\$(selinuxenabled 2>/dev/null && echo :Z)"
-    echo docker run -it --rm -v "\$PWD":/dir\$vol_opt -u "$user_string" -v "\$HOME/.m2":/var/mvn/.m2\$vol_opt -w /dir maven:3.6.0-jdk-8-alpine mvn -Duser.home=/var/mvn -Dmaven.repo.local=/var/mvn/.m2/repository "\$@"
-    docker run -it --rm -v "\$PWD":/dir\$vol_opt -u "$user_string" -v "\$HOME/.m2":/var/mvn/.m2\$vol_opt -w /dir maven:3.6.0-jdk-8-alpine mvn -Duser.home=/var/mvn -Dmaven.repo.local=/var/mvn/.m2/repository "\$@"
+    echo docker run -it --rm --env TZ="${TZ:-$(date +%Z)}" -v "\$PWD":/dir\$vol_opt -u "$user_string" -v "\$HOME/.m2":/var/mvn/.m2\$vol_opt -w /dir maven:3.6.0-jdk-8-alpine mvn -Duser.home=/var/mvn -Dmaven.repo.local=/var/mvn/.m2/repository "\$@"
+    docker run -it --rm --env TZ="${TZ:-$(date +%Z)}" -v "\$PWD":/dir\$vol_opt -u "$user_string" -v "\$HOME/.m2":/var/mvn/.m2\$vol_opt -w /dir maven:3.6.0-jdk-8-alpine mvn -Duser.home=/var/mvn -Dmaven.repo.local=/var/mvn/.m2/repository "\$@"
 }
 EOF
 export -f mvn_8
