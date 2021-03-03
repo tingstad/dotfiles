@@ -162,7 +162,8 @@ read_input() {
 }
 
 read_char() { # $1:chars #2:timeout?
-    stty -icanon -echo ${2:+min 0 time $2}
+    [ -n "$2" ] && _min=0 || _min=1
+    stty -icanon -echo min $_min ${2:+time $2}
     dd bs=1 count="$1" 2>/dev/null
 }
 
