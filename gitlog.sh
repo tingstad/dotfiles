@@ -339,7 +339,7 @@ is_rebasing() {
 
 reword() {
     if [ "$index" -eq 0 ] && [ "$from" = "HEAD" ]; then
-        git commit --amend
+        git commit --amend --verbose
     else
         GIT_SEQUENCE_EDITOR="sed -i.old 's/^pick ""$commit""/r ""$commit""/'" git_rebase "$commit"^
     fi
