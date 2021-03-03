@@ -157,6 +157,7 @@ read_input() {
         'w')  reword ;;
         'v')  revert ;;
         'e')  edit_commit ;;
+        'S')  reset ;;
         'a')  about && dirty_screen=y ;;
         'h')  help && dirty_screen=y ;;
     esac
@@ -192,6 +193,7 @@ help() {
     v           Revert commit
     F           Fixup (amend) commit with staged changes
     e           Edit commit
+    S           Reset --hard
 
 Press any key...
 EOF
@@ -383,6 +385,16 @@ reword() {
 
 revert() {
     git revert "$commit"
+    set_state dirty_git=true
+    goto_beginning
+}
+
+reset() {
+    if [ -n "$TMUX" ]; then
+        tmux kill-pane -t "$session":"$window".1 || true
+    fi
+    clear
+    git reset --hard "$commit"
     set_state dirty_git=true
     goto_beginning
 }
