@@ -4,6 +4,7 @@
 set -e
 
 main() {
+    is_tmux || unset TMUX
     file="$1"
     bootstrap "$@"
     from="HEAD"
@@ -60,7 +61,7 @@ bootstrap() {
     does_exist tmux || {
         printf "Warning: tmux not found" >&2
     }
-    if does_exist tmux; then
+    if is_tmux; then
         if [ -z "$TMUX" ]; then
             tmux new-session -A -s datsgnitlog -n datsgnitlog"$(date +%s)" "$0" "$@"
             exit
@@ -83,6 +84,7 @@ split_screen_if_not_split() {
         show_commit=""
     fi
 }
+
 check_screen_size() {
     _cols=$COLUMNS
     _rows=$LINES
@@ -103,12 +105,18 @@ check_screen_size() {
         quit 1
     fi
     _new_height=$((_rows - 5))
-    _new_width="$_cols"
+    if [ -n "$TMUX" ]; then
+        _new_width=$_cols
+    else
+        _new_width=$((_cols / 2))
+    fi
     if [ "$_new_height" != "$height" ] || [ "$_new_width" != "$width" ]; then
-        height=$((_rows - 5))
-        width="$_cols"
+        height=$_new_height
+        width=$_new_width
+        total_width=$_cols
     fi
 }
+
 draw() {
     if [ "$dirty_screen" != "n" ]; then
     _cols="$1"
@@ -120,6 +128,15 @@ draw() {
     printf '%b' "${_u}h${_reset}elp, ${_u}f${_reset}orward page, be${_u}g${_reset}inning, ${_u}H${_reset}ome/${_u}M${_reset}iddle/${_u}L${_reset}ast line, ${_u}r${_reset}ebase, ${_u}F${_reset}ixup, ${_u}q${_reset}uit" | ccut "$((_cols - 16))"
     printf '\n'
     printf "%s\n" "$lines"
+    if [ -z "$TMUX" ]; then
+        _y=1
+        _x=$((total_width - width + 1))
+        while [ -z "$TMUX" ] && [ $_y -lt $height ]; do
+            cursor_set $_y $_x
+            printf '%b' "|$_reset"
+            _y=$((_y + 1))
+        done
+    fi
     fi
     cursor_set $((index + 4)) 1
     printf ">"
@@ -651,6 +668,10 @@ check_dependencies() {
         printf "Missing dependencies:%s" "$_missing" >&2
         false
     }
+}
+
+is_tmux() {
+    does_exist tmux
 }
 
 does_exist() {
