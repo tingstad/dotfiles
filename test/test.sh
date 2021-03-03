@@ -27,6 +27,11 @@ testSourceAliasesExitCode() {
                 | egrep -o --color=never '(Apache|Java)[^0-9]*[0-9.]*' \
                 | tr '\n' ' ')"
         assertEquals \
+            "Apache Maven 3.6.3 Java version: 11.0.10 " \
+            "$(bash -c 'mvn_11 -v' \
+                | egrep -o --color=never '(Apache|Java)[^0-9]*[0-9.]*' \
+                | tr '\n' ' ')"
+        assertEquals \
             "| From | --> | To |" \
             "$(echo 'digraph { rankdir=LR; From -> To }' | graph-easy | sed -n 2p)"
         assertEquals \

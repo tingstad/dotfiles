@@ -94,18 +94,22 @@ export -f http_server
 
 # Only working dir supported
 # ~/.m2/settings.xml is your friend
+create_mvn() {  # $1 = suffix, $2 = image
 source /dev/stdin <<EOF
-# Only working dir supported
-mvn_8() {
+mvn_$1() {
     if [ ! -d "\$HOME/.m2" ]; then
         mkdir "\$HOME/.m2"
     fi
     local vol_opt="\$(selinuxenabled 2>/dev/null && echo :Z)"
-    echo docker run -it --rm --env TZ="${TZ:-$(date +%Z)}" -v "\$PWD":/dir\$vol_opt -u "$user_string" -v "\$HOME/.m2":/var/mvn/.m2\$vol_opt -w /dir maven:3.6.0-jdk-8-alpine mvn -Duser.home=/var/mvn -Dmaven.repo.local=/var/mvn/.m2/repository "\$@"
-    docker run -it --rm --env TZ="${TZ:-$(date +%Z)}" -v "\$PWD":/dir\$vol_opt -u "$user_string" -v "\$HOME/.m2":/var/mvn/.m2\$vol_opt -w /dir maven:3.6.0-jdk-8-alpine mvn -Duser.home=/var/mvn -Dmaven.repo.local=/var/mvn/.m2/repository "\$@"
+    echo docker run -it --rm --env TZ="\${TZ:-\$(date +%Z)}" -v "\$PWD":/dir\$vol_opt -u "$user_string" -v "\$HOME/.m2":/var/mvn/.m2\$vol_opt -w /dir $2 mvn -Duser.home=/var/mvn -Dmaven.repo.local=/var/mvn/.m2/repository "\$@"
+    docker run -it --rm --env TZ="\${TZ:-\$(date +%Z)}" -v "\$PWD":/dir\$vol_opt -u "$user_string" -v "\$HOME/.m2":/var/mvn/.m2\$vol_opt -w /dir $2 mvn -Duser.home=/var/mvn -Dmaven.repo.local=/var/mvn/.m2/repository "\$@"
 }
 EOF
-export -f mvn_8
+export -f mvn_$1
+}
+
+create_mvn 8 maven:3.6.0-jdk-8-alpine
+create_mvn 11 maven:3.6.3-jdk-11-slim
 
 # Only stdout output supported
 graph-easy() {
@@ -183,7 +187,7 @@ pretty_json() {
 EOF
 export -f pretty_json
 
-unset user_string vol_opt
+unset user_string vol_opt create_mvn
 
 # Others? netcat, socat, vimcat, Gimp, browser, mplayer, Eclipse, etc.
 
