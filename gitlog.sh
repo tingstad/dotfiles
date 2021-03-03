@@ -25,7 +25,7 @@ main() {
             _gitlog="$(log git "$from" "$file" | head -n $((height*4)))"
         fi
         if [ $_dirty_git = true ] || [ $_resized = true ]; then
-            lines="$(printf "%s\n" "$_gitlog" | head -n "$height" | awk '{print "  " $0}' | ccut "$width")"
+            lines="$(printf "%s\n" "$_gitlog" | head -n "$log_height" | awk '{print "  " $0}' | ccut "$width")"
             _end=$(get_index_end)
             if [ $index -gt "$_end" ]; then
                 index=$_end
@@ -104,7 +104,7 @@ check_screen_size() {
         printf "Unable to detect window width %s\n" "$_cols" >&2
         quit 1
     fi
-    _new_height=$((_rows - 5))
+    _new_height=$_rows
     if [ -n "$TMUX" ]; then
         _new_width=$_cols
     else
@@ -112,6 +112,7 @@ check_screen_size() {
     fi
     if [ "$_new_height" != "$height" ] || [ "$_new_width" != "$width" ]; then
         height=$_new_height
+        log_height=$((_new_height - 5))
         width=$_new_width
         total_width=$_cols
     fi
@@ -131,7 +132,7 @@ draw() {
     if [ -z "$TMUX" ]; then
         _y=1
         _x=$((total_width - width + 1))
-        while [ -z "$TMUX" ] && [ $_y -lt $height ]; do
+        while [ -z "$TMUX" ] && [ $_y -le "$height" ]; do
             cursor_set $_y $_x
             printf '%b' "|$_reset"
             _y=$((_y + 1))
@@ -221,7 +222,7 @@ about() {
     _col=1
     while [ $_col -le "$width" ]; do
         _row=1
-        while [ $_row -le $height ]; do
+        while [ $_row -le "$height" ]; do
             cursor_set $_row $_col
             printf "%s" " "
             _row=$((_row + 1))
@@ -497,7 +498,7 @@ EOF
 }
 
 index_inc() {
-    if [ "$index" -lt $((height - 1)) ] \
+    if [ "$index" -lt $((log_height - 1)) ] \
             && [ $((index + 1)) -lt "$(line_count "$lines")" ]; then
         _i=0
         while IFS= read -r _line; do
@@ -542,7 +543,7 @@ EOF
 }
 
 forward_page() {
-    if [ "$(line_count "$lines")" -lt $height ]; then
+    if [ "$(line_count "$lines")" -lt $log_height ]; then
         return
     fi
     from=$(get_commit "$(get_index_end)")
@@ -575,7 +576,7 @@ line_at() {
 quit() {
     restore_tty_settings
     [ -n "$TMUX" ] && tmux kill-window
-    cursor_set $((height + 4)) 1
+    cursor_set "$height" 1
     exit "${1:-0}"
 }
 

@@ -31,6 +31,7 @@ test_key_j() {
 	  * db334c2 2021-01-22  Commit 2
 	  * db334c1 2021-01-21  Commit 1
 	EOF
+    log_height=3
     index=1
     index_inc
     assertEquals "j (down) should increment pointer" 2 $index
@@ -44,6 +45,7 @@ test_key_j_k_graph() {
 	  |/
 	  *   db334c1 2021-01-21  Commit 1
 	EOF
+    log_height=5
     index=0
     index_inc
     assertEquals "increment index graph" 2 $index
@@ -143,7 +145,7 @@ test_index_inc_bottom() {
 	  * db334c1 2021-01-21  Commit 1
 	EOF
     index=1
-    height=2
+    log_height=2
     index_inc
     assertEquals "j (down) should not increment pointer at bottom" 1 $index
 }
@@ -167,13 +169,13 @@ test_forward_page() {
         lines="$(printf '  * 00000%02d 2021-01-01  Commit %d\n%s' $i $i "$lines")"
     done
     index=2
-    height=7
+    log_height=7
     forward_page
     assertEquals "f should set index 0" 0 $index
     assertEquals "f should set HEAD" 0000001 $from
     assertEquals "f should set pager" 'HEAD 0000001' "${pager[*]}"
     from=HEAD
-    height=20
+    log_height=20
     forward_page
     assertEquals "should do nothing if last page" HEAD $from
 }
