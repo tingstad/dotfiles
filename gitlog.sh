@@ -117,7 +117,7 @@ draw() {
     printf "\033c" #clear
     printf " W E L C O M E %s\n" "$(printf '%s\n' "$lines" | awk "NR==$index+1 { print \$2 }")"
     printf "Keys: j/↓, k/↑, " # length: 16
-    printf '%b' "${_u}f${_reset}orward page, be${_u}g${_reset}inning, ${_u}H${_reset}ome/${_u}M${_reset}iddle/${_u}L${_reset}ast line, ${_u}r${_reset}ebase, ${_u}F${_reset}ixup, ${_u}q${_reset}uit" | ccut "$((_cols - 16))"
+    printf '%b' "${_u}h${_reset}elp, ${_u}f${_reset}orward page, be${_u}g${_reset}inning, ${_u}H${_reset}ome/${_u}M${_reset}iddle/${_u}L${_reset}ast line, ${_u}r${_reset}ebase, ${_u}F${_reset}ixup, ${_u}q${_reset}uit" | ccut "$((_cols - 16))"
     printf '\n'
     printf "%s\n" "$lines"
     fi
@@ -158,6 +158,7 @@ read_input() {
         'v')  revert ;;
         'e')  edit_commit ;;
         'a')  about && dirty_screen=y ;;
+        'h')  help && dirty_screen=y ;;
     esac
 }
 
@@ -165,6 +166,36 @@ read_char() { # $1:chars #2:timeout?
     [ -n "$2" ] && _min=0 || _min=1
     stty -icanon -echo min $_min ${2:+time $2}
     dd bs=1 count="$1" 2>/dev/null
+}
+
+help() {
+    printf "\033c" #clear
+    _reset=$(printf '\033[0m')
+    _bold=$(printf '\033[1m')
+    cat <<EOF
+
+
+                $_bold NAVIGATION $_reset
+
+    j/↓, k/↑    Move down/up
+    f           Forward one page
+    g           Goto beginning
+    H/M/L       Jump to home/middle/last in window
+    h           Help
+    q           Quit
+    a           About
+
+                $_bold MODIFYING $_reset
+
+    r           Rebase --interactive
+    w           Rewrite commit message
+    v           Revert commit
+    F           Fixup (amend) commit with staged changes
+    e           Edit commit
+
+Press any key...
+EOF
+    read_char 1 >/dev/null
 }
 
 about() {
