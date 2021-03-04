@@ -53,6 +53,7 @@ main() {
 }
 
 bootstrap() {
+    check_screen_size
     save_tty_settings
     trap 'quit' INT
     #trap 'TODO' WINCH
@@ -96,7 +97,23 @@ check_screen_size() {
         fi
     fi
     if [ -z "$_cols" ]; then
-        _size=$(stty size)
+        _size=""
+        if [ -z "$height" ]; then # first time
+            # stty may fail with 'stty: standard input' if we are too quick (docker)
+            _try=0
+            while [ $((_try += 1)) -lt 9 ]; do
+                _s="$(stty size 2>/dev/null)"
+                case "$_s" in
+                    *[!0-9\ ]*) ;;  # Only digits and space
+                    *\ *\ *) ;;     # Just one space
+                    [0-9]*\ [0-9]*) _size="$_s"; break ;;
+                esac
+                delay 1
+            done
+        fi
+        if [ -z "$_size" ]; then
+            _size=$(stty size)
+        fi
         _cols=${_size#* }
         _rows=${_size% *}
     fi
@@ -585,7 +602,7 @@ save_tty_settings() {
 }
 
 restore_tty_settings() {
-    stty "$saved_tty_settings"
+    [ -n "$saved_tty_settings" ] && stty "$saved_tty_settings"
 }
 
 nocolors() {
