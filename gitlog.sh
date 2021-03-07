@@ -62,9 +62,6 @@ bootstrap() {
     #trap 'TODO' WINCH
     check_dependencies git awk sed head less
     git rev-parse #assert git repository
-    does_exist tmux || {
-        printf "Warning: tmux not found" >&2
-    }
     if is_tmux; then
         if [ -z "$TMUX" ]; then
             tmux new-session -A -s datsgnitlog -n datsgnitlog"$(date +%s)" "$0" "$@"
