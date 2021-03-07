@@ -44,6 +44,9 @@ main() {
             && tmux respawn-pane -t "$session":"$window".1 \
                 -k "GIT_PAGER='less -RX -+F' git show $commit ${file:+ -- \"$file\"}" \
             && show_commit="$commit"
+        [ -z "$TMUX" ] && [ "$commit" != "$show_commit" ] && [ $dirty_screen = n ] \
+            && draw_commit \
+            && show_commit="$commit"
         draw "$width"
         dirty_screen=n
         set_state dirty_git=false
@@ -155,9 +158,28 @@ draw() {
             _y=$((_y + 1))
         done
     fi
+    [ -z "$TMUX" ] && [ "$commit" != "$show_commit" ] \
+        && draw_commit
     fi
     cursor_set $((index + 4)) 1
     printf ">"
+}
+
+draw_commit() {
+    _x=$((total_width - width + 2))
+    _w=$((total_width - _x + 1))
+    _y=0; while [ $((_y += 1)) -lt "$height" ]; do
+        cursor_set "$_y" $_x
+        printf "%${_w}s"
+    done
+    _y=0
+    while read -r _line; do
+        [ $((_y += 1)) -ge "$height" ] && break
+        cursor_set "$_y" $_x
+        printf %s "$_line"
+    done <<EOF
+$(git show --color=always "$commit" | fold -w $_w)
+EOF
 }
 
 cursor_set() {
