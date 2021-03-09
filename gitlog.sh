@@ -70,8 +70,7 @@ bootstrap() {
         session="$(tmux display-message -p '#{session_id}')"
         window="$(tmux display-message -p '#{window_id}')"
         if [ -z "$DATSGNIT_INCEPTION" ]; then
-            _remain="$(does_exist bash && printf bash || printf sh)"
-            tmux new-window -n datsgnitlog"$(date +%s)" "export DATSGNIT_INCEPTION=yes; $0 $*; $_remain -i"
+            tmux new-window -n datsgnitlog"$(date +%s)" "export DATSGNIT_INCEPTION=yes; $0 $*; $SHELL -i"
             exit
         fi
     fi
