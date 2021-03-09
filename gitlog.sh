@@ -146,16 +146,14 @@ draw() {
     printf '\n'
     printf "%s\n" "$lines"
     if [ -z "$TMUX" ]; then
-        _y=1
+        _y=0
         _x=$((total_width - width + 1))
-        while [ -z "$TMUX" ] && [ $_y -le "$height" ]; do
-            cursor_set $_y $_x
+        while [ $((_y += 1)) -le "$height" ]; do
+            cursor_set "$_y" $_x
             printf '%b' "|$_reset"
-            _y=$((_y + 1))
         done
+        draw_commit
     fi
-    [ -z "$TMUX" ] && [ "$commit" != "$show_commit" ] \
-        && draw_commit
     fi
     cursor_set $((index + 4)) 1
     printf ">"
@@ -176,6 +174,7 @@ draw_commit() {
     done <<EOF
 $(git show --color=always "$commit" | fold -w $_w)
 EOF
+    show_commit="$commit"
 }
 
 cursor_set() {
