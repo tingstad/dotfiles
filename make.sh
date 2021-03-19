@@ -14,12 +14,14 @@ link_dotfiles() {
     local target_dir="$2"
     find "$src_dir" -maxdepth 1 \
     \( -name '.*' -or -name gitignore \) \
-    -type f \
+    \( -type f -or -name .vim \) \
     -not -name '.*.swp' -not -name '.gitignore' -not -name .bashrc -not -name .travis.yml \
     -print \
     | while read f; do
         local fil="$target_dir/$(basename "$f")"
-        [ -e "$fil" -a ! -L "$fil" ] && cp -L "$fil" "$fil.old"
+        if [ -e "$fil" -a ! -L "$fil" ]; then
+            [ -f "$fil" ] && cp -L "$fil" "$fil.old" || mv "$fil" "$fil.old"
+        fi
         ln -s -f "$f" "$fil"
     done
 }

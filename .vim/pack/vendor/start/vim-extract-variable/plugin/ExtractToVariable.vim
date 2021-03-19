@@ -31,16 +31,16 @@ function! s:ExtractToVariable(visual_mode)
   let varname = input('Variable name? ')
 
   if varname != ''
-    execute "normal! `<v`>s".varname."\<esc>"
+    noautocmd execute "normal! `<v`>s".varname."\<esc>"
 
     if l:filetype ==# 'javascript' || l:filetype ==# 'typescript'
-      execute "normal! Oconst ".varname." = ".@z."\<esc>"
+      noautocmd execute "normal! Oconst ".varname." = ".@z."\<esc>"
     elseif l:filetype ==# 'go'
-      execute "normal! O".varname." := ".@z."\<esc>"
+      noautocmd execute "normal! O".varname." := ".@z."\<esc>"
     elseif l:filetype ==# 'elixir' || l:filetype ==# 'python' || l:filetype ==# 'ruby'
-      execute "normal! O".varname." = ".@z."\<esc>"
+      noautocmd execute "normal! O".varname." = ".@z."\<esc>"
     elseif l:filetype ==# 'r' 
-      execute "normal! O".varname." <- ".@z."\<esc>"
+      noautocmd execute "normal! O".varname." <- ".@z."\<esc>"
     endif
   else
     redraw
@@ -50,5 +50,5 @@ function! s:ExtractToVariable(visual_mode)
   let @z = saved_z
 endfunction
 
-nnoremap <leader>ev :call <sid>ExtractToVariable('')<cr>
-vnoremap <leader>ev :<c-u>call <sid>ExtractToVariable(visualmode())<cr>
+nnoremap <leader>l :call <sid>ExtractToVariable('')<cr>
+vnoremap <leader>l :<c-u>call <sid>ExtractToVariable(visualmode())<cr>
