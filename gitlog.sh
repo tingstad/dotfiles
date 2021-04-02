@@ -47,7 +47,7 @@ main() {
         [ -z "$TMUX" ] && [ "$commit" != "$show_commit" ] && [ $dirty_screen = n ] \
             && draw_commit \
             && show_commit="$commit"
-        draw "$width"
+        draw "$width" "$height" "$total_width" "$lines" "$index" "$commit"
         dirty_screen=n
         set_state dirty_git=false
         prev_state="$state"
@@ -135,6 +135,7 @@ check_screen_size() {
 }
 
 draw() {
+    width="$1"; height="$2"; total_width="$3"; lines="$4"; index="$5"; commit="$6"
     if [ "$dirty_screen" != "n" ]; then
     _cols="$1"
     _reset="\033[0m"
