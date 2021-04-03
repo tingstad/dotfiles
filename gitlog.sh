@@ -140,7 +140,7 @@ draw() {
     _cols="$1"
     _reset="\033[0m"
     _u="\033[4m"
-    printf "\033c" #clear
+    printf "\033[H\033[J" #clear
     printf " W E L C O M E %s\n" "$(printf '%s\n' "$lines" | awk "NR==$index+1 { print \$2 }")"
     printf "Keys: j/↓, k/↑, " # length: 16
     printf '%b' "${_u}h${_reset}elp, ${_u}f${_reset}orward page, be${_u}g${_reset}inning, ${_u}H${_reset}ome/${_u}M${_reset}iddle/${_u}L${_reset}ast line, ${_u}r${_reset}ebase, ${_u}F${_reset}ixup, ${_u}q${_reset}uit" | ccut "$((_cols - 16))"
