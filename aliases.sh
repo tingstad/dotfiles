@@ -47,7 +47,7 @@ fi
 exittext(){
     [ $? -eq 0 ] && printf ":)" || printf ":("
 }
-PS1="\A \[\$(exitcolor)\]\$(exittext)$(exe reset) \u@\h $(exe yellow)\w$(exe reset)\$(git branch 2>/dev/null|grep \*)${prompt_suffix}>"
+PS1="\A \[\$(exitcolor)\]\$(exittext)$(exe reset) \u@\h $(exe yellow)\w$(exe reset)\$(git branch 2>/dev/null|grep \*)${prompt_suffix}\\$ "
 unset -f exe
 unset prompt_suffix
 
