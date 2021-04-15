@@ -466,7 +466,10 @@ edit_commit() {
 }
 
 git_rebase() {
-    git rebase -i --autosquash --autostash "$@"
+    git rebase -i --autosquash --autostash "$@" || {
+        restore_tty_settings
+        exit 1
+    }
 }
 
 goto_beginning() {
