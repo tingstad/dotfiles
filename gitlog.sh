@@ -14,13 +14,21 @@ main() {
         split_screen_if_not_split
         check_screen_size
         set_state from="$from" index="$index" height="$height" width="$width"
-        [ "$(get_state "$state" dirty_git)" = true ] || ! diff_state "$state" "$prev_state" from height width \
+        [ "$(get_state "$state" dirty_git)" = true ] \
+            || ! diff_state "$state" "$prev_state" from \
+            || [ "$(get_state "$prev_state" height)" -lt "$height" ] \
             && _dirty_git=true || _dirty_git=false
         if [ $_dirty_git = true ]; then
-            lines="$(log git "$from" "$file" | head -n "$height" | ccut "$width")"
+            _gitlog="$(log git "$from" "$file" | head -n $((height*4)))"
+        fi
+        if [ $_dirty_git = true ] || ! diff_state "$state" "$prev_state" height width; then
+            lines="$(printf "%s\n" "$_gitlog" | head -n "$height" | ccut "$width")"
         fi
         if [ $_dirty_git = true ] || ! diff_state "$state" "$prev_state" index; then
             commit=$(printf "%s\n" "$lines" | awk "NR==$index+1 { print \$1 }" | nocolors)
+        fi
+        if [ $_dirty_git = true ]; then
+            dirty_screen=y
         fi
         [ -n "$TMUX" ] && [ "$commit" != "$show_commit" ] \
             && tmux respawn-pane -t "$session":"$window".1 \
@@ -70,7 +78,7 @@ check_screen_size() {
     _cols=$COLUMNS
     _rows=$LINES
     if [ -n "$TMUX" ]; then
-        _size="$(tmux display -p '#{pane_height} #{pane_width}')"
+        _size="$(tmux display -t "$session":"$window".0 -p '#{pane_height} #{pane_width}')"
         if is_number "${_size#* }" && is_number "${_size% *}"; then
             _cols=${_size#* }
             _rows=${_size% *}
@@ -102,7 +110,7 @@ draw() {
     printf " W E L C O M E %s\n" "$(printf '%s\n' "$lines" | awk "NR==$index+1 { print \$1 }")"
     printf "Keys: j/↓, k/↑, " # length: 16
     # shellcheck disable=SC2059
-    printf "${_u}f${_reset}orward page, be${_u}g${_reset}inning, ${_u}H${_reset}ome/${_u}M${_reset}iddle/${_u}L${_reset}ast line, ${_u}r${_reset}ebase, ${_u}F${_reset}ixup, ${_u}q${_reset}uit" | ccut "$(( _cols - 16 ))"
+    printf "${_u}f${_reset}orward page, be${_u}g${_reset}inning, ${_u}H${_reset}ome/${_u}M${_reset}iddle/${_u}L${_reset}ast line, ${_u}r${_reset}ebase, ${_u}F${_reset}ixup, ${_u}q${_reset}uit" | ccut "$((_cols - 16))"
     printf '\n'
     printf "%s\n" "$lines"
     fi
@@ -123,17 +131,16 @@ read_input() {
     if [ "$(printf %d "'$_key")" = "$_escape" ]; then
         _key="$(read_char 2)" # read 2 more chars
     fi
-    dirty_screen=y #TODO remove so default is n
     case $_key in
         'q') quit ;;
         'k')  index_dec ;;
         '[A') index_dec ;;
-        'j')  clear_cursor && dirty_screen=n && index_inc ;;
+        'j')  index_inc ;;
         '[B') index_inc ;;
         '[D') printf LEFT ;;
         '[C') tmux select-pane -R ;;
         'g')  goto_beginning ;;
-        'H')  index=0 ;;
+        'H')  clear_cursor && index=0 ;;
         'L')  index_end ;;
         'M')  index_mid ;;
         'l')  tmux select-pane -R ;;
@@ -143,12 +150,63 @@ read_input() {
         'w')  reword ;;
         'v')  revert ;;
         'e')  edit_commit ;;
+        'a')  about && dirty_screen=y ;;
     esac
 }
 
 read_char() { # $1:chars #2:timeout?
     stty -icanon -echo ${2:+min 0 time $2}
     dd bs=1 count="$1" 2>/dev/null
+}
+
+about() {
+    _col=1
+    while [ $_col -le "$width" ]; do
+        _row=1
+        while [ $_row -le $height ]; do
+            cursor_set $_row $_col
+            printf "%s" " "
+            _row=$((_row + 1))
+        done
+        if [ "$(random 0 4)" -lt 1 ]; then delay 1; fi
+        _col=$((_col + 1))
+    done
+
+    _col=3
+    _row=5
+    _rest="Presented by:"
+    while [ -n "$_rest" ]; do
+        _tail="${_rest#?}"
+        _char="${_rest%%"$_tail"}"
+        _rest="${_tail}"
+        cursor_set $_row $_col
+        printf "%s" "$_char"
+        delay 1
+        _col=$((_col + 1))
+        if [ "$_char" = ":" ]; then
+            _row=$((_row + 1))
+            _rest="Richard Tingstad"
+        fi
+    done
+    _count=5
+    while [ $_count -gt 0 ]; do
+        cursor_set 8 7
+        printf "%s" $_count
+        sleep 1
+        _count=$((_count - 1))
+    done
+}
+
+delay() {
+    if [ "$1" -lt 1 ]; then
+        return
+    fi
+    stty -icanon -echo min 0 time "$1"
+    dd bs=1 count=1 2>/dev/null
+}
+
+random() {
+    awk -v min="$1" -v max="$2" 'BEGIN{srand(); print int(min+rand()*(max-min+1))}'
 }
 
 set_state() {
@@ -243,7 +301,9 @@ fixup() {
         git commit --fixup="$commit" && GIT_EDITOR=true git_rebase "$commit"^
     fi
     set_state dirty_git=true
-    goto_beginning
+    if [ "$from" != "HEAD" ]; then
+        goto_beginning
+    fi
 }
 
 rebase() {
@@ -253,7 +313,7 @@ rebase() {
     clear
     git_rebase "$commit"
     if is_rebasing; then
-        printf "Happy rebasing :)"
+        printf "Happy rebasing :)\n"
         restore_tty_settings
         exit
     fi
@@ -277,7 +337,9 @@ reword() {
         GIT_SEQUENCE_EDITOR="sed -i.old 's/^pick ""$commit""/r ""$commit""/'" git_rebase "$commit"^
     fi
     set_state dirty_git=true
-    goto_beginning
+    if [ "$from" != "HEAD" ]; then
+        goto_beginning
+    fi
 }
 
 revert() {
@@ -294,7 +356,7 @@ edit_commit() {
     if [ "$index" -gt 0 ] || [ "$from" != "HEAD" ]; then
         GIT_SEQUENCE_EDITOR="sed -i.old 's/^pick ""$commit""/e ""$commit""/'" git_rebase "$commit"^
     fi
-    printf "Happy editing :)"
+    printf "Happy editing :)\n"
     restore_tty_settings
     exit
 }
@@ -304,14 +366,17 @@ git_rebase() {
 }
 
 goto_beginning() {
+    clear_cursor
     from="HEAD"
     index=0
 }
 
 index_mid() {
+    clear_cursor
     index=$(($(get_index_end) / 2))
 }
 index_end() {
+    clear_cursor
     index=$(get_index_end)
 }
 clear_cursor() {
@@ -319,18 +384,20 @@ clear_cursor() {
     printf " "
 }
 get_index_end() {
-    _end=$(printf "%s\n" "$lines" | line_count)
+    _end=$(line_count "$lines")
     [ "$_end" -lt $height ] \
         && printf "%s" $((_end - 1)) \
         || printf "%s" $((height - 1))
 }
 index_inc() {
+    clear_cursor
     if [ "$index" -lt $((height - 1)) ] \
-            && [ $((index + 1)) -lt "$(printf "%s\n" "$lines" | line_count)" ]; then
+            && [ $((index + 1)) -lt "$(line_count "$lines")" ]; then
         index=$((index + 1))
     fi
 }
 index_dec() {
+    clear_cursor
     if [ $index -gt 0 ]; then
         index=$((index - 1))
     fi
@@ -344,7 +411,7 @@ forward_page() {
 quit() {
     restore_tty_settings
     [ -n "$TMUX" ] && tmux kill-window
-    exit "$1"
+    exit "${1:-0}"
 }
 
 save_tty_settings() {
@@ -443,6 +510,17 @@ does_exist() {
 }
 
 line_count() {
+    if [ -z "${1+x}" ]; then
+        line_count_stdin
+    elif [ -z "$1" ]; then
+        printf '%s\n' 0
+    else
+        line_count_stdin <<EOF
+$1
+EOF
+    fi
+}
+line_count_stdin() {
     _count=0
     _line=""
     while IFS= read -r _line || [ -n "$_line" ]; do

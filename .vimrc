@@ -23,13 +23,15 @@ set foldlevelstart=99   " ... but keep all folds open from start
 set ruler               " show cursor position and relative file position
 "set visualbell          " do not beep
 
+set timeout timeoutlen=1000 ttimeoutlen=50
+
 " default leader is \  Change with: let mapleader = ","
 map <space> <Leader>
 nnoremap <Leader><space> :set hlsearch!<cr>
-nnoremap <Leader>v :vsplit **/*
-nnoremap <Leader>s :split **/*
-nnoremap <Leader>e :edit **/*
-nnoremap <Leader>t :tabnew **/*
+nnoremap <Leader>v :vsplit <C-r>=expand("%:p:h")<Enter>/**/*
+nnoremap <Leader>s :split <C-r>=expand("%:p:h")<Enter>/**/*
+nnoremap <Leader>e :edit <C-r>=expand("%:p:h")<Enter>/**/*
+nnoremap <Leader>t :tabnew <C-r>=expand("%:p:h")<Enter>/**/*
 nnoremap <Leader>w :w<cr>
 " insert newline above:
 nnoremap <Leader>O v<Esc>O<Esc>`<
@@ -37,6 +39,21 @@ nnoremap <Leader>O v<Esc>O<Esc>`<
 nnoremap <Leader>o v<Esc>o<Esc>`<
 " insert space:
 nnoremap <Leader>i i<Space><Esc>l
+
+" insert one letter (<Esc> = Alt):
+nnoremap <Leader>a a<Space><Esc>r
+nnoremap <Leader>i i<Space><Esc>r
+nnoremap <Leader>A A<Space><Esc>r
+
+"<Esc> = Alt
+inoremap <Esc>a å
+inoremap <Esc>A Å
+inoremap <Esc>' æ
+inoremap <Esc>" Æ
+inoremap <Esc>o ø
+inoremap <Esc>O Ø
+"<Esc>O interferes with arrow keys, but this helps:
+inoremap <Esc>OD <Left>
 
 "augroup configgroup
 "    autocmd!
