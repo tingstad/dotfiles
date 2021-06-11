@@ -629,7 +629,7 @@ restore_tty_settings() {
 }
 
 nocolors() {
-    # shellcheck disable=SC2039
+    # shellcheck disable=SC2039,SC3003
     if [ 'A' = $'\x41' ] 2>/dev/null # Attempt to check support for $'..' (ANSI-C Quoting)
     then                             # Should be supported by most modern shells
         sed $'s,\x1b\\[[0-9;]*[A-Za-z],,g'
