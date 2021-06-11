@@ -72,8 +72,12 @@ python () {
             [ "$arg" = "http.server" ] && found=y
         done
     fi
+    local tty=""
+    if test -t 0; then
+        tty="-t"
+    fi
     local vol_opt="$(selinuxenabled 2>/dev/null && echo :Z)"
-    docker run -it --rm -v "$PWD":/dir"$vol_opt" \
+    docker run -i $tty --rm -v "$PWD":/dir"$vol_opt" \
         -w /dir ${port:+ -p 127.0.0.1:$port:$port/tcp} \
         frolvlad/alpine-python3@sha256:ae841640713bf7e11540b40b6d40614e2e8f93b6ecef201a6cec62d52be1c36d \
         python3 "$@"
@@ -100,9 +104,13 @@ mvn_$1() {
     if [ ! -d "\$HOME/.m2" ]; then
         mkdir "\$HOME/.m2"
     fi
+    local tty=""
+    if test -t 0; then
+        tty="-t"
+    fi
     local vol_opt="\$(selinuxenabled 2>/dev/null && echo :Z)"
-    echo docker run -it --rm --env TZ="\${TZ:-\$(date +%Z)}" -v "\$PWD":/dir\$vol_opt -u "$user_string" -v "\$HOME/.m2":/var/mvn/.m2\$vol_opt -w /dir $2 mvn -Duser.home=/var/mvn -Dmaven.repo.local=/var/mvn/.m2/repository "\$@"
-    docker run -it --rm --env TZ="\${TZ:-\$(date +%Z)}" -v "\$PWD":/dir\$vol_opt -u "$user_string" -v "\$HOME/.m2":/var/mvn/.m2\$vol_opt -w /dir $2 mvn -Duser.home=/var/mvn -Dmaven.repo.local=/var/mvn/.m2/repository "\$@"
+    echo docker run \$tty -i --rm --env TZ="\${TZ:-\$(date +%Z)}" -v "\$PWD":/dir\$vol_opt -u "$user_string" -v "\$HOME/.m2":/var/mvn/.m2\$vol_opt -w /dir $2 mvn -Duser.home=/var/mvn -Dmaven.repo.local=/var/mvn/.m2/repository "\$@"
+    docker run \$tty -i --rm --env TZ="\${TZ:-\$(date +%Z)}" -v "\$PWD":/dir\$vol_opt -u "$user_string" -v "\$HOME/.m2":/var/mvn/.m2\$vol_opt -w /dir $2 mvn -Duser.home=/var/mvn -Dmaven.repo.local=/var/mvn/.m2/repository "\$@"
 }
 EOF
 export -f mvn_$1

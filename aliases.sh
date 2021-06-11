@@ -66,7 +66,8 @@ if [ -f ~/.git-completion.bash ]; then
   . ~/.git-completion.bash
 fi
 
-if command -v tmux &>/dev/null `#tmux exists` \
+if [ -z "$TESTMODE" ] \
+   && command -v tmux &>/dev/null `#tmux exists` \
    && [ -n "$PS1" ]            `#interactive` \
    && [[ ! "$TERM" =~ screen ]] && [[ ! "$TERM" =~ tmux ]] && [ -z "$TMUX" ]
 then

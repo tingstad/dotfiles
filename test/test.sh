@@ -12,7 +12,7 @@ source "$DIR/test_gitlog.sh"
 
 testSourceAliasesExitCode() {
     source "$DIR/../aliases.sh"
-    assertEquals 0 $?
+    assertEquals "Exit code source alias.sh" 0 $?
     assertEquals \
         "Should trunc" \
         "$(bash -c 'echo "Should truncate" | ccut 12')"
@@ -45,13 +45,15 @@ testSourceAliasesExitCode() {
             "PPM 1x1 1x1+0+0 16-bit" \
             "$(identify img.ppm | cut -d ' ' -f 2-5)"
         rm img.ppm
-        assertEquals \
+        assertEquals "node8" \
             "v8.15.0" \
             "$(echo 'node8 -v' | bash)"
-        assertEquals \
+        if [ "$(type npx | head -n1)" = "npx is a function" ]; then
+        assertEquals "npx" \
             "6.14.7" \
             "$(echo 'npx -v' | bash)"
-        assertEquals "3.8.3" "$(bash -c 'python -V' | sed 's/[^0-9.]//g')"
+        fi
+        assertEquals "python" "3.8.3" "$(bash -c 'python -V' | sed 's/[^0-9.]//g')"
     fi
 }
 

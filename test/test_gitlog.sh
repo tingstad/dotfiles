@@ -184,10 +184,12 @@ test_forward_page() {
 }
 
 test_check_screen_size() {
-    height=""
-    width=""
-    check_screen_size
-    assertTrue "Width" "is_number $width"
+    if [ -t 0 ]; then
+        height=""
+        width=""
+        check_screen_size
+        assertTrue "Width" "is_number $width"
+    fi
 }
 
 test_state() {
