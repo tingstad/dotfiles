@@ -10,9 +10,12 @@ tearDown(){
         && printf "\033[u" `#Restore cursor position` && echo
 }
 
-testThatDrawWritesHeading() {
+testThatDrawsHeading() {
     local contains=' W E L C O M E'
-    assertEquals "$contains" "$(draw | egrep -o "$contains")"
+    read -r -d '' lines <<- EOF
+	  * db334c0 2021-01-20  Commit 0
+	EOF
+    assertEquals "$contains" "$(draw 12 10 20 "$lines" 0 HEAD | egrep -o "$contains")"
 }
 
 test_key_k() {
