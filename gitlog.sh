@@ -282,7 +282,7 @@ about() {
             _rest="Richard Tingstad"
         fi
     done
-    _count=5
+    _count=3
     while [ $_count -gt 0 ]; do
         cursor_set 8 7
         printf "%s" $_count
