@@ -44,6 +44,24 @@ shellcheck() {
 }
 export -f shellcheck
 
+# Only one file supported
+yq() {
+    local last_arg="${@:$#}"
+    file=""
+    if [ -e "$last_arg" ]; then
+        filename="$(basename "$last_arg")"
+        file="$(cd "$(dirname "$last_arg")"; pwd -P)/$filename"
+        set -- "${@:1:$#-1}"
+    fi
+    local vol_opt="$(selinuxenabled 2>/dev/null && echo :Z)"
+    docker run --rm --network none \
+        ${file:+ -v "$file":/workdir/"$filename"$vol_opt} \
+        mikefarah/yq:4.4.1 \
+        "$@" ${file:+"$filename"}
+}
+export -f yq
+
+
 # Only working dir supported
 python () {
     local port
@@ -54,8 +72,12 @@ python () {
             [ "$arg" = "http.server" ] && found=y
         done
     fi
+    local tty=""
+    if test -t 0; then
+        tty="-t"
+    fi
     local vol_opt="$(selinuxenabled 2>/dev/null && echo :Z)"
-    docker run -it --rm -v "$PWD":/dir"$vol_opt" \
+    docker run -i $tty --rm -v "$PWD":/dir"$vol_opt" \
         -w /dir ${port:+ -p 127.0.0.1:$port:$port/tcp} \
         frolvlad/alpine-python3@sha256:ae841640713bf7e11540b40b6d40614e2e8f93b6ecef201a6cec62d52be1c36d \
         python3 "$@"
@@ -76,18 +98,26 @@ export -f http_server
 
 # Only working dir supported
 # ~/.m2/settings.xml is your friend
+create_mvn() {  # $1 = suffix, $2 = image
 source /dev/stdin <<EOF
-# Only working dir supported
-mvn_8() {
+mvn_$1() {
     if [ ! -d "\$HOME/.m2" ]; then
         mkdir "\$HOME/.m2"
     fi
+    local tty=""
+    if test -t 0; then
+        tty="-t"
+    fi
     local vol_opt="\$(selinuxenabled 2>/dev/null && echo :Z)"
-    echo docker run -it --rm -v "\$PWD":/dir\$vol_opt -u "$user_string" -v "\$HOME/.m2":/var/mvn/.m2\$vol_opt -w /dir maven:3.6.0-jdk-8-alpine mvn -Duser.home=/var/mvn -Dmaven.repo.local=/var/mvn/.m2/repository "\$@"
-    docker run -it --rm -v "\$PWD":/dir\$vol_opt -u "$user_string" -v "\$HOME/.m2":/var/mvn/.m2\$vol_opt -w /dir maven:3.6.0-jdk-8-alpine mvn -Duser.home=/var/mvn -Dmaven.repo.local=/var/mvn/.m2/repository "\$@"
+    echo docker run \$tty -i --rm --env TZ="\${TZ:-\$(date +%Z)}" -v "\$PWD":/dir\$vol_opt -u "$user_string" -v "\$HOME/.m2":/var/mvn/.m2\$vol_opt -w /dir $2 mvn -Duser.home=/var/mvn -Dmaven.repo.local=/var/mvn/.m2/repository "\$@"
+    docker run \$tty -i --rm --env TZ="\${TZ:-\$(date +%Z)}" -v "\$PWD":/dir\$vol_opt -u "$user_string" -v "\$HOME/.m2":/var/mvn/.m2\$vol_opt -w /dir $2 mvn -Duser.home=/var/mvn -Dmaven.repo.local=/var/mvn/.m2/repository "\$@"
 }
 EOF
-export -f mvn_8
+export -f mvn_$1
+}
+
+create_mvn 8 maven:3.6.0-jdk-8-alpine
+create_mvn 11 maven:3.6.3-jdk-11-slim
 
 # Only stdout output supported
 graph-easy() {
@@ -165,7 +195,7 @@ pretty_json() {
 EOF
 export -f pretty_json
 
-unset user_string vol_opt
+unset user_string vol_opt create_mvn
 
 # Others? netcat, socat, vimcat, Gimp, browser, mplayer, Eclipse, etc.
 

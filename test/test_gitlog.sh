@@ -10,93 +10,186 @@ tearDown(){
         && printf "\033[u" `#Restore cursor position` && echo
 }
 
-testThatDrawWritesHeading() {
+testThatDrawsHeading() {
     local contains=' W E L C O M E'
-    assertEquals "$contains" "$(draw | egrep -o "$contains")"
+    read -r -d '' lines <<- EOF
+	  * db334c0 2021-01-20  Commit 0
+	EOF
+    assertEquals "$contains" "$(draw 12 10 20 "$lines" 0 HEAD | egrep -o "$contains")"
 }
+
 test_key_k() {
+    read -r -d '' lines <<- EOF
+	  * db334c1 2021-01-21  Commit 1
+	  * db334c0 2021-01-20  Commit 0
+	EOF
     index=1
-    read_input <<< k
+    index_dec
     assertEquals "k (up) should decrement pointer" 0 $index
 }
+
 test_key_j() {
-    lines="$(yes | head)"
+    read -r -d '' lines <<- EOF
+	  * db334c3 2021-01-23  Commit 3
+	  * db334c2 2021-01-22  Commit 2
+	  * db334c1 2021-01-21  Commit 1
+	EOF
+    log_height=3
     index=1
-    height=3
-    read_input <<< j
+    index_inc
     assertEquals "j (down) should increment pointer" 2 $index
 }
+
+test_key_j_k_graph() {
+    read -r -d '' lines <<- EOF
+	  *   db334c3 2021-01-23  Commit 3
+	  |\ 
+	  | * db334c2 2021-01-22  Commit 2
+	  |/
+	  *   db334c1 2021-01-21  Commit 1
+	EOF
+    log_height=5
+    index=0
+    index_inc
+    assertEquals "increment index graph" 2 $index
+    index_inc
+    assertEquals "increment index graph" 4 $index
+    index_dec
+    assertEquals "decrement index graph" 2 $index
+    index_dec
+    assertEquals "decrement index graph" 0 $index
+}
+
 test_key_g() {
     from=some_commit
     index=2
-    read_input <<< g
+    goto_beginning
     assertEquals "g (beginning) should reset pointer" 0 $index
     assertEquals "g (beginning) should reset 'from'" HEAD $from
 }
+
 test_key_H() {
+    read -r -d '' lines <<- EOF
+	  * db334c3 2021-01-23  Commit 3
+	  * db334c2 2021-01-22  Commit 2
+	  * db334c1 2021-01-21  Commit 1
+	EOF
     index=2
     read_input <<< H
     assertEquals "H (Home line) should reset pointer" 0 $index
 }
-test_key_L() {
-    lines="$(yes | head -n 30)"
-    height=20
-    read_input <<< L
-    assertEquals "L (end) should set pointer to end" 19 $index
+
+test_index_end() {
+    lines=""
+    for i in {0..6}; do
+        lines="$(printf '%s\n%s' "  * db334c$i 2021-01-2$i  Commit $i" "$lines")"
+    done
+    index_end
+    assertEquals "should set pointer to end" 6 $index
 }
-test_key_L_end() {
-    lines="$(yes | head -n 10)"
-    height=20
-    read_input <<< L
-    assertEquals "L (end) should set pointer to end" 9 $index
+
+test_index_mid() {
+    read -r -d '' lines <<- EOF
+	  * db334c3 2021-01-23  Commit 3 index0
+	  * db334c2 2021-01-22  Commit 2 index1
+	  * db334c1 2021-01-21  Commit 1 index2
+	EOF
+    index_mid
+    assertEquals "M should set pointer to middle" 1 $index
 }
-test_key_M() {
-    lines="$(yes | head -n 30)"
-    height=20
-    read_input <<< M
-    assertEquals "M should set pointer to middle" 9 $index
+
+test_index_mid_even() {
+    read -r -d '' lines <<- EOF
+	  * db334c3 2021-01-23  Commit 3 index0
+	  * db334c2 2021-01-22  Commit 2 index1
+	  * db334c1 2021-01-21  Commit 1 index2
+	  * db334c0 2021-01-20  Commit 0 index3
+	EOF
+    index_mid
+    assertEquals 2 $index
 }
-test_key_M_short_end() {
-    lines="$(yes | head -n 10)"
-    height=20
-    read_input <<< M
-    assertEquals "M should set pointer to middle" 4 $index
+
+test_index_mid_graph() {
+    read -r -d '' lines <<- EOF
+	  *   db334c4 2021-01-24  Commit 4 index0
+	  *   db334c3 2021-01-23  Commit 3 index1
+	  |\ 
+	  | * db334c2 2021-01-22  Commit 2 index3
+	  |/
+	  *   db334c1 2021-01-21  Commit 1 index5
+	EOF
+    index_mid
+    assertEquals "should set index" 3 $index
 }
-test_key_k_at_top() {
+
+test_index_mid_graph_above() {
+    read -r -d '' lines <<- EOF
+	  *   db334c3 2021-01-23  Commit 3 index0
+	  |\ 
+	  | * db334c2 2021-01-22  Commit 2 index2
+	  |/
+	  *   db334c1 2021-01-21  Commit 1 index4
+	  *   db334c0 2021-01-20  Commit 0 index5
+	EOF
+    index_mid
+    assertEquals "should set index" 2 $index
+}
+
+test_index_dec_at_top() {
     index=0
-    read_input <<< k
+    index_dec
     assertEquals "k (up) should not decrement pointer at start" 0 $index
 }
-test_key_j_bottom() {
-    lines="$(yes | head)"
+
+test_index_inc_bottom() {
+    read -r -d '' lines <<- EOF
+	  * db334c3 2021-01-23  Commit 3
+	  * db334c2 2021-01-22  Commit 2
+	  * db334c1 2021-01-21  Commit 1
+	EOF
     index=1
-    height=2
-    read_input <<< j
+    log_height=2
+    index_inc
     assertEquals "j (down) should not increment pointer at bottom" 1 $index
 }
-test_key_j_end() {
-    lines="$(yes | head -n 2)"
+
+test_index_inc_end() {
+    read -r -d '' lines <<- EOF
+	  * db334c2 2021-01-22  Commit 2
+	  * db334c1 2021-01-21  Commit 1
+	EOF
     index=1
     height=9
-    read_input <<< j
+    index_inc
     assertEquals "j (down) should not increment pointer at bottom" 1 $index
 }
-test_key_f_forward() {
+
+test_forward_page() {
     pager=('HEAD')
     from='HEAD'
-    lines="$(seq 1 10)"
+    lines=""
+    for i in {1..10}; do
+        lines="$(printf '  * 00000%02d 2021-01-01  Commit %d\n%s' $i $i "$lines")"
+    done
     index=2
-    height=5
-    read_input <<< f
+    log_height=7
+    forward_page
     assertEquals "f should set index 0" 0 $index
-    assertEquals "f should set HEAD" 10 $from
-    assertEquals "f should set pager" 'HEAD 10' "${pager[*]}"
+    assertEquals "f should set HEAD" 0000001 $from
+    assertEquals "f should set pager" 'HEAD 0000001' "${pager[*]}"
+    from=HEAD
+    log_height=20
+    forward_page
+    assertEquals "should do nothing if last page" HEAD $from
 }
+
 test_check_screen_size() {
-    height=""
-    width=""
-    check_screen_size
-    assertTrue "Width" "is_number $width"
+    if [ -t 0 ]; then
+        height=""
+        width=""
+        check_screen_size
+        assertTrue "Width" "is_number $width"
+    fi
 }
 
 test_state() {
@@ -155,6 +248,41 @@ test_check_dependencies() {
     assertTrue "dependency sed+awk should exist" "check_dependencies awk sed"
     assertFalse "dependency asdifuwe should not exist" "check_dependencies asdifuwe"
     assertEquals "Missing dependencies: a b" "$(check_dependencies a b 2>&1)"
+}
+
+test_get_index_end() {
+    lines="* abcd Single commit"
+    assertEquals "0" "$(get_index_end)"
+    lines="$(printf '0 \n 1_*_commit \n 2 \n 3_*_commit \n 4 \n')"
+    assertEquals "3" "$(get_index_end)"
+}
+
+test_get_commit() {
+    index=0
+    lines="  * abcd commit message"
+    read -r -d '' lines <<- EOF
+	  * 617c03  Commit 3 index0
+	  * 617c02  Commit 2 index1
+	  * 617c01  Commit 1 index2
+	  *   f00c03 foo
+	  |\ 
+	  | | * 844c05 bar
+	  | |/
+	  \033[32m|\033[m * \033[33m8a2c07\033[m Color
+	EOF
+    assertEquals "617c03" "$(get_commit)"
+    assertEquals "617c03" "$(get_commit 0)"
+    assertEquals "617c02" "$(get_commit 1)"
+    assertEquals "617c01" "$(get_commit 2)"
+    index=1
+    assertEquals "617c02" "$(get_commit)"
+    assertEquals "f00c03" "$(get_commit 3)"
+    assertEquals "844c05" "$(get_commit 5)"
+    assertEquals "8a2c07" "$(get_commit 7)"
+}
+
+test_line_at() {
+    assertEquals "4" "$(seq 0 9 | line_at 4)"
 }
 
 test_is_rebasing() {
@@ -272,10 +400,10 @@ assert_nocolors() {
 test_log() {
     local git_mock=echo
     assertEquals \
-        "log --pretty=format:   %C(auto)%h %cd %d %s --date=short HEAD --color=always -- file.txt" \
+        "log --graph --pretty=format:%C(auto)%h %cd %d %s --date=short HEAD --color=always -- file.txt" \
         "$(log $git_mock HEAD file.txt)"
     assertEquals \
-        "log --pretty=format:   %C(auto)%h %cd %d %s --date=short HEAD --color=always" \
+        "log --graph --pretty=format:%C(auto)%h %cd %d %s --date=short HEAD --color=always" \
         "$(log $git_mock HEAD)"
 }
 

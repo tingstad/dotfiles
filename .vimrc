@@ -24,6 +24,8 @@ set ruler               " show cursor position and relative file position
 "set visualbell          " do not beep
 
 set timeout timeoutlen=1000 ttimeoutlen=50
+autocmd InsertEnter * set timeoutlen=20
+autocmd InsertLeave * set timeoutlen=1000
 
 " default leader is \  Change with: let mapleader = ","
 map <space> <Leader>
@@ -37,6 +39,8 @@ nnoremap <Leader>w :w<cr>
 nnoremap <Leader>O v<Esc>O<Esc>`<
 " insert newline below:
 nnoremap <Leader>o v<Esc>o<Esc>`<
+" insert em dash:
+nnoremap <Leader>- i—<Esc>
 " insert space:
 nnoremap <Leader>i i<Space><Esc>l
 
