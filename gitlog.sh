@@ -62,7 +62,7 @@ bootstrap() {
     #trap 'TODO' WINCH
     check_dependencies git awk sed head less
     git rev-parse #assert git repository
-    if is_tmux; then
+    if is_tmux && [ -f "$0" ] && grep -q -m1 datsgnitlog "$0" 2>/dev/null; then
         if [ -z "$TMUX" ]; then
             tmux new-session -A -s datsgnitlog -n datsgnitlog"$(date +%s)" "$0" "$@"
             exit
@@ -73,6 +73,8 @@ bootstrap() {
             tmux new-window -n datsgnitlog"$(date +%s)" "export DATSGNIT_INCEPTION=yes; $0 $*; $SHELL -i"
             exit
         fi
+    elif is_tmux; then
+        unset TMUX
     fi
 }
 
