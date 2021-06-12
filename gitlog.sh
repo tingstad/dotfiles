@@ -57,10 +57,9 @@ main() {
 
 bootstrap() {
     check_screen_size
-    save_tty_settings
     trap 'quit' INT
-    #trap 'TODO' WINCH
-    check_dependencies git awk sed head less
+    save_tty_settings
+    check_dependencies git awk sed head less grep
     git rev-parse #assert git repository
     if is_tmux && [ -f "$0" ] && grep -q -m1 datsgnitlog "$0" 2>/dev/null; then
         if [ -z "$TMUX" ]; then
