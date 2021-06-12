@@ -481,10 +481,10 @@ goto_beginning() {
 
 index_mid() {
     _middle=$(($(line_count "$lines") / 2))
-    index_i $_middle
+    index_row $_middle
 }
 
-index_i() {
+index_row() {
     _target=$1
     _above=0
     _i=0
