@@ -485,7 +485,7 @@ index_mid() {
 }
 
 index_i() {
-    _middle=$1
+    _target=$1
     _above=0
     _i=0
     while IFS= read -r _line; do
@@ -494,10 +494,10 @@ index_i() {
             *) _is_commit=false ;;
         esac
         if [ $_is_commit = true ]; then
-            if [ $_i -lt $_middle ]; then
+            if [ $_i -lt "$_target" ]; then
                 _above=$_i
-            elif [ $_i -gt $_middle ]; then
-                if [ $((_i - _middle)) -lt $((_middle - _above)) ]; then
+            elif [ $_i -gt "$_target" ]; then
+                if [ $((_i - _target)) -lt $((_target - _above)) ]; then
                     index=$_i
                 else
                     index=$_above
