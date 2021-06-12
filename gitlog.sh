@@ -75,6 +75,7 @@ bootstrap() {
     elif is_tmux; then
         unset TMUX
     fi
+    printf '\033[?1000h' #enable mouse click reporting
 }
 
 split_screen_if_not_split() {
@@ -200,6 +201,13 @@ read_input() {
         '[B') index_inc ;;
         '[D') printf LEFT ;;
         '[C') tmux select-pane -R ;;
+        '[M')
+                _event=$(read_char 3)
+                _y="${_event#??}"
+                _y_int=$(printf %d "'$_y")
+                _row=$((_y_int - 32))
+                index_row $((_row - 4))
+              ;;
         'g')  goto_beginning ;;
         'H')  index=0 ;;
         'L')  index_end ;;
@@ -236,6 +244,7 @@ help() {
     f           Forward one page
     g           Goto beginning
     H/M/L       Jump to home/middle/last in window
+    click       Jump to line under mouse cursor
     h           Help
     q           Quit
     a           About
@@ -619,6 +628,7 @@ line_at() {
 
 quit() {
     restore_tty_settings
+    printf '\033[?1000l' #disable mouse click reporting
     [ -n "$TMUX" ] && tmux kill-window
     cursor_set "$height" 1
     exit "${1:-0}"
