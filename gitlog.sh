@@ -61,7 +61,7 @@ bootstrap() {
     save_tty_settings
     check_dependencies git awk sed head less grep
     git rev-parse #assert git repository
-    if is_tmux && [ -f "$0" ] && grep -q -m1 datsgnitlog "$0" 2>/dev/null; then
+    if is_tmux && [ -f "$0" ] && contains "$0" / && grep -q -m1 datsgnitlog "$0" 2>/dev/null; then
         if [ -z "$TMUX" ]; then
             tmux new-session -A -s datsgnitlog -n datsgnitlog"$(date +%s)" "$0" "$@"
             exit
@@ -747,6 +747,13 @@ is_number() {
     case "$1" in
         *[!0-9]*) false ;;
         [0-9]*) true ;;
+        *) false ;;
+    esac
+}
+
+contains() {
+    case $1 in
+        *$2*) true ;;
         *) false ;;
     esac
 }
