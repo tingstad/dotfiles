@@ -319,6 +319,20 @@ test_is_number() {
     assertTrue "Hundreds" "is_number 100"
     assertTrue "Big number" "is_number 1234567"
 }
+
+test_contains() {
+    assertTrue  "contains abc a"
+    assertTrue  "contains abc ab"
+    assertTrue  "contains abc abc"
+    assertTrue  "contains 'a b' a"
+    assertTrue  "contains 'a b' 'a b'"
+    assertFalse "contains abc d"
+    assertFalse "contains 'a b' 'a c'"
+    assertTrue  "contains ./file ./"
+    assertFalse "contains d/file ./"
+    assertTrue  "contains ./file /"
+}
+
 test_ccut() {
     esc="\033"
     red="$esc[0;31m"

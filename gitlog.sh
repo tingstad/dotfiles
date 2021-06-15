@@ -57,12 +57,11 @@ main() {
 
 bootstrap() {
     check_screen_size
-    save_tty_settings
     trap 'quit' INT
-    #trap 'TODO' WINCH
-    check_dependencies git awk sed head less
+    save_tty_settings
+    check_dependencies git awk sed head less grep
     git rev-parse #assert git repository
-    if is_tmux && [ -f "$0" ] && grep -q -m1 datsgnitlog "$0" 2>/dev/null; then
+    if is_tmux && [ -f "$0" ] && contains "$0" / && grep -q -m1 datsgnitlog "$0" 2>/dev/null; then
         if [ -z "$TMUX" ]; then
             tmux new-session -A -s datsgnitlog -n datsgnitlog"$(date +%s)" "$0" "$@"
             exit
@@ -200,12 +199,12 @@ read_input() {
         'j')  index_inc ;;
         '[B') index_inc ;;
         '[D') printf LEFT ;;
-        '[C') tmux select-pane -R ;;
+        '[C') [ -z "$TMUX" ] || tmux select-pane -R ;;
         'g')  goto_beginning ;;
         'H')  index=0 ;;
         'L')  index_end ;;
         'M')  index_mid ;;
-        'l')  tmux select-pane -R ;;
+        'l')  [ -z "$TMUX" ] || tmux select-pane -R ;;
         'f')  forward_page ;;
         'r')  rebase ;;
         'F')  fixup ;;
@@ -481,6 +480,11 @@ goto_beginning() {
 
 index_mid() {
     _middle=$(($(line_count "$lines") / 2))
+    index_row $_middle
+}
+
+index_row() {
+    _target=$1
     _above=0
     _i=0
     while IFS= read -r _line; do
@@ -489,10 +493,10 @@ index_mid() {
             *) _is_commit=false ;;
         esac
         if [ $_is_commit = true ]; then
-            if [ $_i -lt $_middle ]; then
+            if [ $_i -lt "$_target" ]; then
                 _above=$_i
-            elif [ $_i -gt $_middle ]; then
-                if [ $((_i - _middle)) -lt $((_middle - _above)) ]; then
+            elif [ $_i -gt "$_target" ]; then
+                if [ $((_i - _target)) -lt $((_target - _above)) ]; then
                     index=$_i
                 else
                     index=$_above
@@ -743,6 +747,13 @@ is_number() {
     case "$1" in
         *[!0-9]*) false ;;
         [0-9]*) true ;;
+        *) false ;;
+    esac
+}
+
+contains() {
+    case $1 in
+        *$2*) true ;;
         *) false ;;
     esac
 }
