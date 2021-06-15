@@ -75,6 +75,9 @@ bootstrap() {
     elif is_tmux; then
         unset TMUX
     fi
+    if [ -n "$ZSH_VERSION" ]; then
+        setopt shwordsplit
+    fi
 }
 
 split_screen_if_not_split() {
@@ -218,8 +221,11 @@ read_input() {
 }
 
 read_char() { # $1:chars #2:timeout?
-    [ -n "$2" ] && _min=0 || _min=1
-    stty -icanon -echo min $_min ${2:+time $2}
+    if [ -n "$2" ]; then
+        stty -icanon -echo min 0 time "$2"
+    else
+        stty -icanon -echo min 1
+    fi
     dd bs=1 count="$1" 2>/dev/null
 }
 
@@ -597,20 +603,14 @@ forward_page() {
 
 get_commit() {
     _line="$(printf '%s\n' "$lines" | line_at "${1:-$index}")"
-    set -f
-    # shellcheck disable=2086
-    set -- $_line
-    {
-    for _w in "$@"; do
+    for _w in $_line; do
         case "$_w" in
             *[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]*)
                 printf '%b' "$_w"
                 break
             ;;
         esac
-    done
-    set +f
-    } | nocolors
+    done | nocolors
 }
 
 line_at() {
