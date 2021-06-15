@@ -199,12 +199,12 @@ read_input() {
         'j')  index_inc ;;
         '[B') index_inc ;;
         '[D') printf LEFT ;;
-        '[C') tmux select-pane -R ;;
+        '[C') [ -z "$TMUX" ] || tmux select-pane -R ;;
         'g')  goto_beginning ;;
         'H')  index=0 ;;
         'L')  index_end ;;
         'M')  index_mid ;;
-        'l')  tmux select-pane -R ;;
+        'l')  [ -z "$TMUX" ] || tmux select-pane -R ;;
         'f')  forward_page ;;
         'r')  rebase ;;
         'F')  fixup ;;
