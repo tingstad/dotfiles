@@ -118,6 +118,8 @@ export -f mvn_$1
 
 create_mvn 8 maven:3.6.0-jdk-8-alpine
 create_mvn 11 maven:3.6.3-jdk-11-slim
+create_mvn 15 maven:3.8-openjdk-15-slim
+create_mvn 16 maven:3.8-openjdk-16-slim
 
 # Only stdout output supported
 graph-easy() {
