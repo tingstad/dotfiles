@@ -1,7 +1,0 @@
-language: bash
-
-install: true
-
-script:
-- bash test/photosort-test.sh
-

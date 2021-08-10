@@ -47,7 +47,7 @@ testInvalidResizeValue() {
 
 [ -f "$0" ] || { >&2 echo "Do not source file"; exit 1; }
 DIR=$( dirname "$0" )
-. "$DIR/../photosort.sh"
+. "$DIR/../../photosort.sh"
 set +o errexit
 . "$DIR/shunit2.sh"
 
