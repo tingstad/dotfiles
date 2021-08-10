@@ -34,8 +34,8 @@ error() {
 }
 
 check_dependencies() {
-    for i in "identify -version" "convert -version" "stat --help" "find --help"
-        do ! $i >/dev/null && error "${i% *} failed and is a required command" && return 1
+    for i in "identify -version" "convert -version" "command -v stat" "command -v find"
+        do ! $i >/dev/null && error "${i} failed and is a required command" && return 1
     done
     return 0
 }
@@ -44,8 +44,7 @@ FFORMAT="^[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}.[0-9]{2}.[0-9]{2}"
 
 time_taken() {
     local file="$1"
-    # %z %y %w: changed/modified/birth
-    local stat="$(stat --printf='%z\n%y\n%w' "$file")"
+    local stat="$(get_file_times "$file")"
     local exif="$(identify -format "%[EXIF:*]" "$file" | grep -i 'Exif:DateTime' \
         | cut -d= -f2 | sort | head -n 1)"
     local name="$(basename "$file" | egrep -o "$FFORMAT")"
@@ -55,7 +54,7 @@ time_taken() {
 #    echo -e "DEBUG:\n$stat stat\n$exif exif\n$name name\n" \
 #| egrep -io '(19|2[0-9])[0-9]{2}[^a-z0-9](0[1-9]|1[0-2])[^a-z0-9](0[1-9]|[12][0-9]|3[01]).*' >&2
     [ ${#time} -lt 14 ] && time=$(printf "$time%0$[ 14 - ${#time} ]u" 0)
-    local pretty=$(echo $time | sed -r \
+    local pretty=$(echo $time | sed -E \
 's/([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})/\1-\2-\3_\4.\5.\6/')
     echo $pretty
 }
@@ -67,8 +66,8 @@ is_duplicate() {
     local size
     for f in "$dest/$time"*.jpg; do
         if [ -f "$f" ]; then
-            [ -z "$size" ] && size=$(stat --printf=%s "$file")
-            [ $size = $(stat --printf=%s "$f") ] \
+            [ -z "$size" ] && size=$(get_size "$file")
+            [ $size = $(get_size "$f") ] \
                 && cmp --quiet "$file" "$f" \
                 && return 0
         fi
@@ -154,6 +153,25 @@ main() {
     done
     return 0
 }
+
+get_size() {
+    if [ $(uname) = "Darwin" ]; then
+        stat -f %z "$1"
+    else
+        stat --printf=%s "$1"
+    fi
+}
+
+get_file_times() {
+    if [ $(uname) = "Darwin" ]; then
+        stat -f '%Sc%n%Sm%n%SB' -t '%F %T %z' "$1"
+    else
+        # %z %y %w: changed/modified/birth
+        stat --printf='%z\n%y\n%w' "$1"
+    fi
+}
+
 return 2>/dev/null || true
+
 main "$@"
 
