@@ -43,6 +43,9 @@ nnoremap <Leader>o v<Esc>o<Esc>`<
 nnoremap <Leader>- i—<Esc>
 " insert space:
 nnoremap <Leader>i i<Space><Esc>l
+" inline variable:
+nnoremap <Leader>n #2dWy$dd<C-o>viw"0p
+
 
 " insert one letter (<Esc> = Alt):
 nnoremap <Leader>a a<Space><Esc>r
