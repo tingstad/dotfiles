@@ -33,7 +33,7 @@ split(all, chars, "")
 w = int( length(chars) / height )
 for (y=5; y < height-5; y++) {
     for (x=0; x < w; x++) {
-        all2[ y*w + x + 1 ] = chars[ (y+ (0) )*w + x + 1+int(y/2) ]
+        all2[ y*w + x + 1 ] = chars[ (y+ 1*int(4*sin(x/8)) )*w + x + 1+int(0*y/2) ]
     }
 }
 all=""
