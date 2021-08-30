@@ -13,28 +13,35 @@ for (k=1; k<=length(letters); k++) {
     letter = toupper(letters[k])
     s = a[letter]
 
-split(s, chars, "")
+    split(s, chars, "")
 
-height = 32
+    height = 32
+    w = int( length(chars) / height )
+
+    for (i=0; i < length(chars); i++) {
+        x = i % w
+        y = int(i / w)
+        spacing = (x == 0 ? "00" : "")
+        canvas[y+1] = canvas[y+1] spacing chars[ y*w + x + 1 ]
+    }
+}
+for (i=1; i <= height; i++) {
+    all = all canvas[i]
+}
+split(all, chars, "")
 w = int( length(chars) / height )
 
 line = ""
-for (i=1; i<=length(chars); i++) {
-    x = i % w
-    y = int(i / w)
-    if (y % 4 == 0 && (x % 2 == 0 && x > 1 || x == w-1)) {
-        if (x == 2 && y > 1) {
-            system("printf \"" line "\\n\"")
-            line = ""
-        }
-        p[1] = chars[ (y-3)*w + x-1 ]
-        p[2] = chars[ (y-2)*w + x-1 ]
-        p[3] = chars[ (y-1)*w + x-1 ]
-        p[7] = chars[ (y-0)*w + x-1 ]
-        p[4] = chars[ (y-3)*w + x   ]
-        p[5] = chars[ (y-2)*w + x   ]
-        p[6] = chars[ (y-1)*w + x   ]
-        p[8] = chars[ (y-0)*w + x   ]
+for (y=3; y < height; y+=4) {
+    for (x=1; x < w; x+=2) {
+        p[1] = chars[ (y-3)*w + x-1 +1 ]
+        p[2] = chars[ (y-2)*w + x-1 +1 ]
+        p[3] = chars[ (y-1)*w + x-1 +1 ]
+        p[7] = chars[ (y  )*w + x-1 +1 ]
+        p[4] = chars[ (y-3)*w + x   +1 ]
+        p[5] = chars[ (y-2)*w + x   +1 ]
+        p[6] = chars[ (y-1)*w + x   +1 ]
+        p[8] = chars[ (y  )*w + x   +1 ]
         for (j=1; j<=8; j++) b[j]=p[9-j]
         byte2 = 160 +  2*b[1] + b[2]
         byte3 = 128 + 32*b[3] + 16*b[4] + 8*b[5] + 4*b[6] + 2*b[7] + b[8]
@@ -43,9 +50,9 @@ for (i=1; i<=length(chars); i++) {
         utf8 = "\\342\\" byte2_oct "\\" byte3_oct
         line = line utf8
     }
+    line = line "\\n"
 }
-print ""
-}
+system("printf \"" line "\"")
 
 }
 
