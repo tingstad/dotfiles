@@ -29,6 +29,19 @@ for (i=1; i <= height; i++) {
     all = all canvas[i]
 }
 split(all, chars, "")
+
+w = int( length(chars) / height )
+for (y=5; y < height-5; y++) {
+    for (x=0; x < w; x++) {
+        all2[ y*w + x + 1 ] = chars[ (y+ (0) )*w + x + 1+int(y/2) ]
+    }
+}
+all=""
+for (c=1; c<=length(chars); c++)  all = all (all2[c] ? all2[c] : 0)
+print all
+
+
+split(all, chars, "")
 w = int( length(chars) / height )
 
 line = ""
