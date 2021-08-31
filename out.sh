@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-export LC_ALL=UTF-8
+export LC_ALL=UTF-8 2>/dev/null
 
 main() {
     text="$@"
@@ -1447,7 +1447,9 @@ a[" "]="000000'\
 }'
 }
 
-return 2>/dev/null || true
+if [ -n "$BASH_VERSION" ]; then
+    return 2>/dev/null || true
+fi
 
 main "$@"
 
