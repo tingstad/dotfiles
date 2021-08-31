@@ -1,4 +1,5 @@
 #!/bin/sh
+# https://github.com/tingstad/dotfiles/
 set -e
 
 export LC_ALL=UTF-8 2>/dev/null
