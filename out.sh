@@ -17,11 +17,12 @@ main() {
 shout() {
 awk 'BEGIN {
 
-init()
+init_a()
 
 word="'"$1"'"
 split(word, letters, "")
 
+# Compose:
 for (k=1; k<=length(letters); k++) {
     letter = toupper(letters[k])
     s = a[letter]
@@ -43,6 +44,7 @@ for (i=1; i <= height; i++) {
 }
 split(all, chars, "")
 
+# Transform:
 min = 1
 w = int( length(chars) / height )
 for (y=5; y < height-5; y++) {
@@ -50,20 +52,23 @@ for (y=5; y < height-5; y++) {
         x2 = x + (length(letters)>2) * int(y*(1/2-x/w))
         y2 = y - int(5*sin(x*3.14/w))
         if (y2 < min) min = y2
-        all2[ y2 * w + x2 ] = chars[ y*w + x + 1 ]
+        transformed[ y2 * w + x2 ] = chars[ y*w + x + 1 ]
     }
 }
 if (min < 1) {
+# perhaps translate canvas pixels
 }
 all=""
-for (c=1; c<=length(chars); c++)  all = all (all2[c] ? all2[c] : 0)
+for (c=1; c<=length(chars); c++)  all = all (transformed[c] ? transformed[c] : 0)
 
 split(all, chars, "")
 w = int( length(chars) / height )
 
+# Render:
 line = ""
 for (y=3; y < height; y+=4) {
     for (x=1; x < w; x+=2) {
+#     Braille pattern:
         p[1] = chars[ (y-3)*w + x-1 +1 ]
         p[2] = chars[ (y-2)*w + x-1 +1 ]
         p[3] = chars[ (y-1)*w + x-1 +1 ]
@@ -72,6 +77,17 @@ for (y=3; y < height; y+=4) {
         p[5] = chars[ (y-2)*w + x   +1 ]
         p[6] = chars[ (y-1)*w + x   +1 ]
         p[8] = chars[ (y  )*w + x   +1 ]
+
+#     Unicode offset is 0x2800
+#     We do not know if platform printf supports \u or \x
+#     so we bet on printing UTF-8 muti-byte characters (octal).
+#     0x2800-28FF are all within UTF-8 3 bytes range (0x800-0xFFFF)
+#     and the 4 most significant bits are always 0010, resulting in
+#     the 1st byte being: 1110 0010 = 226 = 0xE2 = 0342
+#                         ^^^^-UTF-8 byte1/3 encoding prefix
+#     the prefix of the next 2 bytes is 10, so we calculate
+#     (after reversing the dot number order to get bits):
+
         for (j=1; j<=8; j++) b[j]=p[9-j]
         byte2 = 160 +  2*b[1] + b[2]
         byte3 = 128 + 32*b[3] + 16*b[4] + 8*b[5] + 4*b[6] + 2*b[7] + b[8]
@@ -86,7 +102,7 @@ system("printf \"" line "\"")
 
 }
 
-function init() {
+function init_a() {
 
 a["A"]="00000000000000000'\
 '00000000000000000'\
