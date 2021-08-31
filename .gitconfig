@@ -7,6 +7,8 @@
 	editor = vim
 [github]
 	user = tingstad
+[url "git@github.com:"]
+	insteadOf = https://github.com/
 [alias]
 	upstream    = !"git fetch -q && git --no-pager log --oneline --no-merges \"HEAD..${1-$(git rev-parse --abbrev-ref @{upstream})}\""
 	upstreamraw = !"git fetch -q && git            log --raw     --no-merges \"HEAD..${1-$(git rev-parse --abbrev-ref @{upstream})}\""
