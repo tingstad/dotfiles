@@ -30,14 +30,17 @@ for (i=1; i <= height; i++) {
 }
 split(all, chars, "")
 
+min = 1
 w = int( length(chars) / height )
 for (y=5; y < height-5; y++) {
     for (x=0; x < w; x++) {
-        ang = (w/2-x)/w
-        x2 = x + int(y * sin(ang)/cos(ang))
-        y2 = y
+        x2 = x + (length(letters)>2) * int(y*(w/2-x)/w)
+        y2 = y - int(5*sin(x*3.14/w))
+        if (y2 < min) min = y2
         all2[ y2 * w + x2 ] = chars[ y*w + x + 1 ]
     }
+}
+if (min < 1) {
 }
 all=""
 for (c=1; c<=length(chars); c++)  all = all (all2[c] ? all2[c] : 0)
