@@ -1,7 +1,20 @@
 #!/bin/sh
+set -e
 
 export LC_ALL=UTF-8
 
+main() {
+    text="$@"
+    if [ -n "$text" ]; then
+        shout "$text"
+    else
+        while IFS= read -r line; do
+            shout "$line"
+        done
+    fi
+}
+
+shout() {
 awk 'BEGIN {
 
 init()
@@ -933,6 +946,12 @@ a["Z"]="000000000000000'\
 '000000000000000'\
 '000000000000000"
 }'
+}
+
+main "$@"
+
+return 2>/dev/null || exit
+
 # Images generated using ImageMagick:
 # for i in {A..Z}; do
 #   convert -background black -fill white -font SFNSDisplayCondensed-Semibold.otf -pointsize 144 label:$i $i.png
