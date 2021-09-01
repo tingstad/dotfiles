@@ -24,13 +24,13 @@ word="'"$1"'"
 split(word, letters, "")
 
 # Compose:
+height = 32
 for (k=1; k<=length(letters); k++) {
     letter = toupper(letters[k])
     s = a[letter]
 
     split(s, chars, "")
 
-    height = 32
     w = int( length(chars) / height )
 
     for (i=0; i < length(chars); i++) {
