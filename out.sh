@@ -25,15 +25,15 @@ split(word, letters, "")
 
 # Compose:
 height = 32
-for (k=1; k<=length(letters); k++) {
+for (k=1; k in letters; k++) {
     letter = toupper(letters[k])
     s = a[letter]
 
-    split(s, chars, "")
+    char_len = split(s, chars, "")
 
-    w = int( length(chars) / height )
+    w = int( char_len / height )
 
-    for (i=0; i < length(chars); i++) {
+    for (i=0; i < char_len; i++) {
         x = i % w
         y = int(i / w)
         spacing = (x == 0 ? "00" : "")
@@ -43,14 +43,14 @@ for (k=1; k<=length(letters); k++) {
 for (i=1; i <= height; i++) {
     all = all canvas[i]
 }
-split(all, chars, "")
+len_chars = split(all, chars, "")
 
 # Transform:
 min = 1
-w = int( length(chars) / height )
+w = int( len_chars / height )
 for (y=5; y < height-5; y++) {
     for (x=0; x < w; x++) {
-        x2 = x + (length(letters)>2) * int(y*(1/2-x/w))
+        x2 = x + (len_chars>2) * int(y*(1/2-x/w))
         y2 = y - int(5*sin(x*3.14/w))
         if (y2 < min) min = y2
         transformed[ y2 * w + x2 ] = chars[ y*w + x + 1 ]
@@ -60,10 +60,10 @@ if (min < 1) {
 # perhaps translate canvas pixels
 }
 all=""
-for (c=1; c<=length(chars); c++)  all = all (transformed[c] ? transformed[c] : 0)
+for (c=1; c<=len_chars; c++)  all = all (transformed[c] ? transformed[c] : 0)
 
-split(all, chars, "")
-w = int( length(chars) / height )
+len_chars = split(all, chars, "")
+w = int( len_chars / height )
 
 # Render:
 line = ""
