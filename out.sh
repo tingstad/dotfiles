@@ -20,7 +20,7 @@ awk 'BEGIN {
 
 init_a()
 
-word="'"$1"'"
+word="'"$(printf "$1" | tr -d '\r')"'"
 split(word, letters, "")
 
 # Compose:
