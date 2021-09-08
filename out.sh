@@ -60,7 +60,7 @@ if (min < 1) {
 # perhaps translate canvas pixels
 }
 all=""
-for (c=1; c<=len_chars; c++)  all = all (transformed[c] ? transformed[c] : 0)
+for (c=1; c<=len_chars; c++)  all = all "" (transformed[c] ? transformed[c] : 0)
 
 len_chars = split(all, chars, "")
 w = int( len_chars / height )
