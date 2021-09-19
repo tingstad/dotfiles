@@ -18,6 +18,19 @@ testThatDrawsHeading() {
     assertEquals "$contains" "$(draw 12 10 20 "$lines" 0 HEAD | egrep -o "$contains")"
 }
 
+testDraw() {
+    # git log --oneline --graph --decorate --color 3db84c4 | head -n7 | awk '{ print "  " $0 }' | ccut 40 > test_draw_lines40x7.ansi
+    # draw 30 12 60 "$(cat test_draw_lines40x7.ansi)" 3 5a66f98 | ./capture_darwin_amd64 > test_draw_expected.ansi #with mock git_show
+    lines=$(cat "$DIR"/test_draw_lines40x7.ansi)
+    expected=$(cat "$DIR"/test_draw_expected.ansi)
+    unset TMUX
+    screen=$(draw 30 12 60 "$lines" 3 5a66f98 | "$DIR/capture_$(uname -s|tr '[:upper:]' '[:lower:]')_amd64")
+    assertEquals "$expected" "$screen"
+    if [ "$expected" != "$screen" ]; then
+        assertEquals "$(echo "$expected"|cat -v)" "$(echo "$screen"|cat -v)"
+    fi
+}
+
 test_key_k() {
     read -r -d '' lines <<- EOF
 	  * db334c1 2021-01-21  Commit 1
@@ -424,6 +437,9 @@ test_log() {
 DIR=$(cd "$(dirname "$0")"; pwd)
 source "$DIR/../gitlog.sh"
 set +o errexit
+git_show() { # mock for testDraw
+    cat "$DIR/test_draw_show_commit.ansi"
+}
 return 2>/dev/null || true
 source "$DIR/shunit2.sh"
 
