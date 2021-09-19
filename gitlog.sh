@@ -177,7 +177,7 @@ draw_commit() {
         cursor_set "$_y" $_x
         printf %s "$_line"
     done <<EOF
-$(git show --color=always "$commit" | fold -w $_w)
+$(git_show --color=always "$commit" | fold -w $_w)
 EOF
     show_commit="$commit"
 }
@@ -393,6 +393,10 @@ log() {
     $_git_cmd log --graph --pretty=format:'%C(auto)%h %cd %d %s' --date=short "$_from" \
         --color=always \
         ${_file:+ -- "$_file"}
+}
+
+git_show() {
+    git show "$@"
 }
 
 fixup() {

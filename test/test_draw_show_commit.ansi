@@ -1,0 +1,32 @@
+[33mcommit 5a66f98[m...
+Author: Richard Tingstad <tingstad@users.noreply.github.com>
+Date:   Tue Aug 10 11:29:32 2021 +0200
+
+    Run photosort tests
+    
+    Enforce relative path by stripping $(pwd)/ from beginning.
+
+[1mdiff --git a/test/photosort/photosort-test.sh b/test/photosort/photosort-test.sh[m
+[1mindex 6f821ef..9e6a5ad 100755[m
+[1m--- a/test/photosort/photosort-test.sh[m
+[1m+++ b/test/photosort/photosort-test.sh[m
+[36m@@ -47,6 +47,7 @@[m [mtestInvalidResizeValue() {[m
+ [m
+ [ -f "$0" ] || { >&2 echo "Do not source file"; exit 1; }[m
+ DIR=$( dirname "$0" )[m
+[32m+[m[32mDIR="${DIR##$(pwd)/}"[m
+ . "$DIR/../../photosort.sh"[m
+ set +o errexit[m
+ . "$DIR/shunit2.sh"[m
+[1mdiff --git a/test/test.sh b/test/test.sh[m
+[1mindex ff48ca0..ca9e370 100755[m
+[1m--- a/test/test.sh[m
+[1m+++ b/test/test.sh[m
+[36m@@ -6,6 +6,7 @@[m [mTESTMODE="on"[m
+ src="$(echo "${BASH_SOURCE[0]}" | grep . || echo "$0")"[m
+ DIR="$(cd "$(dirname "$src")"; pwd)"[m
+ [m
+[32m+[m[32mbash "$DIR/photosort/photosort-test.sh"[m
+ source "$DIR/test_add_aliases.sh"[m
+ source "$DIR/test_link_dotfiles.sh"[m
+ source "$DIR/test_gitlog.sh"[m
