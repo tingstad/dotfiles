@@ -18,6 +18,19 @@ testThatDrawsHeading() {
     assertEquals "$contains" "$(draw 12 10 20 "$lines" 0 HEAD | egrep -o "$contains")"
 }
 
+testDraw() (
+    git_show() {
+        cat "$DIR/test_draw_show_commit.ansi"
+    }
+    # git log --oneline --graph --decorate --color 3db84c4 | head -n7 | awk '{ print "  " $0 }' | ccut 40 > test_draw_lines40x7.ansi
+    # draw 20 12 40 "$lines" 3 5a66f98 | ./capture_darwin_amd64 > test_draw_expected.ansi
+    lines=$(cat "$DIR"/test_draw_lines40x7.ansi)
+    expected=$(cat "$DIR"/test_draw_expected.ansi)
+    unset TMUX
+    screen=$(draw 20 12 40 "$lines" 3 5a66f98 | "$DIR/capture_$(uname -s|tr '[:upper:]' '[:lower:]')_amd64")
+    assertEquals "$expected" "$screen"
+)
+
 test_key_k() {
     read -r -d '' lines <<- EOF
 	  * db334c1 2021-01-21  Commit 1
