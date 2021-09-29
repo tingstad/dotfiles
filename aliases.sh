@@ -73,6 +73,8 @@ gitlog() {
 EOF
 export -f gitlog
 
+export CARGO_NET_GIT_FETCH_WITH_CLI=true
+
 # Somewhat weird form to support Bash 3:
 source /dev/stdin <<<"$(source "$my_dir"/gitlog.sh && type ccut | sed '1d')"
 export -f ccut
