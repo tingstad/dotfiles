@@ -607,6 +607,8 @@ forward_page() {
 
 get_commit() {
     _line="$(printf '%s\n' "$lines" | line_at "${1:-$index}")"
+    {
+    set -f
     for _w in $_line; do
         case "$_w" in
             *[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]*)
@@ -614,7 +616,9 @@ get_commit() {
                 break
             ;;
         esac
-    done | nocolors
+    done
+    set +f
+    } | nocolors
 }
 
 line_at() {
