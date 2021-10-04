@@ -7,23 +7,25 @@ export LC_ALL=UTF-8 2>/dev/null
 main() {
     text="$@"
     if [ -n "$text" ]; then
-        shout "$text"
+        shout <<EOF
+$text
+EOF
     else
-        while IFS= read -r line; do
-            shout "$line"
-        done
+        shout
     fi
 }
 
 shout() {
+tr -d '\r' | \
 awk 'BEGIN {
+  init_a()
+}
+{
 
-init_a()
-
-word="'"$(printf "$1" | tr -d '\r')"'"
-split(word, letters, "")
+len_letters = split($0, letters, "")
 
 # Compose:
+for (k in canvas) delete canvas[k]
 height = 32
 for (k=1; k in letters; k++) {
     letter = toupper(letters[k])
@@ -40,17 +42,19 @@ for (k=1; k in letters; k++) {
         canvas[y+1] = canvas[y+1] spacing chars[ y*w + x + 1 ]
     }
 }
+all = ""
 for (i=1; i <= height; i++) {
     all = all canvas[i]
 }
 len_chars = split(all, chars, "")
 
 # Transform:
+split("", transformed, "clear array")
 min = 1
 w = int( len_chars / height )
 for (y=5; y < height-5; y++) {
     for (x=0; x < w; x++) {
-        x2 = x + (len_chars>2) * int(y*(1/2-x/w))
+        x2 = x + (len_letters>2) * int(y*(1/2-x/w))
         y2 = y - int(5*sin(x*3.14/w))
         if (y2 < min) min = y2
         transformed[ y2 * w + x2 ] = chars[ y*w + x + 1 ]
