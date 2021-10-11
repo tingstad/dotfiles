@@ -21,6 +21,14 @@ timeout() {
     kill %%
 }
 
+inplace()(
+    file="$1"
+    shift
+    cat <<EOF > "$file"
+$("$@" < "$file")
+EOF
+)
+
 source "$my_dir"/docker_aliases.sh
 
 prompt_suffix=''
