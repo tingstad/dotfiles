@@ -24,9 +24,8 @@ timeout() {
 inplace()(
     file="$1"
     shift
-    cat <<EOF > "$file"
-$("$@" < "$file")
-EOF
+    temp=$(mktemp)
+    "$@" < "$file" > "$temp" && mv "$temp" "$file"
 )
 
 source "$my_dir"/docker_aliases.sh
