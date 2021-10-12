@@ -13,13 +13,20 @@ grip(){
     find "${3-.}" \( -name '.[^.]*' $filter \) -prune -or -name "${2:-*}" -type f -print0 | xargs -0 egrep --binary-files=without-match ${@:4} "$1"
 }
 
-timeout () {
+timeout() {
 # inspired by https://www.oilshell.org/blog/2017/01/13.html
     limit=$1;
     shift;
     ( "$@" ) & sleep $limit;
     kill %%
 }
+
+inplace()(
+    file="$1"
+    shift
+    temp=$(mktemp)
+    "$@" < "$file" > "$temp" && mv "$temp" "$file"
+)
 
 source "$my_dir"/docker_aliases.sh
 
