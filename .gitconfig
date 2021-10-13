@@ -23,6 +23,8 @@
 	accept-others-merge  = "!f() { git checkout --theirs -- \"${@:-.}\" && git add -u \"${@:-.}\"; }; f"
 	graph = "log --graph --oneline --decorate"
 	fixup = !"f(){ git commit --fixup=\"$1\" && GIT_EDITOR=true git rebase -i \"$1\"^; }; f"
+	message = show -s --format=%B
+	subject = show -s --format=%s
 
 [pull]
 	rebase = true
