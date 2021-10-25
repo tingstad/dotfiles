@@ -165,7 +165,7 @@ for cmd in compare composite convert identify magick mogrify montage stream ; do
         source /dev/stdin <<-EOF
 		$cmd() {
 		    echo>/dev/null "See $my_dir for source"
-		    docker run --rm -i --network none -u "$user_string" -v "\$(pwd)":/dir$vol_opt -w /dir acleancoder/imagemagick-full $cmd "\$@"
+		    docker run --rm -i --network none -u "$user_string" -v "\$(pwd)":/dir$vol_opt -w /dir madhead/imagemagick@sha256:a92e823df833c20604a42f76f56deae86efe089000a4c86bf1b4b92fb1781e8b $cmd "\$@"
 		}
 		EOF
         export -f $cmd
