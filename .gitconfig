@@ -25,6 +25,7 @@
 	fixup = !"f(){ git commit --fixup=\"$1\" && GIT_EDITOR=true git rebase -i \"$1\"^; }; f"
 	message = show -s --format=%B
 	subject = show -s --format=%s
+	recent = !"git for-each-ref --sort=-committerdate refs/heads --format='%(HEAD)%(color:yellow)%(refname:short)|%(color:red)%(objectname:short)|%(color:bold green)%(committerdate:relative)|%(color:blue)%(subject)|%(color:magenta)%(authorname)%(color:reset)' --color=always --count=20 | column -ts'|'"
 
 [pull]
 	rebase = true
