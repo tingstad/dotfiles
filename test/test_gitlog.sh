@@ -219,6 +219,9 @@ test_state() {
     assertEquals "1" "$(get_state "$state" 'index')"
     assertEquals "HEAD" "$(get_state "$state" 'from')"
 
+    set_state "from=--until=A B"
+    assertEquals "--until=A B" "$(get_state "$state" 'from')"
+
     set_state one=1 index=3 two=2
     assertEquals "3" "$(get_state "$state" 'index')"
     assertEquals "1" "$(get_state "$state" 'one')"
