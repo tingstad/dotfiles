@@ -596,6 +596,26 @@ EOF
     fi
 }
 
+set_index() {
+    _commit="$1"
+    _lines="$2"
+    if [ -z "$_commit" ]; then
+        return
+    fi
+    _i=0
+    while IFS= read -r _line; do
+        case $_line in
+            *\*\ *$_commit*)
+                index=$_i
+                return
+            ;;
+        esac
+        _i=$((_i + 1))
+    done <<EOF
+$_lines
+EOF
+}
+
 forward_page() {
     if [ "$(line_count "$lines")" -lt $log_height ]; then
         return

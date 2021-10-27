@@ -177,6 +177,27 @@ test_index_inc_end() {
     assertEquals "j (down) should not increment pointer at bottom" 1 $index
 }
 
+test_set_index() {
+    read -r -d '' lines <<- EOF
+	  * db334c3 2021-01-23  Commit 3 index0
+	  * db334c2 2021-01-22  Commit 2 index1
+	  * db334c1 2021-01-21  Commit 1 index2
+	EOF
+    index=0
+
+    set_index "" "$lines"
+    assertEquals "should not set if no commit" 0 $index
+
+    set_index "jdslklj" "$lines"
+    assertEquals "should not set if commit not found" 0 $index
+
+    set_index "db334c1" "$lines"
+    assertEquals "should set index" 2 $index
+
+    set_index "db334c2" "$lines"
+    assertEquals "should set index" 1 $index
+}
+
 test_forward_page() {
     pager=('HEAD')
     from='HEAD'
