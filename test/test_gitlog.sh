@@ -177,23 +177,25 @@ test_index_inc_end() {
     assertEquals "j (down) should not increment pointer at bottom" 1 $index
 }
 
-test_forward_page() {
-    pager=('HEAD')
-    from='HEAD'
-    lines=""
-    for i in {1..10}; do
-        lines="$(printf '  * 00000%02d 2021-01-01  Commit %d\n%s' $i $i "$lines")"
-    done
-    index=2
-    log_height=7
-    forward_page
-    assertEquals "f should set index 0" 0 $index
-    assertEquals "f should set HEAD" 0000001 $from
-    assertEquals "f should set pager" 'HEAD 0000001' "${pager[*]}"
-    from=HEAD
-    log_height=20
-    forward_page
-    assertEquals "should do nothing if last page" HEAD $from
+test_set_index() {
+    read -r -d '' lines <<- EOF
+	  * db334c3 2021-01-23  Commit 3 index0
+	  * db334c2 2021-01-22  Commit 2 index1
+	  * db334c1 2021-01-21  Commit 1 index2
+	EOF
+    index=0
+
+    set_index "" "$lines"
+    assertEquals "should not set if no commit" 0 $index
+
+    set_index "jdslklj" "$lines"
+    assertEquals "should not set if commit not found" 0 $index
+
+    set_index "db334c1" "$lines"
+    assertEquals "should set index" 2 $index
+
+    set_index "db334c2" "$lines"
+    assertEquals "should set index" 1 $index
 }
 
 test_check_screen_size() {
@@ -218,6 +220,9 @@ test_state() {
 
     assertEquals "1" "$(get_state "$state" 'index')"
     assertEquals "HEAD" "$(get_state "$state" 'from')"
+
+    set_state "from=--until=A B"
+    assertEquals "--until=A B" "$(get_state "$state" 'from')"
 
     set_state one=1 index=3 two=2
     assertEquals "3" "$(get_state "$state" 'index')"
@@ -427,10 +432,10 @@ assert_nocolors() {
 test_log() {
     local git_mock=echo
     assertEquals \
-        "log --graph --pretty=format:%C(auto)%h %cd %d %s --date=short HEAD --color=always -- file.txt" \
+        "log --graph --pretty=format:%C(auto)%h %cd %d %s --date=short-local HEAD --date-order --color=always -- file.txt" \
         "$(log $git_mock HEAD file.txt)"
     assertEquals \
-        "log --graph --pretty=format:%C(auto)%h %cd %d %s --date=short HEAD --color=always" \
+        "log --graph --pretty=format:%C(auto)%h %cd %d %s --date=short-local HEAD --date-order --color=always" \
         "$(log $git_mock HEAD)"
 }
 

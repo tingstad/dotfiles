@@ -26,6 +26,9 @@ main() {
         fi
         if [ $_dirty_git = true ] || [ $_resized = true ]; then
             lines="$(printf "%s\n" "$_gitlog" | head -n "$log_height" | awk '{print "  " $0}' | ccut "$width")"
+            if [ "$(get_state "$state" action)" = "forward_page" ]; then
+                set_index "$(get_state "$state" bottom_commit)" "$lines"
+            fi
             _end=$(get_index_end)
             if [ $index -gt "$_end" ]; then
                 index=$_end
@@ -42,14 +45,14 @@ main() {
         fi
         [ -n "$TMUX" ] && [ "$commit" != "$show_commit" ] \
             && tmux respawn-pane -t "$session":"$window".1 \
-                -k "GIT_PAGER='less -RX -+F' git show $commit ${file:+ -- \"$file\"}" \
+                -k "GIT_PAGER='less -RX -+F' git show $commit --pretty=fuller ${file:+ -- \"$file\"}" \
             && show_commit="$commit"
         [ -z "$TMUX" ] && [ "$commit" != "$show_commit" ] && [ $dirty_screen = n ] \
             && draw_commit \
             && show_commit="$commit"
         draw "$width" "$height" "$total_width" "$lines" "$index" "$commit"
         dirty_screen=n
-        set_state dirty_git=false
+        set_state dirty_git=false action=""
         prev_state="$state"
         read_input
     done
@@ -317,7 +320,7 @@ set_state() {
         _new_state=""
         while read -r _line; do
             for _word in $_line; do
-                if [ "${_word%=*}" = "${1%=*}" ]; then
+                if [ "${_word%%=*}" = "${1%%=*}" ]; then
                     _new_state="$1
 $_new_state"
                 elif [ -n "$_word" ]; then
@@ -367,7 +370,7 @@ get_state_value() {
     # $1: state
     # $2: name
     while IFS= read -r _line; do
-        [ "${_line%=*}" = "$2" ] && {
+        [ "${_line%%=*}" = "$2" ] && {
             printf "%s" "${_line#*=}"
             break
         }
@@ -390,8 +393,8 @@ log() {
     _git_cmd="$1"
     _from="$2"
     _file="$3"
-    $_git_cmd log --graph --pretty=format:'%C(auto)%h %cd %d %s' --date=short "$_from" \
-        --color=always \
+    $_git_cmd log --graph --pretty=format:'%C(auto)%h %cd %d %s' --date=short-local "$_from" \
+        --date-order --color=always \
         ${_file:+ -- "$_file"}
 }
 
@@ -596,11 +599,34 @@ EOF
     fi
 }
 
+set_index() {
+    _commit="$1"
+    _lines="$2"
+    if [ -z "$_commit" ]; then
+        return
+    fi
+    _i=0
+    while IFS= read -r _line; do
+        case $_line in
+            *\*\ *$_commit*)
+                index=$_i
+                return
+            ;;
+        esac
+        _i=$((_i + 1))
+    done <<EOF
+$_lines
+EOF
+}
+
 forward_page() {
     if [ "$(line_count "$lines")" -lt $log_height ]; then
         return
     fi
-    from=$(get_commit "$(get_index_end)")
+    _last=$(get_commit "$(get_index_end)")
+    _time=$(git show "$_last" --no-patch --format=%cd --date=iso-local)
+    set_state bottom_commit="$_last" action=forward_page
+    from='--until="'"$_time"'"'
     pager="$pager $from"
     index=0
 }
