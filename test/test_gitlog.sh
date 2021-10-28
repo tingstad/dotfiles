@@ -198,25 +198,6 @@ test_set_index() {
     assertEquals "should set index" 1 $index
 }
 
-test_forward_page() {
-    pager=('HEAD')
-    from='HEAD'
-    lines=""
-    for i in {1..10}; do
-        lines="$(printf '  * 00000%02d 2021-01-01  Commit %d\n%s' $i $i "$lines")"
-    done
-    index=2
-    log_height=7
-    forward_page
-    assertEquals "f should set index 0" 0 $index
-    assertEquals "f should set HEAD" 0000001 $from
-    assertEquals "f should set pager" 'HEAD 0000001' "${pager[*]}"
-    from=HEAD
-    log_height=20
-    forward_page
-    assertEquals "should do nothing if last page" HEAD $from
-}
-
 test_check_screen_size() {
     if [ -t 0 ]; then
         height=""
@@ -451,10 +432,10 @@ assert_nocolors() {
 test_log() {
     local git_mock=echo
     assertEquals \
-        "log --graph --pretty=format:%C(auto)%h %cd %d %s --date=short HEAD --color=always -- file.txt" \
+        "log --graph --pretty=format:%C(auto)%h %cd %d %s --date=short-local HEAD --date-order --color=always -- file.txt" \
         "$(log $git_mock HEAD file.txt)"
     assertEquals \
-        "log --graph --pretty=format:%C(auto)%h %cd %d %s --date=short HEAD --color=always" \
+        "log --graph --pretty=format:%C(auto)%h %cd %d %s --date=short-local HEAD --date-order --color=always" \
         "$(log $git_mock HEAD)"
 }
 
