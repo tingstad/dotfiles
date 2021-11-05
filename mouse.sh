@@ -17,11 +17,11 @@ main() {
         _key=""
         _key="$(read_char 1)" # get 1 character
         if [ "$(printf %d "'$_key")" = "27" ]; then # 27=escape
-            _key="$(read_char 2)" # read 2 more chars
+            _key="$(read_char 5)" # read 5 more chars
         fi
         case $_key in
-            '[M')
-                    _event=$(read_char 3)
+            '[M'*)
+                    _event="${_key#??}"
                     _button="${_event%??}"
                     _coord="${_event#?}"
                     _x="${_coord%?}"
