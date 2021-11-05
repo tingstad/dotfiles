@@ -3,8 +3,9 @@ set -e
 
 main() {
     trap 'quit' INT
-    printf '\033[?1000h'
-    printf '\033[?1003h'
+    printf '\033[?1000h' # VT200 mouse button tracking
+    printf '\033[?1002h' # mouse button-motion tracking
+    printf '\033[?25l' # hide cursor
     save_tty_settings
     x=3
     y=3
@@ -12,10 +13,9 @@ main() {
     h=4
     render $y $x
     while true; do
-        _escape="27"
         _key=""
         _key="$(read_char 1)" # get 1 character
-        if [ "$(printf %d "'$_key")" = "$_escape" ]; then
+        if [ "$(printf %d "'$_key")" = "27" ]; then # 27=escape
             _key="$(read_char 2)" # read 2 more chars
         fi
         case $_key in
@@ -25,14 +25,14 @@ main() {
                     _coord="${_event#?}"
                     _x="${_coord%?}"
                     _y="${_event#??}"
-                    _btn_int=$(printf %d "'$_button")
-                    _y_int=$(printf %d "'$_y")
-                    _x_int=$(printf %d "'$_x")
+                    read _btn_int _y_int _x_int <<-EOF
+						$(printf '%d %d %d' "'$_button" "'$_y" "'$_x")
+EOF
                     _row=$((_y_int - 32))
                     _col=$((_x_int - 32))
                     _btn=$((_btn_int - 32))
                     #printf "%d %s %d,%d\n" "$_btn" "$_x" "$_col" "$_row"
-                    if [ "$_btn" = "0" ]; then
+                    if [ "$_btn" = "0" ]; then # MB1 pressed
                         if [ $_col -ge $x ] \
                         && [ $_col -le $((x + w)) ] \
                         && [ $_row -ge $y ] \
@@ -44,7 +44,8 @@ main() {
                         else
                             selected=""
                         fi
-                    elif [ "$_btn" = "3" ] || [ "$_btn" = "32" ]; then
+                    elif [ "$_btn" = "3" ] || [ "$_btn" = "32" ]
+                    then # 3: release, 32: motion
                         if [ -n "$selected" ]; then
                             _x2=$((_col - offx))
                             _y2=$((_row - offy))
@@ -55,7 +56,7 @@ main() {
                     if [ -n "$selected" ]; then
                         render $y $x
                     fi
-                    if [ "$_btn" = "3" ]; then
+                    if [ "$_btn" = "3" ]; then # release
                         selected=""
                     fi
                 ;;
@@ -67,15 +68,17 @@ main() {
 render() {
     _y=$1
     _x=$2
-    printf "\033[H\033[J" #clear
+    _leading_newlines=""
     _i=0; while [ $((_i += 1)) -lt "$_y" ]; do
-        printf "\n"
+        _leading_newlines="\n$_leading_newlines"
     done
     _i=$((_x - 1))
-    printf "%${_i}s\033[44m╔════════╗\033[m\n"
-    printf "%${_i}s\033[44m║DRAG ME!║\033[m\n"
-    printf "%${_i}s\033[44m║%3d,%3d ║\033[m\n" "" $_y $_x
-    printf "%${_i}s\033[44m╚════════╝\033[m\n"
+    # clear and print:
+    printf "\033[H\033[J$_leading_newlines"\
+"%${_i}s\033[44m╔════════╗\033[m\n"\
+"%${_i}s\033[44m║DRAG ME!║\033[m\n"\
+"%${_i}s\033[44m║%3d,%3d ║\033[m\n"\
+"%${_i}s\033[44m╚════════╝\033[m\n" "" "" "" $_y $_x
 }
 
 read_char() { # $1:chars #2:timeout?
@@ -87,7 +90,8 @@ read_char() { # $1:chars #2:timeout?
 quit() {
     restore_tty_settings
     printf '\033[?1000l'
-    printf '\033[?1003l'
+    printf '\033[?1002l'
+    printf '\033[?25h' # show cursor
     exit
 }
 
