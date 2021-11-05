@@ -7,6 +7,7 @@ main() {
     printf '\033[?1002h' # mouse button-motion tracking
     printf '\033[?25l' # hide cursor
     save_tty_settings
+    stty -icanon -echo min 1
     x=3
     y=3
     w=10
@@ -81,9 +82,7 @@ render() {
 "%${_i}s\033[44m╚════════╝\033[m\n" "" "" "" $_y $_x
 }
 
-read_char() { # $1:chars #2:timeout?
-    [ -n "$2" ] && _min=0 || _min=1
-    stty -icanon -echo min $_min ${2:+time $2}
+read_char() { # $1:chars
     dd bs=1 count="$1" 2>/dev/null
 }
 
