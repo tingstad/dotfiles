@@ -86,7 +86,7 @@ read_char() { # $1:chars #2:timeout?
 
 quit() {
     restore_tty_settings
-    printf '\033[?1000h'
+    printf '\033[?1000l'
     printf '\033[?1003l'
     exit
 }
