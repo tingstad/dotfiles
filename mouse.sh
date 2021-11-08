@@ -1,4 +1,7 @@
 #!/bin/sh
+# Terminal mouse demo
+# https://github.com/tingstad/dotfiles
+#
 set -e
 
 main() {
@@ -8,13 +11,12 @@ main() {
     printf '\033[?25l' # hide cursor
     save_tty_settings
     stty -icanon -echo min 1
-    x=3 y=3 w=10 h=4
+    x=4 y=3 w=10 h=4
     render $y $x
     while true; do
-        _key=""
-        _key="$(read_char 1)" # get 1 character
+        _key=$(read_char 1) # get 1 character
         if [ "$(printf %d "'$_key")" = "27" ]; then # 27=escape
-            _key="$(read_char 5)" # read 5 more chars
+            _key=$(read_char 5) # read 5 more chars
         fi
         case $_key in
             '[M'*)
@@ -29,7 +31,6 @@ EOF
                     _row=$((_y_int - 32))
                     _col=$((_x_int - 32))
                     _btn=$((_btn_int - 32))
-                    #printf "%d %s %d,%d\n" "$_btn" "$_x" "$_col" "$_row"
                     if [ "$_btn" = "0" ]; then # MB1 pressed
                         if [ $_col -ge $x ] \
                         && [ $_col -le $((x + w)) ] \
@@ -67,11 +68,11 @@ render() {
     _y=$1
     _x=$2
     # clear and print:
-    printf "\033[H\033[J\033[37;44m\033[%d;%dH"\
-"╔════════╗\033[B\033[%dD"\
-"║DRAG ME!║\033[B\033[%dD"\
-"║%3d,%3d ║\033[B\033[%dD"\
-"╚════════╝\033[0m" "$_y" "$_x" "$w" "$w" "$_y" "$_x" "$w"
+    printf '\033[H\033[J\033[37;44m\033[%d;%dH'\
+'╔════════╗\033[B\033[%dD'\
+'║DRAG ME!║\033[B\033[%dD'\
+'║%3d,%3d ║\033[B\033[%dD'\
+'╚════════╝\033[0m' "$_y" "$_x" "$w" "$w" "$_y" "$_x" "$w"
 }
 
 read_char() { # $1:chars
@@ -87,7 +88,7 @@ quit() {
 }
 
 save_tty_settings() {
-    saved_tty_settings="$(stty -g)"
+    saved_tty_settings=$(stty -g)
 }
 
 restore_tty_settings() {
