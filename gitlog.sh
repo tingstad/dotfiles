@@ -674,7 +674,7 @@ nocolors_line() {
         then
             _ansi="$(expr " $_rest" : " \(\[[0-9;]*[A-Za-z]\)")"
             if [ -n "$_ansi" ]; then
-                _rest="${_rest##$_ansi}"
+                _rest="${_rest##"$_ansi"}"
                 continue
             fi
         fi
