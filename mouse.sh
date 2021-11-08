@@ -8,10 +8,7 @@ main() {
     printf '\033[?25l' # hide cursor
     save_tty_settings
     stty -icanon -echo min 1
-    x=3
-    y=3
-    w=10
-    h=4
+    x=3 y=3 w=10 h=4
     render $y $x
     while true; do
         _key=""
@@ -69,17 +66,12 @@ EOF
 render() {
     _y=$1
     _x=$2
-    _leading_newlines=""
-    _i=0; while [ $((_i += 1)) -lt "$_y" ]; do
-        _leading_newlines="\n$_leading_newlines"
-    done
-    _i=$((_x - 1))
     # clear and print:
-    printf "\033[H\033[J$_leading_newlines"\
-"%${_i}s\033[44m╔════════╗\033[m\n"\
-"%${_i}s\033[44m║DRAG ME!║\033[m\n"\
-"%${_i}s\033[44m║%3d,%3d ║\033[m\n"\
-"%${_i}s\033[44m╚════════╝\033[m\n" "" "" "" $_y $_x
+    printf "\033[H\033[J\033[37;44m\033[%d;%dH"\
+"╔════════╗\033[B\033[%dD"\
+"║DRAG ME!║\033[B\033[%dD"\
+"║%3d,%3d ║\033[B\033[%dD"\
+"╚════════╝\033[0m" "$_y" "$_x" "$w" "$w" "$_y" "$_x" "$w"
 }
 
 read_char() { # $1:chars
@@ -90,7 +82,7 @@ quit() {
     restore_tty_settings
     printf '\033[?1000l'
     printf '\033[?1002l'
-    printf '\033[?25h' # show cursor
+    printf '\n\033[?25h' # show cursor
     exit
 }
 
