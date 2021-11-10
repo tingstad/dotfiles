@@ -9,6 +9,9 @@ main() {
     printf '\033[?1000h' # VT200 mouse button tracking
     printf '\033[?1002h' # mouse button-motion tracking
     printf '\033[?25l' # hide cursor
+    printf '\033[22t' # save window and icon title to stack (xterm)
+    printf '\033]0;Mouse demo\007' # set title
+
     save_tty_settings
     stty -icanon -echo min 1
     x=4 y=3 w=10 h=4
@@ -83,6 +86,8 @@ quit() {
     restore_tty_settings
     printf '\033[?1000l'
     printf '\033[?1002l'
+    printf '\033]0;\007' # set title
+    printf '\033[23t' # restore original title
     printf '\n\033[?25h' # show cursor
     exit
 }
