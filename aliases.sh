@@ -28,6 +28,8 @@ inplace()(
     "$@" < "$file" > "$temp" && mv "$temp" "$file"
 )
 
+export -f timeout inplace
+
 source "$my_dir"/docker_aliases.sh
 
 prompt_suffix=''
