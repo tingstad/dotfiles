@@ -86,7 +86,7 @@ quit() {
     restore_tty_settings
     printf '\033[?1000l'
     printf '\033[?1002l'
-    printf '\033]0;\007' # set title
+    printf '\033]0;%s\007' "$SHELL" # set title
     printf '\033[23t' # restore original title
     printf '\n\033[?25h' # show cursor
     exit
