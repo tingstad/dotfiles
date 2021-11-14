@@ -5,7 +5,7 @@
 set -e
 
 main() {
-    trap 'quit' INT
+    trap 'quit' INT EXIT
     printf '\033[?1000h' # VT200 mouse button tracking
     printf '\033[?1002h' # mouse button-motion tracking
     printf '\033[?25l' # hide cursor
