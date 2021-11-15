@@ -78,9 +78,16 @@ bootstrap() {
     elif is_tmux; then
         unset TMUX
     fi
+    trap 'end' EXIT
     if [ -n "$ZSH_VERSION" ]; then
         setopt shwordsplit
     fi
+}
+
+end() {
+    rc=$?
+    restore_tty_settings
+    exit $rc
 }
 
 split_screen_if_not_split() {
@@ -147,7 +154,7 @@ draw() {
     _cols="$1"
     _reset="\033[0m"
     _u="\033[4m"
-    printf "\033[H\033[J" #clear
+    clear
     printf " W E L C O M E %s\n" "$(printf '%s\n' "$lines" | awk "NR==$index+1 { print \$2 }")"
     printf "Keys: j/↓, k/↑, " # length: 16
     printf '%b' "${_u}h${_reset}elp, ${_u}f${_reset}orward page, be${_u}g${_reset}inning, ${_u}H${_reset}ome/${_u}M${_reset}iddle/${_u}L${_reset}ast line, ${_u}r${_reset}ebase, ${_u}F${_reset}ixup, ${_u}q${_reset}uit" | ccut "$((_cols - 16))"
@@ -403,6 +410,7 @@ git_show() {
 }
 
 fixup() {
+    clear
     if [ "$index" -eq 0 ] && [ "$from" = "HEAD" ]; then
         git commit --amend --no-edit
     else
@@ -422,7 +430,6 @@ rebase() {
     git_rebase "$commit"
     if is_rebasing; then
         printf "Happy rebasing :)\n"
-        restore_tty_settings
         exit
     fi
     set_state dirty_git=true
@@ -439,6 +446,7 @@ is_rebasing() {
 }
 
 reword() {
+    clear
     if [ "$index" -eq 0 ] && [ "$from" = "HEAD" ]; then
         git commit --amend --verbose
     else
@@ -451,6 +459,7 @@ reword() {
 }
 
 revert() {
+    clear
     git revert "$commit"
     set_state dirty_git=true
     goto_beginning
@@ -475,15 +484,11 @@ edit_commit() {
         GIT_SEQUENCE_EDITOR="sed -i.old 's/^pick ""$commit""/e ""$commit""/'" git_rebase "$commit"^
     fi
     printf "Happy editing :)\n"
-    restore_tty_settings
     exit
 }
 
 git_rebase() {
-    git rebase -i --autosquash --autostash "$@" || {
-        restore_tty_settings
-        exit 1
-    }
+    git rebase -i --autosquash --autostash "$@"
 }
 
 goto_beginning() {
@@ -534,6 +539,10 @@ index_end() {
 clear_cursor() {
     cursor_set $((${1:-$index} + 4)) 1
     printf " "
+}
+
+clear() {
+    printf "\033[H\033[J"
 }
 
 get_index_end() {
