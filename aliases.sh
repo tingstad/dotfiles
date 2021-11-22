@@ -6,11 +6,15 @@ alias mci='mvn clean install'
 grip(){
     case "/$3/ /$(pwd)/" in
         */node_modules/*)
-            filter="" ;;
+            filter_node="" ;;
+        */target/*)
+            filter_target="" ;;
         *)
-            filter="-or -name node_modules" ;;
+            filter_node="-or -type d -and -name node_modules"
+            filter_target="-or -type d -and -name target"
+        ;;
     esac
-    find "${3-.}" \( -name '.[^.]*' $filter \) -prune -or -name "${2:-*}" -type f -print0 | xargs -0 egrep --binary-files=without-match ${@:4} "$1"
+    find "${3-.}" \( -name '.[^.]*' $filter_node $filter_target \) -prune -or -name "${2:-*}" -type f -print0 | xargs -0 egrep --binary-files=without-match ${@:4} "$1"
 }
 
 timeout() {
