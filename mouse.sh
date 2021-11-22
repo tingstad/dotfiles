@@ -31,6 +31,8 @@ main() {
                     read _btn_int _y_int _x_int <<-EOF
 						$(printf '%d %d %d' "'$_button" "'$_y" "'$_x")
 EOF
+                    [ $_x_int -lt 0 ] && _x_int=$((_x_int + 256))
+                    [ $_y_int -lt 0 ] && _y_int=$((_y_int + 256))
                     _row=$((_y_int - 32))
                     _col=$((_x_int - 32))
                     _btn=$((_btn_int - 32))
