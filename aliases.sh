@@ -17,6 +17,8 @@ grip(){
     find "${3-.}" \( -name '.[^.]*' $filter_node $filter_target \) -prune -or -name "${2:-*}" -type f -print0 | xargs -0 egrep --binary-files=without-match ${@:4} "$1"
 }
 
+calc() { awk "BEGIN{ print $* }" ;}
+
 timeout() {
 # inspired by https://www.oilshell.org/blog/2017/01/13.html
     limit=$1;
@@ -32,7 +34,7 @@ inplace()(
     "$@" < "$file" > "$temp" && mv "$temp" "$file"
 )
 
-export -f timeout inplace
+export -f timeout inplace calc
 
 source "$my_dir"/docker_aliases.sh
 
