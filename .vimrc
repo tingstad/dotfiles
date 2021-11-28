@@ -22,6 +22,8 @@ set foldmethod=indent   " fold by indent level
 set foldlevelstart=99   " ... but keep all folds open from start
 set ruler               " show cursor position and relative file position
 "set visualbell          " do not beep
+set laststatus=2        " always show status line
+set statusline=%<%f\ %h%m%r%=%-14.(%l,%c,%o%V%)\ %P  " show (line,column),byte offset (+1)
 
 set timeout timeoutlen=1000 ttimeoutlen=50
 autocmd InsertEnter * set timeoutlen=20
