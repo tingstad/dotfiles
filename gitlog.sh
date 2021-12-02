@@ -488,7 +488,15 @@ edit_commit() {
 }
 
 git_rebase() {
-    git rebase -i --autosquash --autostash "$@"
+    case $1 in
+        *^) if [ "$from" = "HEAD" ] && [ "$index" = "$(get_index_end)" ]; then
+                _base="--root" # requires git 1.7.12+
+            else
+                _base="$1"
+            fi ;;
+        *) _base="$1" ;;
+    esac
+    git rebase --interactive --autosquash --autostash "$_base"
 }
 
 goto_beginning() {
