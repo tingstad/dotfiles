@@ -17,6 +17,8 @@ testSourceAliasesExitCode() {
     assertEquals \
         "Should trunc" \
         "$(bash -c 'echo "Should truncate" | ccut 12')"
+    assertEquals "1.5" "$(calc 3 / 2)"
+    assertEquals "1" "$(seq 3 | drop 2)"
     if [ "$TRAVIS_OS_NAME" = "linux" ] || docker version >/dev/null ; then
         assertEquals "ShellCheck - shell script analysis tool" \
                      "$(shellcheck -V | sed '2,$d')"
