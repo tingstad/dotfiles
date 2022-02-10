@@ -34,7 +34,11 @@ inplace()(
     "$@" < "$file" > "$temp" && mv "$temp" "$file"
 )
 
-export -f timeout inplace calc
+drop() {
+    awk -v drop=$1 '{ buffer[++j]=$0 } NR>drop{ print buffer[j-drop]; delete buffer[j-drop] }'
+}
+
+export -f timeout inplace calc drop
 
 source "$my_dir"/docker_aliases.sh
 
