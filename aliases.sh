@@ -38,7 +38,18 @@ drop() {
     awk -v drop=$1 '{ buffer[++j]=$0 } NR>drop{ print buffer[j-drop]; delete buffer[j-drop] }'
 }
 
-export -f timeout inplace calc drop
+randomstr() {
+    awk -v len="${1:-20}" 'BEGIN {
+        srand('$RANDOM');
+        while(len-- > 0) {
+            n = int(rand() * 62);
+            printf("%c", (n>35 ? n+61 : (n>9 ? n+55 : n+48) ) );
+        };
+        print "";
+    }'
+}
+
+export -f timeout inplace calc drop randomstr
 
 source "$my_dir"/docker_aliases.sh
 
