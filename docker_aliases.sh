@@ -145,6 +145,8 @@ graph-easy() {
 # Only stdin/stdout supported
 alias dot='docker run --rm --network none -i risaacson/graphviz@sha256:f111059ce08697cc1ead8d9770b9d4ce7faa7af70bfc371d1609146ae0ac1243 dot -Tsvg'
 
+alias plantuml='docker run -d -p 8080:8080 plantuml/plantuml-server:jetty'
+
 # Only working dir supported
 unrar() {
    #docker run --privileged=true
