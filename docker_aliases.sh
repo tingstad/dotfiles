@@ -56,7 +56,7 @@ yq() {
     local vol_opt="$(selinuxenabled 2>/dev/null && echo :Z)"
     docker run --rm --network none \
         ${file:+ -v "$file":/workdir/"$filename"$vol_opt} \
-        mikefarah/yq:4.4.1 \
+        mikefarah/yq:4.24.2 \
         "$@" ${file:+"$filename"}
 }
 export -f yq
