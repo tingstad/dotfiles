@@ -148,33 +148,75 @@ test_index_mid_graph_above() {
     assertEquals "should set index" 2 $index
 }
 
-test_index_dec_at_top() {
+test_index_dec_at_beginning() {
     index=0
+    from='HEAD'
+    pager="$from"
+    set_state action=""
+
     index_dec
+
     assertEquals "k (up) should not decrement pointer at start" 0 $index
+    assertEquals "should not page" "HEAD" "$from"
+    assertEquals "should not page" "" "$(get_state "$state" 'action')"
 }
 
-test_index_inc_bottom() {
-    read -r -d '' lines <<- EOF
-	  * db334c3 2021-01-23  Commit 3
-	  * db334c2 2021-01-22  Commit 2
-	  * db334c1 2021-01-21  Commit 1
-	EOF
-    index=1
-    log_height=2
-    index_inc
-    assertEquals "j (down) should not increment pointer at bottom" 1 $index
+test_index_dec_at_top() {
+    index=0
+    from='--until="2022-04-07 23:33:33 +0200"'
+    pager="HEAD
+$from"
+    set_state action=""
+
+    index_dec
+
+    assertEquals "should page" "index_dec_back_page" "$(get_state "$state" 'action')"
 }
 
 test_index_inc_end() {
     read -r -d '' lines <<- EOF
-	  * db334c2 2021-01-22  Commit 2
-	  * db334c1 2021-01-21  Commit 1
+         * db334c2 2021-01-22  Commit 2
+         * db334c1 2021-01-21  Commit 1
 	EOF
     index=1
-    height=9
+    height=9 log_height=9
+    set_state action=""
+
     index_inc
+
     assertEquals "j (down) should not increment pointer at bottom" 1 $index
+    assertEquals "should not forward" "" "$(get_state "$state" 'action')"
+}
+
+test_back_page_one() {
+    from='--until="2022-04-07 19:18:44 +0200"'
+    pager="$from"
+    set_state action=""
+
+    back_page
+
+    assertEquals "should keep pager" "$from" "$pager"
+    assertEquals "should keep from" '--until="2022-04-07 19:18:44 +0200"' "$from"
+    assertEquals "should not page" "" "$(get_state "$state" 'action')"
+}
+
+test_back_page_two() {
+    from='--until="2022-04-07 23:33:33 +0200"'
+    pager='--until="2022-04-07 20:00:00 +0200"
+--until="2022-04-07 23:33:33 +0200"'
+    back_page
+    assertEquals "should page pager" '--until="2022-04-07 20:00:00 +0200"' "$pager"
+    assertEquals "should page from" "$pager" "$from"
+}
+
+test_back_page_three() {
+    pager='--until="2022-04-07 19:18:44 +0200"
+--until="2022-04-07 20:00:00 +0200"
+--until="2022-04-07 23:33:33 +0200"'
+    back_page
+    assertEquals "should page back" '--until="2022-04-07 19:18:44 +0200"
+--until="2022-04-07 20:00:00 +0200"' "$pager"
+    assertEquals "should page from" '--until="2022-04-07 20:00:00 +0200"' "$from"
 }
 
 test_set_index() {
@@ -229,6 +271,9 @@ test_state() {
     assertEquals "1" "$(get_state "$state" 'one')"
     assertEquals "2" "$(get_state "$state" 'two')"
     assertEquals $'1\n2' "$(get_state "$state" one two)"
+
+    set_state from='--until="2022-04-07 20:00:00 +0200"'
+    assertEquals '--until="2022-04-07 20:00:00 +0200"' "$(get_state "$state" 'from')"
 }
 
 test_full_state() {
