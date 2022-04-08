@@ -26,9 +26,17 @@ main() {
         fi
         if [ $_dirty_git = true ] || [ $_resized = true ]; then
             lines="$(printf "%s\n" "$_gitlog" | head -n "$log_height" | awk '{print "  " $0}' | ccut "$width")"
-            if [ "$(get_state "$state" action)" = "forward_page" ]; then
-                set_index "$(get_state "$state" bottom_commit)" "$lines"
-            fi
+            _action=$(get_state "$state" action)
+            case "$_action" in
+                *forward_page*)
+                    set_index "$(get_state "$state" bottom_commit)" "$lines"
+                    [ "$_action" = "index_inc_forward_page" ] && index_inc
+                ;;
+                index_dec_back_page)
+                    index_end
+                    index_dec
+                ;;
+            esac
             _end=$(get_index_end)
             if [ $index -gt "$_end" ]; then
                 index=$_end
@@ -52,7 +60,7 @@ main() {
             && show_commit="$commit"
         draw "$width" "$height" "$total_width" "$lines" "$index" "$commit"
         dirty_screen=n
-        set_state dirty_git=false action=""
+        set_state dirty_git=false action="" index="$index"
         prev_state="$state"
         read_input
     done
@@ -219,6 +227,8 @@ read_input() {
         'M')  index_mid ;;
         'l')  [ -z "$TMUX" ] || tmux select-pane -R ;;
         'f')  forward_page ;;
+        '[6') forward_page ;; #PgDwn
+        '[5') back_page ;; #PgUp
         'r')  rebase ;;
         'F')  fixup ;;
         'w')  reword ;;
@@ -326,15 +336,13 @@ set_state() {
             continue
         _new_state=""
         while read -r _line; do
-            for _word in $_line; do
-                if [ "${_word%%=*}" = "${1%%=*}" ]; then
-                    _new_state="$1
+            if [ "${_line%%=*}" = "${1%%=*}" ]; then
+                _new_state="$1
 $_new_state"
-                elif [ -n "$_word" ]; then
-                    _new_state="$_word
+            elif [ -n "$_line" ]; then
+                _new_state="$_line
 $_new_state"
-                fi
-            done
+            fi
         done <<-EOF
 		$state
 EOF
@@ -501,6 +509,7 @@ git_rebase() {
 
 goto_beginning() {
     from="HEAD"
+    pager="$from"
     index=0
 }
 
@@ -574,6 +583,7 @@ EOF
 index_inc() {
     if [ "$index" -lt $((log_height - 1)) ] \
             && [ $((index + 1)) -lt "$(line_count "$lines")" ]; then
+        _oldindex="$index"
         _i=0
         while IFS= read -r _line; do
             if [ $_i -gt "$index" ]; then
@@ -590,6 +600,10 @@ index_inc() {
         done <<EOF
 $lines
 EOF
+        if [ "$index" = "$_oldindex" ]; then
+            forward_page \
+            && set_state action=index_inc_forward_page
+        fi
     fi
 }
 
@@ -613,6 +627,9 @@ index_dec() {
 $lines
 EOF
         index=$_max
+    else
+        back_page \
+        && set_state action=index_dec_back_page
     fi
 }
 
@@ -638,13 +655,36 @@ EOF
 
 forward_page() {
     if [ "$(line_count "$lines")" -lt $log_height ]; then
-        return
+        return 1
     fi
     _last=$(get_commit "$(get_index_end)")
     _time=$(git show "$_last" --no-patch --format=%cd --date=iso-local)
     set_state bottom_commit="$_last" action=forward_page
     from='--until="'"$_time"'"'
-    pager="$pager $from"
+    pager="$pager
+$from"
+}
+
+back_page() {
+    _n=$(line_count "$pager")
+    if [ "$_n" -lt 2 ]; then
+        return 1
+    fi
+    _n=$((_n - 1))
+    _buf=""
+    _line=""
+    _i=0
+    while IFS= read -r _line; do
+        _buf="${_buf:+$_buf
+}$_line"
+        if [ $((_i += 1)) -eq $_n ]; then
+            from="$_line"
+            break
+        fi
+    done <<EOF
+$pager
+EOF
+    pager="$_buf"
     index=0
 }
 
