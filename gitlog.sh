@@ -326,15 +326,13 @@ set_state() {
             continue
         _new_state=""
         while read -r _line; do
-            for _word in $_line; do
-                if [ "${_word%%=*}" = "${1%%=*}" ]; then
-                    _new_state="$1
+            if [ "${_line%%=*}" = "${1%%=*}" ]; then
+                _new_state="$1
 $_new_state"
-                elif [ -n "$_word" ]; then
-                    _new_state="$_word
+            elif [ -n "$_line" ]; then
+                _new_state="$_line
 $_new_state"
-                fi
-            done
+            fi
         done <<-EOF
 		$state
 EOF

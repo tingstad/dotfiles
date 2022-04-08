@@ -229,6 +229,9 @@ test_state() {
     assertEquals "1" "$(get_state "$state" 'one')"
     assertEquals "2" "$(get_state "$state" 'two')"
     assertEquals $'1\n2' "$(get_state "$state" one two)"
+
+    set_state from='--until="2022-04-07 20:00:00 +0200"'
+    assertEquals '--until="2022-04-07 20:00:00 +0200"' "$(get_state "$state" 'from')"
 }
 
 test_full_state() {
