@@ -195,7 +195,7 @@ draw_commit() {
         cursor_set "$_y" $_x
         printf %s "$_line"
     done <<EOF
-$(git_show --color=always "$commit" | fold -w $_w)
+$(git_show --color=always "$commit" --pretty=fuller | fold -w $_w)
 EOF
     show_commit="$commit"
 }
