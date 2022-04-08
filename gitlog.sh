@@ -52,7 +52,7 @@ main() {
             && show_commit="$commit"
         draw "$width" "$height" "$total_width" "$lines" "$index" "$commit"
         dirty_screen=n
-        set_state dirty_git=false action=""
+        set_state dirty_git=false action="" index="$index"
         prev_state="$state"
         read_input
     done
