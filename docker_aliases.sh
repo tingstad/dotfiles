@@ -96,6 +96,19 @@ http_server() {
 EOF
 export -f http_server
 
+swagger() (
+    top=$(git rev-parse --show-toplevel)
+    wd=$(pwd)
+    top="${top:-$wd}"
+    [ "$top" = "$wd" ] && sub="" || sub="${wd#$top}"
+    docker run -i --rm -u "$(id -u):$(id -g)" \
+        -v "$(go env GOPATH)":/go -e GOPATH=/go \
+        -v "$(go env GOCACHE)":/cach -e GOCACHE=/cach \
+        -v "$top":/dir -w "/dir$sub" \
+        quay.io/goswagger/swagger:v0.29.0 "$@"
+)
+export -f swagger
+
 # Only working dir supported
 # ~/.m2/settings.xml is your friend
 create_mvn() {  # $1 = suffix, $2 = image

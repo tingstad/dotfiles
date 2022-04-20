@@ -57,6 +57,8 @@ testSourceAliasesExitCode() {
             "$(echo 'npx -v' | bash)"
         fi
         assertEquals "python" "3.8.3" "$(bash -c 'python -V' | sed 's/[^0-9.]//g')"
+        assertEquals "swagger" "v0.29.0" \
+            "$(bash -c 'swagger version' | awk '/^version:/{print $2}')"
     fi
 }
 
