@@ -195,7 +195,7 @@ draw_commit() {
         cursor_set "$_y" $_x
         printf %s "$_line"
     done <<EOF
-$(git_show --color=always "$commit" | fold -w $_w)
+$(git_show --color=always "$commit" --pretty=fuller | fold -w $_w)
 EOF
     show_commit="$commit"
 }
@@ -229,6 +229,7 @@ read_input() {
         'f')  forward_page ;;
         '[6') forward_page ;; #PgDwn
         '[5') back_page ;; #PgUp
+        'b')  back_page ;;
         'r')  rebase ;;
         'F')  fixup ;;
         'w')  reword ;;
@@ -259,7 +260,8 @@ help() {
                 $_bold NAVIGATION $_reset
 
     j/↓, k/↑    Move down/up
-    f           Forward one page
+    f/PgDn      Forward one page
+    b/PgUp      Back one page
     g           Goto beginning
     H/M/L       Jump to home/middle/last in window
     h           Help
