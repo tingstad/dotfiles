@@ -226,10 +226,10 @@ read_input() {
         'L')  index_end ;;
         'M')  index_mid ;;
         'l')  [ -z "$TMUX" ] || tmux select-pane -R ;;
-        'f')  forward_page ;;
-        '[6') forward_page ;; #PgDwn
-        '[5') back_page ;; #PgUp
-        'b')  back_page ;;
+        'f')  forward_page || true ;;
+        '[6') forward_page || true ;; #PgDwn
+        '[5') back_page || true ;; #PgUp
+        'b')  back_page || true ;;
         'r')  rebase ;;
         'F')  fixup ;;
         'w')  reword ;;
@@ -603,8 +603,9 @@ index_inc() {
 $lines
 EOF
         if [ "$index" = "$_oldindex" ]; then
+            # shellcheck disable=SC2015
             forward_page \
-            && set_state action=index_inc_forward_page
+            && set_state action=index_inc_forward_page || true
         fi
     fi
 }
@@ -630,8 +631,9 @@ $lines
 EOF
         index=$_max
     else
+        # shellcheck disable=SC2015
         back_page \
-        && set_state action=index_dec_back_page
+        && set_state action=index_dec_back_page || true
     fi
 }
 
