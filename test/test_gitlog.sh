@@ -204,7 +204,9 @@ test_back_page_two() {
     from='--until="2022-04-07 23:33:33 +0200"'
     pager='--until="2022-04-07 20:00:00 +0200"
 --until="2022-04-07 23:33:33 +0200"'
+
     back_page
+
     assertEquals "should page pager" '--until="2022-04-07 20:00:00 +0200"' "$pager"
     assertEquals "should page from" "$pager" "$from"
 }
