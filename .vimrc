@@ -47,7 +47,8 @@ nnoremap <Leader>- i—<Esc>
 nnoremap <Leader>i i<Space><Esc>l
 " inline variable:
 nnoremap <Leader>n #2dWy$dd<C-o>viw"0p
-
+" search for selection (use register s):
+vnoremap <leader>/ "sy/\V<C-R>=escape(@s,'/\')<CR><CR>
 
 " insert one letter (<Esc> = Alt):
 nnoremap <Leader>a a<Space><Esc>r
