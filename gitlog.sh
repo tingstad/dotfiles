@@ -226,15 +226,16 @@ read_input() {
         'L')  index_end ;;
         'M')  index_mid ;;
         'l')  [ -z "$TMUX" ] || tmux select-pane -R ;;
-        'f')  forward_page ;;
-        '[6') forward_page ;; #PgDwn
-        '[5') back_page ;; #PgUp
-        'b')  back_page ;;
+        'f')  forward_page || true ;;
+        '[6') forward_page || true ;; #PgDwn
+        '[5') back_page || true ;; #PgUp
+        'b')  back_page || true ;;
         'r')  rebase ;;
         'F')  fixup ;;
         'w')  reword ;;
         'v')  revert ;;
         'e')  edit_commit ;;
+        's')  show_commit_full; dirty_screen=y ;;
         'S')  reset ;;
         'a')  about && dirty_screen=y ;;
         'h')  help && dirty_screen=y ;;
@@ -264,6 +265,7 @@ help() {
     b/PgUp      Back one page
     g           Goto beginning
     H/M/L       Jump to home/middle/last in window
+    s           Show commit (full screen)
     h           Help
     q           Quit
     a           About
@@ -497,6 +499,14 @@ edit_commit() {
     exit
 }
 
+show_commit_full() {
+    if [ -n "$TMUX" ]; then
+        tmux kill-pane -t "$session":"$window".1 || true
+    fi
+    clear
+    GIT_PAGER='less -RX -+F' git show "$commit" --pretty=fuller
+}
+
 git_rebase() {
     case $1 in
         *^) if [ "$from" = "HEAD" ] && [ "$index" = "$(get_index_end)" ]; then
@@ -603,8 +613,9 @@ index_inc() {
 $lines
 EOF
         if [ "$index" = "$_oldindex" ]; then
+            # shellcheck disable=SC2015
             forward_page \
-            && set_state action=index_inc_forward_page
+            && set_state action=index_inc_forward_page || true
         fi
     fi
 }
@@ -630,8 +641,9 @@ $lines
 EOF
         index=$_max
     else
+        # shellcheck disable=SC2015
         back_page \
-        && set_state action=index_dec_back_page
+        && set_state action=index_dec_back_page || true
     fi
 }
 
