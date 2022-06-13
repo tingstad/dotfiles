@@ -235,6 +235,7 @@ read_input() {
         'w')  reword ;;
         'v')  revert ;;
         'e')  edit_commit ;;
+        's')  show_commit_full; dirty_screen=y ;;
         'S')  reset ;;
         'a')  about && dirty_screen=y ;;
         'h')  help && dirty_screen=y ;;
@@ -264,6 +265,7 @@ help() {
     b/PgUp      Back one page
     g           Goto beginning
     H/M/L       Jump to home/middle/last in window
+    s           Show commit (full screen)
     h           Help
     q           Quit
     a           About
@@ -495,6 +497,14 @@ edit_commit() {
     fi
     printf "Happy editing :)\n"
     exit
+}
+
+show_commit_full() {
+    if [ -n "$TMUX" ]; then
+        tmux kill-pane -t "$session":"$window".1 || true
+    fi
+    clear
+    GIT_PAGER='less -RX -+F' git show "$commit" --pretty=fuller
 }
 
 git_rebase() {
