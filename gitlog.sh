@@ -2,6 +2,7 @@
 # Richard H. Tingstad's Git UI
 # https://github.com/tingstad/dotfiles
 set -e
+trap 'dirty_screen=y' CONT
 
 main() {
     is_tmux || unset TMUX
