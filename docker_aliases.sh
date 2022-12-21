@@ -63,7 +63,7 @@ export -f yq
 
 
 # Only working dir supported
-python () {
+python_docker() {
     local port
     if [[ "$*" == *-m\ http.server* ]]; then
         local found
@@ -82,7 +82,7 @@ python () {
         frolvlad/alpine-python3@sha256:ae841640713bf7e11540b40b6d40614e2e8f93b6ecef201a6cec62d52be1c36d \
         python3 "$@"
 }
-export -f python
+export -f python_docker
 
 source /dev/stdin <<EOF
 # Only working dir supported
@@ -91,7 +91,7 @@ http_server() {
         echo >&2 "Usage: http_server PORT"
         return 1
     fi
-    python -m http.server \$1
+    python_docker -m http.server \$1
 }
 EOF
 export -f http_server
