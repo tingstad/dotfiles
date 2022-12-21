@@ -49,7 +49,24 @@ randomstr() {
     }'
 }
 
-export -f timeout inplace calc drop randomstr
+watchfiles() {
+    if [ $# -lt 2 ]; then
+        echo >&2 "Usage: %0 FILENAME_PATTERN COMMAND ARGS..."
+        return 1
+    fi
+    tmp=$(mktemp)
+    pattern="$1"
+    shift
+    while true; do
+        if find . -name "$pattern" -newer "$tmp" | grep . ; then
+            "$@"
+            touch "$tmp"
+        fi
+        sleep 0.1
+    done
+}
+
+export -f timeout inplace calc drop randomstr watchfiles
 
 source "$my_dir"/docker_aliases.sh
 
