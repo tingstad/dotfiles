@@ -39,6 +39,9 @@ awk -v str="$1" -v cols="$2" -v lines="$3" 'BEGIN {
     strlen = length(str)
     strwidth = strlen * 2
     strstart = startx - int(strlen / 2) * 2
+    w2 = w + w
+    w3 = w + w2
+    w4 = w + w3
 }
 {
   t = $0
@@ -82,6 +85,11 @@ awk -v str="$1" -v cols="$2" -v lines="$3" 'BEGIN {
 # Render:
 line = "\\033[H" #cursor top left (= [1;1H )
 
+p1 = 0
+p2 = w
+p3 = w2
+p4 = w3
+
 for (y=3; y < height; y+=4) {
     for (x=1; x < w; x+=2) {
         if (y == starty && x-1 == strstart) {
@@ -89,14 +97,14 @@ for (y=3; y < height; y+=4) {
           x += strwidth - 1
         }
 #     Braille pattern:
-        b[1] = canvas[ (y-3)*w + x-1 ]
-        b[2] = canvas[ (y-2)*w + x-1 ]
-        b[3] = canvas[ (y-1)*w + x-1 ]
-        b[7] = canvas[ (y  )*w + x-1 ]
-        b[4] = canvas[ (y-3)*w + x   ]
-        b[5] = canvas[ (y-2)*w + x   ]
-        b[6] = canvas[ (y-1)*w + x   ]
-        b[8] = canvas[ (y  )*w + x   ]
+        b[1] = canvas[ p1 + x-1 ]
+        b[2] = canvas[ p2 + x-1 ]
+        b[3] = canvas[ p3 + x-1 ]
+        b[7] = canvas[ p4 + x-1 ]
+        b[4] = canvas[ p1 + x   ]
+        b[5] = canvas[ p2 + x   ]
+        b[6] = canvas[ p3 + x   ]
+        b[8] = canvas[ p4 + x   ]
 
 #     Unicode offset is 0x2800
 #     We do not know if platform printf supports \u or \x
@@ -127,6 +135,10 @@ for (y=3; y < height; y+=4) {
         utf8 = "\\342\\" byte2_oct "\\" byte3_oct
         line = line "\\033[" color "m" utf8 "\\033[m"
     }
+    p1 += w4
+    p2 += w4
+    p3 += w4
+    p4 += w4
     line = line "\\n"
 }
 system("printf \"" line "\"")
