@@ -93,7 +93,7 @@ p4 = w3
 for (y=3; y < height; y+=4) {
     for (x=1; x < w; x+=2) {
         if (y == starty && x-1 == strstart) {
-          line = line str
+          line = line "\\033[m" str
           x += strwidth - 1
         }
 #     Braille pattern:
@@ -133,13 +133,13 @@ for (y=3; y < height; y+=4) {
                 break
             }
         utf8 = "\\342\\" byte2_oct "\\" byte3_oct
-        line = line "\\033[" color "m" utf8 "\\033[m"
+        line = line "\\033[" color "m" utf8
     }
     p1 += w4
     p2 += w4
     p3 += w4
     p4 += w4
-    line = line "\\n"
+    line = line "\\033[m\\n"
 }
 system("printf \"" line "\"")
 
