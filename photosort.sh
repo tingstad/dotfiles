@@ -117,27 +117,13 @@ main() {
     fi
     
     j=$offset
+    export -f handle time_taken is_duplicate get_size get_file_times
     for src in "${@:$offset}";do
         [ $j -ge $# ] && break
         j=$[ $j + 1 ]
         find "$src" ${recursive--maxdepth 1} -path "$dir" -prune -o \
-            -type f \( -iname '*.jpg' -o -iname '*.jpeg' \) -print0 \
-        | while read -d $'\0' i ;do
-            t=$(time_taken "$i")
-            is_duplicate "$i" "$t" "$dir" \
-                && echo "Skipping duplicate: $i ($t)" && continue
-            c=""
-            while [ -e "$dir/$t$c.jpg" ]; do
-                c=$[ $c - 1 ]
-            done
-            dest="$dir/$t$c.jpg"
-            echo "$i > $dest"
-            if [ -z "$px" ]; then
-                cp "$i" "$dest"
-            else
-                convert -resize "$px"x$px\> -auto-orient -strip "$i" "$dest"
-            fi
-        done
+            -type f \( -iname '*.jpg' -o -iname '*.jpeg' \) \
+            -exec sh -c 'handle "$@"' fun {} "$dir" "$px" \;
     done
     
     [ $rename ] || return 0
@@ -152,6 +138,23 @@ main() {
         c=$[ $c + 1 ]
     done
     return 0
+}
+
+handle() {  i="$1"  dir="$2"  px="$3"
+    t=$(time_taken "$i")
+    is_duplicate "$i" "$t" "$dir" \
+        && echo "Skipping duplicate: $i ($t)" && continue
+    c=""
+    while [ -e "$dir/$t$c.jpg" ]; do
+        c=$[ $c - 1 ]
+    done
+    dest="$dir/$t$c.jpg"
+    echo "$i > $dest"
+    if [ -z "$px" ]; then
+        cp "$i" "$dest"
+    else
+        convert -resize "$px"x$px\> -auto-orient -strip "$i" "$dest"
+    fi
 }
 
 get_size() {
