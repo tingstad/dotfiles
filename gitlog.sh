@@ -22,10 +22,10 @@ main() {
             && _dirty_git=true || _dirty_git=false
         ! diff_state "$state" "$prev_state" height width \
             && _resized=true || _resized=false
-        if [ $_dirty_git = true ]; then
+        if [ "$_dirty_git" = true ]; then
             _gitlog="$(log git "$from" "$file" | head -n $((height*4)))"
         fi
-        if [ $_dirty_git = true ] || [ $_resized = true ]; then
+        if [ "$_dirty_git" = true ] || [ "$_resized" = true ]; then
             lines="$(printf "%s\n" "$_gitlog" | head -n "$log_height" | awk '{print "  " $0}' | ccut "$width")"
             _action=$(get_state "$state" action)
             case "$_action" in
@@ -39,17 +39,17 @@ main() {
                 ;;
             esac
             _end=$(get_index_end)
-            if [ $index -gt "$_end" ]; then
+            if [ "$index" -gt "$_end" ]; then
                 index=$_end
             fi
         fi
-        if [ $_dirty_git = true ] || [ "$(get_state "$prev_state" index)" != "$index" ]; then
+        if [ "$_dirty_git" = true ] || [ "$(get_state "$prev_state" index)" != "$index" ]; then
             commit=$(get_commit "$index")
-            if ! [ $_dirty_git = true ]; then
+            if ! [ "$_dirty_git" = true ]; then
                 clear_cursor "$(get_state_value "$prev_state" index)"
             fi
         fi
-        if [ $_dirty_git = true ] || [ $_resized = true ]; then
+        if [ "$_dirty_git" = true ] || [ "$_resized" = true ]; then
             dirty_screen=y
         fi
         [ -n "$TMUX" ] && [ "$commit" != "$show_commit" ] \
@@ -287,10 +287,10 @@ EOF
 
 about() {
     _col=1
-    while [ $_col -le "$width" ]; do
+    while [ "$_col" -le "$width" ]; do
         _row=1
-        while [ $_row -le "$height" ]; do
-            cursor_set $_row $_col
+        while [ "$_row" -le "$height" ]; do
+            cursor_set "$_row" "$_col"
             printf "%s" " "
             _row=$((_row + 1))
         done
@@ -305,7 +305,7 @@ about() {
         _tail="${_rest#?}"
         _char="${_rest%%"$_tail"}"
         _rest="${_tail}"
-        cursor_set $_row $_col
+        cursor_set "$_row" "$_col"
         printf "%s" "$_char"
         delay 1
         _col=$((_col + 1))
@@ -622,7 +622,7 @@ EOF
 }
 
 index_dec() {
-    if [ $index -gt 0 ]; then
+    if [ "$index" -gt 0 ]; then
         _i=0
         _max=$index
         while IFS= read -r _line; do
@@ -669,7 +669,7 @@ EOF
 }
 
 forward_page() {
-    if [ "$(line_count "$lines")" -lt $log_height ]; then
+    if [ "$(line_count "$lines")" -lt "$log_height" ]; then
         return 1
     fi
     _last=$(get_commit "$(get_index_end)")
@@ -865,6 +865,7 @@ contains() {
 }
 
 if [ -n "$BASH_VERSION" ]; then
+    # shellcheck disable=SC2317
     return 0 2>/dev/null || true
 fi
 
