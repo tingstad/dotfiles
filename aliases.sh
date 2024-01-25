@@ -1,6 +1,6 @@
 my_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd)"
 
-PATH="$PATH:$my_dir/bin"
+export PATH="$PATH:$my_dir/bin"
 
 alias gs='git status'
 alias mci='mvn clean install'
