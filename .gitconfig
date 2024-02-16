@@ -26,10 +26,10 @@
 	message = show -s --format=%B
 	subject = show -s --format=%s
 	recent = !"git for-each-ref --sort=-committerdate refs/heads --format='%(HEAD)%(color:yellow)%(refname:short)|%(color:red)%(objectname:short)|%(color:bold green)%(committerdate:relative)|%(color:blue)%(subject)|%(color:magenta)%(authorname)%(color:reset)' --color=always --count=20 | column -ts'|'"
-	split = !"f(){ commit=$1; file=$2; \
+	split = !"f(){ commit=$1; file=\"$2\"; \
         GIT_SEQUENCE_EDITOR='sed -i.old 1s/^pick/e/' git rebase -i $commit~ \
-        && git reset HEAD~ -- $file && git commit --amend --no-edit \
-        && git add -- $file && git commit -m Split && git rebase --continue \
+        && git reset HEAD~ -- \"$file\" && git commit --amend --no-edit \
+        && git add -- \"$file\" && git commit -m Split && git rebase --continue \
     ;}; f"
 
 [pull]
