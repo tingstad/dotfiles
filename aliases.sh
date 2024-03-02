@@ -4,6 +4,8 @@ export PATH="$PATH:$my_dir/bin"
 
 alias gs='git status'
 alias mci='mvn clean install'
+alias ,touchbar='sudo pkill TouchBarServer'
+alias ,touchbar2='sudo killall “ControlStrip”'
 
 grip(){
     case "/$3/ /$(pwd)/" in
