@@ -25,6 +25,8 @@ node8() {
 EOF
 export -f node8
 
+alias kcat='docker run -it --rm --network=host -v /Users/richard/amedia/kafka:/Users/richard/amedia/kafka -w /Users/richard/amedia/kafka edenhill/kcat:1.7.1'
+
 # Only working dir supported
 alias npm6='docker run -it --rm -v "$PWD":/dir'$vol_opt' -w /dir -p 127.0.0.1:8080:8080/tcp node:14.7.0-alpine3.10 npm'
 
