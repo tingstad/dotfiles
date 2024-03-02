@@ -38,6 +38,16 @@ inplace()(
     "$@" < "$file" > "$temp" && mv "$temp" "$file"
 )
 
+retry()(
+    # https://github.com/teodorlu/terminalen-motorsag/blob/master/bin/repeatedly-try
+    while ! "$@"
+    do
+        echo WOOPS
+        echo prøver igjen om 1 sek
+        sleep 1
+    done
+)
+
 drop() {
     awk -v drop=$1 '{ buffer[++j]=$0 } NR>drop{ print buffer[j-drop]; delete buffer[j-drop] }'
 }
@@ -70,7 +80,7 @@ watchfiles() {
     done
 }
 
-export -f timeout inplace calc drop randomstr watchfiles
+export -f timeout inplace calc drop randomstr watchfiles retry
 
 source "$my_dir"/docker_aliases.sh
 
