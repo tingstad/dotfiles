@@ -49,6 +49,8 @@ nnoremap <Leader>i i<Space><Esc>l
 nnoremap <Leader>n #2dWy$dd<C-o>viw"0p
 " search for selection (use register s):
 vnoremap <leader>/ "sy/\V<C-R>=escape(@s,'/\')<CR><CR>
+" replace word under cursor:
+nnoremap <Leader>r :%s/<C-r><C-w>/
 
 " insert one letter (<Esc> = Alt):
 nnoremap <Leader>a a<Space><Esc>r
