@@ -822,7 +822,7 @@ check_dependencies() {
 }
 
 is_tmux() {
-    does_exist tmux
+    false #does_exist tmux
 }
 
 does_exist() {
