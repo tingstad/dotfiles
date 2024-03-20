@@ -1,5 +1,7 @@
 [user]
-	name = Richard Tingstad
+	name = Richqrd Tingstad
+[includeIf "gitdir:~/amedia/"]
+	path = ~/amedia/.gitconfig
 [core]
 	filemode = false
 	autocrlf = input
