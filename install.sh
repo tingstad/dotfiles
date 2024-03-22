@@ -29,8 +29,14 @@ link_dotfiles() {
 add_aliases() {
     local alias_file="$1"
     local target="$2"
-    local tag="# TINGSTAD DOTFILES v2"
     local content="source \"$alias_file\" $tag"
+    add_code "$target" "$content"
+}
+
+add_code() {
+    local target="$1"
+    local tag="# TINGSTAD DOTFILES v2"
+    local content="$2"
     # Handle v1:
     local head="#BEGIN TINGSTAD DOTFILES"
     local tail="#END TINGSTAD DOTFILES"
