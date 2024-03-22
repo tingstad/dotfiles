@@ -119,7 +119,7 @@ unset prompt_suffix
 
 source /dev/stdin <<EOF
 gitlog() {
-    "$my_dir"/gitlog.sh "\$@"
+    "$my_dir"/bin/,gitlog "\$@"
 }
 EOF
 export -f gitlog
@@ -127,7 +127,7 @@ export -f gitlog
 export CARGO_NET_GIT_FETCH_WITH_CLI=true CLICOLOR=1
 
 # Somewhat weird form to support Bash 3:
-source /dev/stdin <<<"$(source "$my_dir"/gitlog.sh && type ccut | sed '1d')"
+source /dev/stdin <<<"$(source "$my_dir"/bin/,gitlog && type ccut | sed '1d')"
 export -f ccut
 
 if [ -f ~/.git-completion.bash ]; then
