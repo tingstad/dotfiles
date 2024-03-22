@@ -47,13 +47,13 @@ add_code() {
     # Handle v2:
     elif [ -f "$target" ] && grep -q "$tag$" "$target"; then
         { rm "$target" && \
-        sed "/$tag$/s|.*|$content|" \
+        sed "/$tag$/s|.*|$content $tag|" \
         > "$target"; } < "$target"
     elif [ -f "$target" ] && grep -q "TINGSTAD DOTFILES" "$target"; then
         echo "ERROR: Unknown TINGSTAD DOTFILES version!" >&2
         return 1
     else
-        echo "$content" >> "$target"
+        echo "$content $tag" >> "$target"
     fi
 }
 
