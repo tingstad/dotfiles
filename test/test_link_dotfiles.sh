@@ -16,7 +16,7 @@ testEmptyTargetDir() {
 if [ -z "$TESTMODE" ]; then
     TESTMODE="on"
     DIR=$(cd "$(dirname "$0")"; pwd)
-    source "$DIR/../make.sh"
+    source "$DIR/../install.sh"
     set +o errexit
     source "$DIR/shunit2.sh"
 fi
