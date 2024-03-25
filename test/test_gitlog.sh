@@ -487,7 +487,7 @@ test_log() {
 }
 
 DIR=$(cd "$(dirname "$0")"; pwd)
-source "$DIR/../gitlog.sh"
+source "$DIR/../bin/,gitlog"
 set +o errexit
 git_show() { # mock for testDraw
     cat "$DIR/test_draw_show_commit.ansi"
