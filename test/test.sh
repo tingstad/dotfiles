@@ -69,7 +69,7 @@ testSourceAliasesOutput() {
 
 return 2>/dev/null || true
 
-source "$DIR/../make.sh"
+source "$DIR/../install.sh"
 set +o errexit
 source "$DIR/shunit2.sh"
 
