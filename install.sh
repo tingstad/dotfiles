@@ -30,7 +30,7 @@ link_dotfiles() {
 add_aliases() {
     local alias_file="$1"
     local target="$2"
-    local content="source \"$alias_file\" $tag"
+    local content="source \"$alias_file\""
     add_code "$target" "$content"
 }
 
@@ -43,7 +43,7 @@ add_code() {
     local tail="#END TINGSTAD DOTFILES"
     if [ -f "$target" ] && grep -q "$head$" "$target"; then
         { rm "$target" && \
-        sed "/^$head/,/^$tail/{ /^$tail/!d; /^$tail/s|.*|$content|; }" \
+        sed "/^$head/,/^$tail/{ /^$tail/!d; /^$tail/s|.*|$content $tag|; }" \
         > "$target"; } < "$target"
     # Handle v2:
     elif [ -f "$target" ] && grep -q "$tag$" "$target"; then
