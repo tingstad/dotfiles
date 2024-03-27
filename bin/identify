@@ -1,0 +1,9 @@
+#!/bin/sh
+
+docker run --rm -i \
+    --network none \
+    -u "$(id -u):$(id -g)" \
+    -v "$(pwd)":/dir$(selinuxenabled 2>/dev/null && echo :Z) -w /dir \
+    madhead/imagemagick@sha256:a92e823df833c20604a42f76f56deae86efe089000a4c86bf1b4b92fb1781e8b \
+    identify "$@"
+
