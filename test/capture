@@ -4,7 +4,7 @@ set -e
 if ! docker image list captermscrn --format '{{.ID}}' | grep -q .
 then
     docker container ls --all --filter 'name=captermscrn' --format '{{.ID}}' \
-        | xargs docker rm
+        | xargs -I {} docker rm {}
     docker run --name captermscrn golang:1.21-alpine sh -ec '
         go install github.com/tingstad/termscreen/cmd@v0.1.1'
     docker commit $(docker container ls --all --filter 'name=captermscrn' \
