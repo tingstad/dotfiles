@@ -20,11 +20,11 @@ testThatDrawsHeading() {
 
 testDraw() {
     # git log --oneline --graph --decorate --color 3db84c4 | head -n7 | awk '{ print "  " $0 }' | ccut 40 > test_draw_lines40x7.ansi
-    # draw 30 12 60 "$(cat test_draw_lines40x7.ansi)" 3 5a66f98 | ./capture_darwin_amd64 > test_draw_expected.ansi #with mock git_show
+    # draw 30 12 60 "$(cat test_draw_lines40x7.ansi)" 3 5a66f98 | ./capture > test_draw_expected.ansi #with mock git_show
     lines=$(cat "$DIR"/test_draw_lines40x7.ansi)
     expected=$(cat "$DIR"/test_draw_expected.ansi)
     unset TMUX
-    screen=$(draw 30 12 60 "$lines" 3 5a66f98 | "$DIR/capture_$(uname -s|tr '[:upper:]' '[:lower:]')_amd64")
+    screen=$(draw 30 12 60 "$lines" 3 5a66f98 | "$DIR/capture")
     assertEquals "$expected" "$screen"
     if [ "$expected" != "$screen" ]; then
         assertEquals "$(echo "$expected"|cat -v)" "$(echo "$screen"|cat -v)"
