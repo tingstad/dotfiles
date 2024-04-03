@@ -1,0 +1,18 @@
+#!/bin/sh
+set -e
+
+mvn() (
+    img="$1"
+    if [ ! -d "$HOME/.m2" ]; then
+        mkdir "$HOME/.m2"
+    fi
+    tty=""
+    if test -t 0; then
+        tty="-t"
+    fi
+    vol_opt="$(selinuxenabled 2>/dev/null && echo :Z || true)"
+    docker run $tty -i --rm --env TZ="${TZ:-$(date +%Z)}" -v "$PWD":/dir$vol_opt -u "$(id -u):$(id -g)" -v "$HOME/.m2":/var/mvn/.m2$vol_opt -w /dir "$img" mvn -Duser.home=/var/mvn -Dmaven.repo.local=/var/mvn/.m2/repository "$@"
+)
+
+mvn maven:3.8-openjdk-17-slim "$@"
+
