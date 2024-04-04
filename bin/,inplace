@@ -1,0 +1,12 @@
+#!/bin/sh
+set -e
+
+inplace()(
+    file="$1"
+    shift
+    temp=$(mktemp)
+    "$@" < "$file" > "$temp" && mv "$temp" "$file"
+)
+
+inplace "$@"
+
