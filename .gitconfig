@@ -1,5 +1,5 @@
 [user]
-	name = Richqrd Tingstad
+	name = Richard Tingstad
 [includeIf "gitdir:~/amedia/"]
 	path = ~/amedia/.gitconfig
 [core]
