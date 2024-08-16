@@ -74,6 +74,7 @@ test_key_j_k_graph() {
 }
 
 test_key_g() {
+    beginning=HEAD
     from=some_commit
     index=2
     goto_beginning

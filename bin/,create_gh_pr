@@ -1,0 +1,5 @@
+#!/bin/sh
+set -e
+
+gh pr create --fill --body="$(git log master.. --reverse --pretty='* %h %s%n%b')" "$@"
+

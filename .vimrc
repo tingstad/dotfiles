@@ -48,7 +48,7 @@ nnoremap <Leader>i i<Space><Esc>l
 " inline variable:
 nnoremap <Leader>n #2dWy$dd<C-o>viw"0p
 " search for selection (use register s):
-vnoremap <leader>/ "sy/\V<C-R>=escape(@s,'/\')<CR><CR>
+vnoremap <leader>/ "sy:/\V<C-R>=escape(@s,'/\')<CR><CR>
 " replace word under cursor:
 nnoremap <Leader>r :%s/<C-r><C-w>/
 

@@ -5,15 +5,25 @@ set -e
 trap 'dirty_screen=y' CONT
 
 main() {
-    is_tmux || unset TMUX
-    file="$1"
+    arg=$1
     bootstrap "$@"
+    file=""
     from="HEAD"
+    if [ -n "$arg" ]; then
+        if [ -e "$arg" ]; then
+            file=$arg
+        elif git rev-parse -q --verify "$arg"; then
+            from=$arg
+        else
+            echo >&2 "Unknown argument: $arg"
+            quit 1
+        fi
+    fi
+    beginning=$from
     pager="$from"
     index=0
     dirty_screen=y
     while true; do
-        split_screen_if_not_split
         check_screen_size
         set_state from="$from" index="$index" height="$height" width="$width"
         [ "$(get_state "$state" dirty_git)" = true ] \
@@ -24,6 +34,7 @@ main() {
             && _resized=true || _resized=false
         if [ "$_dirty_git" = true ]; then
             _gitlog="$(log git "$from" "$file" | head -n $((height*4)))"
+            [ -n "$_gitlog" ] || quit
         fi
         if [ "$_dirty_git" = true ] || [ "$_resized" = true ]; then
             lines="$(printf "%s\n" "$_gitlog" | head -n "$log_height" | awk '{print "  " $0}' | ccut "$width")"
@@ -52,11 +63,7 @@ main() {
         if [ "$_dirty_git" = true ] || [ "$_resized" = true ]; then
             dirty_screen=y
         fi
-        [ -n "$TMUX" ] && [ "$commit" != "$show_commit" ] \
-            && tmux respawn-pane -t "$session":"$window".1 \
-                -k "GIT_PAGER='less -RX -+F' git show $commit --pretty=fuller ${file:+ -- \"$file\"}" \
-            && show_commit="$commit"
-        [ -z "$TMUX" ] && [ "$commit" != "$show_commit" ] && [ $dirty_screen = n ] \
+        [ "$commit" != "$show_commit" ] && [ $dirty_screen = n ] \
             && draw_commit \
             && show_commit="$commit"
         draw "$width" "$height" "$total_width" "$lines" "$index" "$commit"
@@ -73,20 +80,6 @@ bootstrap() {
     save_tty_settings
     check_dependencies git awk sed head less grep
     git rev-parse #assert git repository
-    if is_tmux && [ -f "$0" ] && contains "$0" / && grep -q -m1 datsgnitlog "$0" 2>/dev/null; then
-        if [ -z "$TMUX" ]; then
-            tmux new-session -A -s datsgnitlog -n datsgnitlog"$(date +%s)" "$0" "$@"
-            exit
-        fi
-        session="$(tmux display-message -p '#{session_id}')"
-        window="$(tmux display-message -p '#{window_id}')"
-        if [ -z "$DATSGNIT_INCEPTION" ]; then
-            tmux new-window -n datsgnitlog"$(date +%s)" "export DATSGNIT_INCEPTION=yes; $0 $*; $SHELL -i"
-            exit
-        fi
-    elif is_tmux; then
-        unset TMUX
-    fi
     trap 'end' EXIT
     if [ -n "$ZSH_VERSION" ]; then
         setopt shwordsplit
@@ -99,25 +92,9 @@ end() {
     exit $rc
 }
 
-split_screen_if_not_split() {
-    if [ -n "$TMUX" ] \
-    && [ "$(tmux display-message -p '#{window_id}')" = "$window" ] \
-    && [ "$(tmux list-panes | line_count)" -lt 2 ]; then
-        tmux split-window -h -d
-        show_commit=""
-    fi
-}
-
 check_screen_size() {
     _cols=$COLUMNS
     _rows=$LINES
-    if [ -n "$TMUX" ]; then
-        _size="$(tmux display -t "$session":"$window".0 -p '#{pane_height} #{pane_width}')"
-        if is_number "${_size#* }" && is_number "${_size% *}"; then
-            _cols=${_size#* }
-            _rows=${_size% *}
-        fi
-    fi
     if [ -z "$_cols" ]; then
         _size=""
         if [ -z "$height" ]; then # first time
@@ -144,11 +121,7 @@ check_screen_size() {
         quit 1
     fi
     _new_height=$_rows
-    if [ -n "$TMUX" ]; then
-        _new_width=$_cols
-    else
-        _new_width=$((_cols / 2))
-    fi
+    _new_width=$((_cols / 2))
     if [ "$_new_height" != "$height" ] || [ "$_new_width" != "$width" ]; then
         height=$_new_height
         log_height=$((_new_height - 5))
@@ -169,15 +142,13 @@ draw() {
     printf '%b' "${_u}h${_reset}elp, ${_u}f${_reset}orward page, be${_u}g${_reset}inning, ${_u}H${_reset}ome/${_u}M${_reset}iddle/${_u}L${_reset}ast line, ${_u}r${_reset}ebase, ${_u}F${_reset}ixup, ${_u}q${_reset}uit" | ccut "$((_cols - 16))"
     printf '\n'
     printf "%s\n" "$lines"
-    if [ -z "$TMUX" ]; then
-        _y=0
-        _x=$((total_width - width + 1))
-        while [ $((_y += 1)) -le "$height" ]; do
-            cursor_set "$_y" $_x
-            printf '%b' "|$_reset"
-        done
-        draw_commit
-    fi
+    _y=0
+    _x=$((total_width - width + 1))
+    while [ $((_y += 1)) -le "$height" ]; do
+        cursor_set "$_y" $_x
+        printf '%b' "|$_reset"
+    done
+    draw_commit
     fi
     cursor_set $((index + 4)) 1
     printf ">"
@@ -220,13 +191,12 @@ read_input() {
         '[A') index_dec ;;
         'j')  index_inc ;;
         '[B') index_inc ;;
-        '[D') printf LEFT ;;
-        '[C') [ -z "$TMUX" ] || tmux select-pane -R ;;
+       #'[D') printf LEFT ;;
+       #'[C') printf RIGHT;;
         'g')  goto_beginning ;;
         'H')  index=0 ;;
         'L')  index_end ;;
         'M')  index_mid ;;
-        'l')  [ -z "$TMUX" ] || tmux select-pane -R ;;
         'f')  forward_page || true ;;
         '[6') forward_page || true ;; #PgDwn
         '[5') back_page || true ;; #PgUp
@@ -430,15 +400,12 @@ fixup() {
         git commit --fixup="$commit" && GIT_EDITOR=true git_rebase "$commit"^
     fi
     set_state dirty_git=true
-    if [ "$from" != "HEAD" ]; then
+    if [ "$from" != "$beginning" ]; then
         goto_beginning
     fi
 }
 
 rebase() {
-    if [ -n "$TMUX" ]; then
-        tmux kill-pane -t "$session":"$window".1 || true
-    fi
     clear
     git_rebase "$commit"
     if is_rebasing; then
@@ -466,7 +433,7 @@ reword() {
         GIT_SEQUENCE_EDITOR="sed -i.old 's/^pick ""$commit""/r ""$commit""/'" git_rebase "$commit"^
     fi
     set_state dirty_git=true
-    if [ "$from" != "HEAD" ]; then
+    if [ "$from" != "$beginning" ]; then
         goto_beginning
     fi
 }
@@ -479,9 +446,6 @@ revert() {
 }
 
 reset() {
-    if [ -n "$TMUX" ]; then
-        tmux kill-pane -t "$session":"$window".1 || true
-    fi
     clear
     git reset --hard "$commit"
     set_state dirty_git=true
@@ -489,9 +453,6 @@ reset() {
 }
 
 edit_commit() {
-    if [ -n "$TMUX" ]; then
-        tmux kill-pane -t "$session":"$window".1 || true
-    fi
     clear
     if [ "$index" -gt 0 ] || [ "$from" != "HEAD" ]; then
         GIT_SEQUENCE_EDITOR="sed -i.old 's/^pick ""$commit""/e ""$commit""/'" git_rebase "$commit"^
@@ -501,9 +462,6 @@ edit_commit() {
 }
 
 show_commit_full() {
-    if [ -n "$TMUX" ]; then
-        tmux kill-pane -t "$session":"$window".1 || true
-    fi
     clear
     GIT_PAGER='less -RX -+F' git show "$commit" --pretty=fuller
 }
@@ -521,7 +479,7 @@ git_rebase() {
 }
 
 goto_beginning() {
-    from="HEAD"
+    from=$beginning
     pager="$from"
     index=0
 }
@@ -725,7 +683,6 @@ line_at() {
 
 quit() {
     restore_tty_settings
-    [ -n "$TMUX" ] && tmux kill-window
     cursor_set "$height" 1
     exit "${1:-0}"
 }
@@ -819,10 +776,6 @@ check_dependencies() {
         printf "Missing dependencies:%s" "$_missing" >&2
         false
     }
-}
-
-is_tmux() {
-    false #does_exist tmux
 }
 
 does_exist() {
