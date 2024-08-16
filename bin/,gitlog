@@ -12,7 +12,7 @@ main() {
     if [ -n "$arg" ]; then
         if [ -e "$arg" ]; then
             file=$arg
-        elif git show-ref "$arg" >/dev/null ; then
+        elif git rev-parse -q --verify "$arg"; then
             from=$arg
         else
             echo >&2 "Unknown argument: $arg"
