@@ -19,6 +19,18 @@ main() {
             quit 1
         fi
     fi
+    if [ -n "$file" ]; then
+        if [ -d "$file" ]; then
+            dir=$file
+            file=.
+        else
+            dir=$(dirname "$file")
+            file=$(basename "$file")
+        fi
+        if [ "$(pwd)" != "${dir%/}" ]; then
+            cd "$dir"
+        fi
+    fi
     beginning=$from
     pager="$from"
     index=0
