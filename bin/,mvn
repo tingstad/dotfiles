@@ -2,7 +2,8 @@
 set -e
 
 mvn() (
-    img="$1"
+    img=$1
+    shift
     if [ ! -d "$HOME/.m2" ]; then
         mkdir "$HOME/.m2"
     fi
@@ -11,8 +12,18 @@ mvn() (
         tty="-t"
     fi
     vol_opt="$(selinuxenabled 2>/dev/null && echo :Z || true)"
-    docker run $tty -i --rm --env TZ="${TZ:-$(date +%Z)}" -v "$PWD":/dir$vol_opt -u "$(id -u):$(id -g)" -v "$HOME/.m2":/var/mvn/.m2$vol_opt -w /dir "$img" mvn -Duser.home=/var/mvn -Dmaven.repo.local=/var/mvn/.m2/repository "$@"
+    set - docker run $tty -i --rm --env TZ="${TZ:-$(date +%Z)}" -v "$PWD":/dir$vol_opt -u "$(id -u):$(id -g)" -v "$HOME/.m2":/var/mvn/.m2$vol_opt -w /dir "$img" mvn -Duser.home=/var/mvn -Dmaven.repo.local=/var/mvn/.m2/repository "$@"
+    echo "$@"
+    "$@"
 )
 
-mvn maven:3.8-openjdk-17-slim "$@"
+case "$1" in
+    8)  shift; mvn maven:3.6.0-jdk-8-alpine              "$@" ;;
+    11) shift; mvn maven:3.6.3-jdk-11-slim               "$@" ;;
+    15) shift; mvn maven:3.8-openjdk-15-slim             "$@" ;;
+    16) shift; mvn maven:3.8-openjdk-16-slim             "$@" ;;
+    17) shift; mvn maven:3.8-openjdk-17-slim             "$@" ;;
+    21) shift; mvn maven:3.9.9-eclipse-temurin-21-alpine "$@" ;;
+    *)         mvn maven:3.9.9-eclipse-temurin-21-alpine "$@" ;;
+esac
 
