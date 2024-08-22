@@ -37,6 +37,7 @@ nnoremap <Leader>s :split <C-r>=expand("%:p:h")<Enter>/**/*
 nnoremap <Leader>e :edit <C-r>=expand("%:p:h")<Enter>/**/*
 nnoremap <Leader>t :tabnew <C-r>=expand("%:p:h")<Enter>/**/*
 nnoremap <Leader>w :w<cr>
+nnoremap <Leader>q :qa<cr>
 " insert newline above:
 nnoremap <Leader>O v<Esc>O<Esc>`<
 " insert newline below:
