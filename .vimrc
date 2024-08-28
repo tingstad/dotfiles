@@ -25,6 +25,10 @@ set ruler               " show cursor position and relative file position
 set laststatus=2        " always show status line
 set statusline=%<%f\ %h%m%r%=%-14.(%l,%c,%o%V%)\ %P  " show (line,column),byte offset (+1)
 
+if &diff
+    syntax off
+endif
+
 set timeout timeoutlen=1000 ttimeoutlen=50
 autocmd InsertEnter * set timeoutlen=20
 autocmd InsertLeave * set timeoutlen=1000
