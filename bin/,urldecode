@@ -1,0 +1,13 @@
+#!/bin/sh
+
+urldecode() {
+    printf '%b\n' "$(sed 's/+/ /g;s/%\(..\)/\\x\1/g;')"
+}
+
+if [ $# -gt 0 ]; then
+    echo "$@" | urldecode
+    exit $?
+fi
+
+urldecode
+
