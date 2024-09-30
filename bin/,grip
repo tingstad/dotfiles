@@ -1,17 +1,48 @@
 #!/bin/sh
 
 grip(){
-    case "/$3/ /$(pwd)/" in
+    filter_hidden="-name .* -not -name . -not -name .."
+    filter_node="-type d -and -name node_modules"
+    filter_target="-type d -and -name target"
+    dirs="/$3/ /$(pwd)/"
+    case $dirs in
         */node_modules/*)
             filter_node="" ;;
+    esac
+    case $dirs in
         */target/*)
             filter_target="" ;;
-        *)
-            filter_node="-or -type d -and -name node_modules"
-            filter_target="-or -type d -and -name target"
-        ;;
     esac
-    find "${3-.}" \( -name '.[^.]*' $filter_node $filter_target \) -prune -or -name "${2:-*}" -type f -print0 | xargs -0 egrep --binary-files=without-match ${@:4} "$1"
+    case $dirs in
+        */.[!./]*)
+            filter_hidden="" ;;
+    esac
+    filter=$(buildfilter "$filter_hidden" "$filter_target" "$filter_node")
+    (set -f
+    find "${3:-.}" $filter -name "${2:-*}" -type f -print0 \
+        | xargs -0 -P12 egrep --binary-files=without-match ${@:4} "$1"
+    )
+}
+
+buildfilter() {
+    i=0 n=$#
+    while [ $((i+=1)) -le $n ]; do
+        # filter non-empty values
+        [ -z "$1" ] || set -- "$@" "$1"
+        shift
+    done
+    i=0
+    while [ $((i+=1)) -le $# ]; do
+        # reverse to original order
+        set -- "$@" "$1"
+        shift
+    done
+
+    if [ $# -gt 0 ]; then
+        printf '( '
+        printf '%s\n' "$@" | paste -s -d, - | sed 's/,/ -or /g'
+        printf ' ) -prune -or '
+    fi
 }
 
 grip "$@"
