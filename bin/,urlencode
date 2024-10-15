@@ -1,0 +1,41 @@
+#!/bin/sh
+set -eu
+
+urlencode() {
+    od -vAn -tx1 \
+    | tr -s '[:upper:] ' '[:lower:]\n' \
+    | LC_ALL=POSIX awk '
+    BEGIN {
+        for (i = 0; i < 256; i++)
+            hex2dec[tolower(sprintf("%x", i))] = i
+    }
+    /^[0-9a-f][0-9a-f]$/ {
+        hex = $1
+        char = hex2dec[hex] + 0
+
+        # RFC 3986 Uniform Resource Identifier (URI): Generic Syntax
+        # Section 2.3 Unreserved Characters
+
+        alpha = (char >= 65 && char <= 90 || char >= 97 && char <= 122)
+        digit = (char >= 48 && char <= 57)
+        hyphen = (hex == "2d")
+        period = (hex == "2e")
+        underscore = (hex == "5f")
+        tilde = (hex == "7e")
+
+        unreserved = alpha || digit || hyphen || period || underscore || tilde
+
+        if (unreserved)
+            printf("%c", char)
+        else
+            printf("%s", ("%" hex))
+    }'
+}
+
+if [ $# -gt 0 ]; then
+    echo "$@" | urlencode
+    exit $?
+fi
+
+urlencode
+
