@@ -1,10 +1,11 @@
 #!/bin/sh
 
-grip(){
+grip(){ pattern=$1 name=$2 dir=$3
+    shift $(( $# < 3 ? $# : 3 ))
     filter_hidden="-name .* -not -name . -not -name .."
     filter_node="-type d -and -name node_modules"
     filter_target="-type d -and -name target"
-    dirs="/$3/ /$(pwd)/"
+    dirs="/$dir/ /$(pwd)/"
     case $dirs in
         */node_modules/*)
             filter_node="" ;;
@@ -18,9 +19,17 @@ grip(){
             filter_hidden="" ;;
     esac
     filter=$(buildfilter "$filter_hidden" "$filter_target" "$filter_node")
+    p=$(getconf _NPROCESSORS_ONLN 2>/dev/null || \
+        getconf  NPROCESSORS_ONLN 2>/dev/null || echo 1 )
+    if [ $p -gt 2 ]; then
+        p="-P$(( p - 1 ))"
+        n="-n4"
+    else
+        p=""
+    fi
     (set -f
-    find "${3:-.}" $filter -name "${2:-*}" -type f -print0 \
-        | xargs -0 -P12 egrep --binary-files=without-match ${@:4} "$1"
+    find "${dir:-.}" $filter -name "${name:-*}" -type f -print0 \
+        | xargs -0 $p $n egrep --binary-files=without-match "$@" "$pattern"
     )
 }
 
