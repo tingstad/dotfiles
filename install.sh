@@ -7,7 +7,7 @@ main() {
     local src_dir=$(cd "$(dirname "$0")"; pwd)
     link_dotfiles "$src_dir" "$HOME"
     add_aliases "$src_dir/aliases.sh" "$HOME/.bashrc"
-    add_code "$HOME/.zshrc" "export PATH=\"\$PATH:$src_dir/bin\""
+    add_code "$HOME/.zshrc" "source \"$src_dir/zshrc\""
 }
 
 link_dotfiles() {
