@@ -564,9 +564,9 @@ EOF
 }
 
 index_inc() {
+    _oldindex="$index"
     if [ "$index" -lt $((log_height - 1)) ] \
             && [ $((index + 1)) -lt "$(line_count "$lines")" ]; then
-        _oldindex="$index"
         _i=0
         while IFS= read -r _line; do
             if [ $_i -gt "$index" ]; then
@@ -583,11 +583,11 @@ index_inc() {
         done <<EOF
 $lines
 EOF
-        if [ "$index" = "$_oldindex" ]; then
-            # shellcheck disable=SC2015
-            forward_page \
-            && set_state action=index_inc_forward_page || true
-        fi
+    fi
+    if [ "$index" = "$_oldindex" ]; then
+        # shellcheck disable=SC2015
+        forward_page \
+        && set_state action=index_inc_forward_page || true
     fi
 }
 
