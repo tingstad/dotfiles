@@ -3,8 +3,12 @@ set -o errexit
 
 TESTMODE="on"
 
-src="$(echo "${BASH_SOURCE[0]}" | grep . || echo "$0")"
-DIR="$(cd "$(dirname "$src")"; pwd)"
+src=$(echo "${BASH_SOURCE[0]}" | grep . || echo "$0")
+DIR=$(dirname -- "$src")
+DIR=$(cd -- "$DIR"; pwd)
+
+bin=$(cd -- "$DIR"; cd ../bin/; pwd)
+export PATH="$PATH:$bin"
 
 bash "$DIR/photosort/photosort-test.sh"
 source "$DIR/test_add_aliases.sh"
