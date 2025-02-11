@@ -1,6 +1,9 @@
 #!/bin/sh
 set -e
 
+# { rm file; command > file; } < file
+# https://backreference.org/2011/01/29/in-place-editing-of-files/index.html
+
 inplace()(
     file="$1"
     shift
