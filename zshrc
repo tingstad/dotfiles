@@ -14,16 +14,20 @@ export HISTFILE=~/.zsh_history
 export HISTSIZE=999999999
 export SAVEHIST=$HISTSIZE
 
+PROMPT="%n@%m %1~ %(?.%F{green}✓.%F{red}%?)%f %% "
+
 precmd() {
     [ $? -eq 0 ] && printf '\033[32m'$? || printf '\033[91m'$?
     if [ -n "$start" ]; then
-        echo >&2 "\\033[0;2m after $(( $(date +%s) - $start ))s\\033[m"
+        used=$(( $(date +%s) - $start ))
+        if [ ${used:-0} -gt 2 ]; then
+            echo >&2 "\\033[0;2m after ${used}s $(date '+%H:%M:%S')\\033[m"
+        fi
         start=""
     fi
 }
 
 preexec() {
-    echo >&2 "\\033[2m$(date '+%H:%M:%S')\\033[0m"
     start=$(date +%s)
 }
 
