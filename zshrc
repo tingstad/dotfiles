@@ -14,7 +14,9 @@ export HISTFILE=~/.zsh_history
 export HISTSIZE=999999999
 export SAVEHIST=$HISTSIZE
 
-PROMPT="%n@%m %1~ %(?.%F{green}✓.%F{red}%?)%f %v %% "
+# https://zsh.sourceforge.io/Doc/Release/Prompt-Expansion.html
+PROMPT='%n@%m %1~ %1(V.%F{yellow}%v%f .)%2(V.%F{blue}%2v%f .)%(?.%F{green}✓.%F{red}%?)%f %% '
+RPROMPT="%*" # Current time of day in 24-hour format, with seconds.
 
 precmd() {
     if [ -n "$start" ]; then
@@ -25,9 +27,19 @@ precmd() {
         start=""
     fi
     branch=$(git branch 2>/dev/null | sed -n 's/^\* //p')
+    psvar[1]="$branch"
+    changes=
     if [ -n "$branch" ]; then
-        psvar[1]="$branch"
+        while read xy; do
+            if [ "$xy" != "" ] && [ "$xy" != "??" ] && [ "$xy" != "!!" ]
+            then
+                changes=$(( ${changes:-0} + 1 ))
+            fi
+        done <<EOF
+$(git status --porcelain=v1 | cut -c1-2)
+EOF
     fi
+    psvar[2]=$changes
 }
 
 preexec() {
