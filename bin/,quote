@@ -1,3 +1,3 @@
-+# http://www.etalabs.net/sh_tricks.html
+# http://www.etalabs.net/sh_tricks.html
 printf %s\\n "$1" | sed "s/'/'\\\\''/g;1s/^/'/;\$s/\$/'/"
 
