@@ -17,11 +17,10 @@ export SAVEHIST=$HISTSIZE
 PROMPT="%n@%m %1~ %(?.%F{green}✓.%F{red}%?)%f %v %% "
 
 precmd() {
-    [ $? -eq 0 ] && printf '\033[32m'$? || printf '\033[91m'$?
     if [ -n "$start" ]; then
         used=$(( $(date +%s) - $start ))
         if [ ${used:-0} -gt 2 ]; then
-            echo >&2 "\\033[0;2m after ${used}s $(date '+%H:%M:%S')\\033[m"
+            echo >&2 "\\033[2m${used}s after $(date '+%H:%M:%S')\\033[m"
         fi
         start=""
     fi
