@@ -27,10 +27,10 @@ grip(){ pattern=$1 name=$2 dir=$3
     else
         p=""
     fi
-    (set -f
+    (set -f # disable filename expansion
     find "${dir:-.}" $filter -name "${name:-*}" -type f -print0 \
         | xargs -0 $p $n egrep --binary-files=without-match "$@" "$pattern"
-    )
+    ) || true
 }
 
 buildfilter() {
