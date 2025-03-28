@@ -4,7 +4,16 @@
 set -e
 
 main() {
-    width="${1:-$COLUMNS}" height="${2:-$LINES}"
+    while getopts sw:h: opt; do
+        case $opt in
+            s) strip=1 ;;
+            w) width=$OPTARG ;;
+            h) height=$OPTARG ;;
+            ?) usage; exit 1 ;;
+        esac
+    done
+    shift $((OPTIND - 1))
+    [ -n "$width" ] || width=$COLUMNS height=$LINES
     [ -n "$width" ] || read height width <<-EOF
 		$(stty size 2>/dev/null)
 		EOF
@@ -24,7 +33,8 @@ main() {
         { print }
         function csi(code) {
             print "1b"; print "5b"; print code }' \
-    | awk -v width=${width:-80} -v height=${height:-25} '
+    | awk -v width=${width:-80} -v height=${height:-25} \
+        -v strip=$strip '
     BEGIN {
         for (i = 0; i < 128; i++) {
             h = sprintf("%x", i)
@@ -93,12 +103,13 @@ main() {
         for (i = 0; i < width * height; i++)
             if (term[i]) max = i
 
-        printhex("<pre style=\"background-color:black;\">")
+        if (!strip)
+            printhex("<pre style=\"background-color:black;\">")
         laststyle = ""
         for (y = 0; y < height; y++) {
             for (x = 0; x < width; x++) {
                 i = y * width + x
-                if (rendition[i] != laststyle) {
+                if (rendition[i] != laststyle && !strip) {
                     if (laststyle != "") printhex("</span>")
                     if (rendition[i])
                         printhex("<span style=\"" rendition[i] "\">")
@@ -112,8 +123,10 @@ main() {
             if (i >= max) break
             print "0a"
         }
-        if (laststyle != "") printhex("</span>")
-        printhex("\n</pre>")
+        if (!strip) {
+            if (laststyle != "") printhex("</span>")
+            printhex("\n</pre>")
+        }
     }
 
     # Select Graphics Rendition
@@ -429,6 +442,22 @@ main() {
     done
 }
 
+usage() {
+    cat <<-EOF
+Converts ANSI codes to HTML (primarily).
+
+Usage: $(basename "$0") [options]
+
+Options:
+
+    -s    Strip ANSI codes instead of converting to HTML
+    -w    Set width
+    -h    Set height
+
+Richard H. Tingstad
+EOF
+}
+
 assert() {
     test "$1" = "$2" || {
         printf 'Unexpected value; expected, actual:\n%s\n%s\n' "$2" "$1"
@@ -442,45 +471,48 @@ if [ "$1" = test ]; then
 
     pre='<pre style="background-color:black;">'
 
-    assert "$(printf 'Test1' | main 20)" \
+    assert "$(printf 'Test1' | main -w 20)" \
         "$(printf "$pre"'Test1               \n</pre>')"
 
-    assert "$(printf 'Test2 \nHello' | main 20)" \
+    assert "$(printf 'Test2 \nHello' | main -w 20)" \
         "$(printf "$pre"'Test2               \nHello               \n</pre>')"
 
-    assert "$(printf 'Test3 \033[999Gx' | main 20)" \
+    assert "$(printf 'Test3 \033[999Gx' | main -w 20)" \
         "$(printf "$pre"'Test3              x\n</pre>')"
 
-    assert "$(printf '\033[1mTest4' | main 5)" \
+    assert "$(printf '\033[1mTest4' | main -w 5)" \
         "$(printf "$pre"'<span style="font-weight:bold;">Test4</span>\n</pre>')"
 
-    assert "$(printf 'Test5\n\033[31mHello' | main 10)" \
+    assert "$(printf 'Test5\n\033[31mHello' | main -w 10)" \
         "$pre"'Test5     
 <span style="color:maroon;">Hello</span>     
 </pre>'
 
-    assert "$(printf 'Test6 abcd\033[5D left' | main 20)" \
+    assert "$(printf 'Test6 abcd\033[5D left' | main -w 20)" \
         "$(printf "$pre"'Test6 left          \n</pre>')"
 
-    assert "$(printf '\033[38;2;3;2;1mTest7' | main 5)" \
+    assert "$(printf '\033[38;2;3;2;1mTest7' | main -w 5)" \
         "$(printf "$pre"'<span style="color:rgb(3,2,1);">Test7</span>\n</pre>')"
 
-    assert "$(printf 'Test8 \n \033[AeS' | main 10)" \
+    assert "$(printf 'Test8 \n \033[AeS' | main -w 10)" \
         "$(printf "$pre"'TeSt8     \n          \n</pre>')"
 
-    assert "$(printf 'Test9 \n\033[At\n ' | main 10)" \
+    assert "$(printf 'Test9 \n\033[At\n ' | main -w 10)" \
         "$(printf "$pre"'test9     \n          \n</pre>')"
 
-    assert "$(printf '\033[38;5;6mTestA' | main 5)" \
+    assert "$(printf '\033[38;5;6mTestA' | main -w 5)" \
         "$(printf "$pre"'<span style="color:teal;">TestA</span>\n</pre>')"
         # 16 + 36r + 6g + b
 
-    assert "$(printf '\033[38;5;18mTestB' | main 5)" \
+    assert "$(printf '\033[38;5;18mTestB' | main -w 5)" \
       "$(printf "$pre"'<span style="color:rgb(0,0,135);">TestB</span>\n</pre>')"
       # 16 + 36r + 6g + b [0, 95, 135, 175, 215, 255] => 16 + 0r + 0g + 2 = 18
 
-    assert "$(printf '\033[38;5;233mTestC' | main 5)" \
+    assert "$(printf '\033[38;5;233mTestC' | main -w 5)" \
      "$(printf "$pre"'<span style="color:rgb(18,18,18);">TestC</span>\n</pre>')"
+
+    assert "$(printf '\033[91mTestD' | main -w5 -s)" \
+        "TestD"
 
     exit $?
 fi
