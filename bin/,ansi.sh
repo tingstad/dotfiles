@@ -45,6 +45,18 @@ main() {
         initcolor()
     }
 
+    /[89a-f][0-9a-f]/ { # multi-byte character
+        multi = 1
+        data[c+1] = (data[c+1] (length(data[c+1]) ? "\n" : "") $1)
+        params = ""
+        state = 0
+        next
+    }
+    multi {
+        multi = 0
+        c++
+    }
+
     state == 0 && /1b/ { state++; next } # ESC
     state == 1 && /5b/ { state++; next } # [
     state == 2 && /3[0-9b]/ { # 0–9;
@@ -75,6 +87,8 @@ main() {
     }
 
     END {
+        if (multi) c++
+
         x = 0
         y = 0
 
@@ -115,7 +129,7 @@ main() {
                         printhex("<span style=\"" rendition[i] "\">")
                     laststyle = rendition[i]
                 }
-                if (term[i])
+                if (length(term[i]))
                     print term[i]
                 else
                     print "20"
@@ -513,6 +527,15 @@ if [ "$1" = test ]; then
 
     assert "$(printf '\033[91mTestD' | main -w5 -s)" \
         "TestD"
+
+    assert "$(printf 'TestE å\033[Dx' | main -w 10)" \
+        "$(printf "$pre"'TestE x   \n</pre>')"
+
+    assert "$(printf 'TestF\n\033[31mØ\033[32m✆\n\033[33m📞' | main -w 8)" \
+        "$pre"'TestF   
+<span style="color:maroon;">Ø</span><span style="color:green;">✆</span>      
+<span style="color:olive;">📞</span>       
+</pre>'
 
     exit $?
 fi
