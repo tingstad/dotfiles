@@ -46,8 +46,17 @@ main() {
     }
 
     /[89a-f][0-9a-f]/ { # multi-byte character
+        pre = data[c+1]
+        if ($1 == "9b" && (pre == "c2" || !pre)) {
+            # 0x9b (UTF-8 c2 9b) CSI is equivalent to ESC [
+            delete data[c+1]
+            multi = 0
+            params = ""
+            state = 2
+            next
+        }
         multi = 1
-        data[c+1] = (data[c+1] (length(data[c+1]) ? "\n" : "") $1)
+        data[c+1] = (pre (pre ? "\n" : "") $1)
         params = ""
         state = 0
         next
@@ -60,19 +69,19 @@ main() {
     state == 0 && /1b/ { state++; next } # ESC
     state == 1 && /5b/ { state++; next } # [
     state == 2 && /3[0-9b]/ { # 0–9;
-        params = (params (length(params) ? " " : "") $1)
+        params = (params (params ? " " : "") $1)
         next
     }
     state == 2 && /4[1-8ab]/ { # A-H,J,K
-        params = (params (length(params) ? " " : "") $1)
-        old = code[c + 1]
-        code[c + 1] = (old (length(old) ? "," : "") params)
+        params = (params (params ? " " : "") $1)
+        pre = code[c + 1]
+        code[c + 1] = (pre (pre ? "," : "") params)
         params = ""
         state = 0
         next
     }
     state == 2 && /6d/ { # m
-        params = (params (length(params) ? " " : "") $1)
+        params = (params (params ? " " : "") $1)
         style[c + 1] = params
         params = ""
         state = 0
@@ -96,9 +105,9 @@ main() {
         rendition[y * width + x] = rendered
 
         for (i = 1; i <= c; i++) {
-            if (length(code[i])) {
+            if (code[i]) {
                 res = execc(x, y, code[i])
-                if (length(res)) {
+                if (res) {
                     split(res, a, ",")
                     x = a[1]
                     y = a[2]
@@ -129,7 +138,7 @@ main() {
                         printhex("<span style=\"" rendition[i] "\">")
                     laststyle = rendition[i]
                 }
-                if (length(term[i]))
+                if (term[i])
                     print term[i]
                 else
                     print "20"
@@ -536,6 +545,9 @@ if [ "$1" = test ]; then
 <span style="color:maroon;">Ø</span><span style="color:green;">✆</span>      
 <span style="color:olive;">📞</span>       
 </pre>'
+
+    assert "$(printf 'TestF \2331mF' | main -w 7)" \
+        "$(printf "$pre"'TestF <span style="font-weight:bold;">F</span>\n</pre>')"
 
     exit $?
 fi
