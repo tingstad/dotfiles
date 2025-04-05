@@ -76,6 +76,14 @@ main() {
 
     state == 0 && /1b/ { state++; next } # ESC
     state == 1 && /5b/ { state++; next } # [
+    state == 1 && /63/ { # c (reset)
+        pre = code[c + 1]
+        code[c + 1] = (pre (pre ? "," : "") "48,4a") # H,J
+        style[c + 1] = "m"
+        params = ""
+        state = 0
+        next
+    }
     state == 2 && /3[0-9b]/ { # 0–9;
         params = (params (params ? " " : "") $1)
         next
@@ -104,7 +112,7 @@ main() {
     }
 
     END {
-        if (multi) c++
+        if (multi || code[c+1]) c++
 
         x = 0
         y = 0
@@ -613,6 +621,9 @@ if [ "$1" = test ]; then
 
     assert "$(printf '\033[2m\033[1mTestG\033[m ' | main -w6 -o ansi)" \
         "$(printf '\033[1mTestG\033[m ')"
+
+    assert "$(printf 'TestH\033c' | main -w6 -o txt)" \
+        "$(printf '      ')"
 
     exit $?
 fi
