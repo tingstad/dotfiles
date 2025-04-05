@@ -18,12 +18,15 @@ main() {
         esac
     done
     shift $((OPTIND - 1))
-    [ -n "$width" ] || width=$COLUMNS height=$LINES
-    [ -n "$width" ] || read height width <<-EOF
+    [ -n "$width" ] || width=$COLUMNS
+    [ -n "$height" ] || height=$LINES
+    [ -n "$width" ] && [ -n "$height" ] || read h w <<-EOF
 		$(stty size 2>/dev/null)
 		EOF
-    [ -n "$width" ] || \
-        width=$(tput cols 2>/dev/null) height=$(tput lines 2>/dev/null) || true
+    [ -n "$width" ] || width=$w \
+        && [ -n "$width" ] || width=$(tput cols 2>/dev/null) || true
+    [ -n "$height" ] || height=$h \
+        && [ -n "$height" ] || height=$(tput lines 2>/dev/null) || true
 
     hexdump="od -v -A n -t x1"
 
