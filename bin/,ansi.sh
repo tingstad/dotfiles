@@ -4,9 +4,14 @@
 set -e
 
 main() {
-    while getopts sw:h: opt; do
+    while getopts o:sw:h: opt; do
         case $opt in
-            s) strip=1 ;;
+            o)  case $OPTARG in
+                    html|txt|ansi) output=$OPTARG ;;
+                    *) echo >/dev/stderr \
+                        "invalid -o $OPTARG, expected html|txt|ansi"
+                        return 1 ;;
+                esac ;;
             w) width=$OPTARG ;;
             h) height=$OPTARG ;;
             ?) usage; exit 1 ;;
@@ -34,7 +39,7 @@ main() {
         function csi(code) {
             print "1b"; print "5b"; print code }' \
     | awk -v width=${width:-80} -v height=${height:-25} \
-        -v strip=$strip '
+        -v output=${output:-html} '
     BEGIN {
         for (i = 0; i < 128; i++) {
             h = sprintf("%x", i)
@@ -101,8 +106,8 @@ main() {
         x = 0
         y = 0
 
-        rendered = render()
-        rendition[y * width + x] = rendered
+        #rendered = render(output)
+        #rendition[y * width + x] = rendered
 
         for (i = 1; i <= c; i++) {
             if (code[i]) {
@@ -115,27 +120,28 @@ main() {
             }
             if (style[i]) {
                 sgr(style[i])
-                rendered = render()
+                rendered = render(output)
             }
             rendition[y * width + x] = rendered
             term[y * width + x] = data[i]
-            if (length(data[i])) x++
+            if (data[i]) x++
         }
 
         max = 0
         for (i = 0; i < width * height; i++)
             if (term[i]) max = i
 
-        if (!strip)
+        if (output == "html")
             printhex("<pre style=\"background-color:black;\">")
         laststyle = ""
         for (y = 0; y < height; y++) {
             for (x = 0; x < width; x++) {
                 i = y * width + x
-                if (rendition[i] != laststyle && !strip) {
-                    if (laststyle != "") printhex("</span>")
-                    if (rendition[i])
-                        printhex("<span style=\"" rendition[i] "\">")
+                if (rendition[i] != laststyle) {
+                    if (output == "html")
+                        printhtml(laststyle, rendition[i])
+                    else if (output == "ansi")
+                        printansi(laststyle, rendition[i])
                     laststyle = rendition[i]
                 }
                 if (term[i])
@@ -146,7 +152,7 @@ main() {
             if (i >= max) break
             print "0a"
         }
-        if (!strip) {
+        if (output == "html") {
             if (laststyle != "") printhex("</span>")
             printhex("\n</pre>")
         }
@@ -235,7 +241,26 @@ main() {
         }
     }
 
-    function render() {
+    function printhtml(laststyle, current) {
+        if (laststyle != "") printhex("</span>")
+        if (current)
+            printhex("<span style=\"" current "\">")
+    }
+
+    function printansi(laststyle, current) {
+        if (current)
+            printhex(current)
+    }
+
+    function render(output) {
+        if (output == "html") {
+            return renderhtml()
+        } else if (output == "ansi") {
+            return renderansi()
+        }
+    }
+
+    function renderhtml() {
         s = ""
         if (!class) {
             if (intensity == 1)
@@ -284,6 +309,31 @@ main() {
             if (bg)
                 s = s (length(s) ? " " : "") "bg" bg
         }
+        return s
+    }
+
+    function renderansi() {
+        s = ""
+        if (intensity)
+            s = s "\033[" intensity "m"
+        if (italics)
+            s = s "\033[3m"
+        if (underlined == 1)
+            s = s "\033[4m"
+        else if (underlined > 1)
+            s = s "\033[21m"
+        if (blinking)
+            s = s "\033[" blinking "m"
+        if (crossedout)
+            s = s "\033[9m"
+        if (fg)
+            s = s "\033[" ((fg ~ "^[25];") ? "38;" : "") fg "m"
+        if (bg)
+            s = s "\033[" ((bg ~ "^[25];") ? "48;" : "") bg "m"
+
+        if (s == "")
+            s = "\033[m"
+
         return s
     }
 
@@ -456,10 +506,18 @@ main() {
         return s
     }
 
-    function printhex(s) {
+    function tohex(s) {
+        hexs = ""
         for (j = 1; j <= length(s); j++)
-            print hex[substr(s, j, 1)]
-    }' \
+            hexs = hexs ((j == 1 ? "" : "\n") hex[substr(s, j, 1)])
+        return hexs
+    }
+
+    function printhex(s) {
+        print tohex(s)
+    }
+
+    ' \
     | while read hex; do
         printf \\$(printf %03o 0x$hex)
     done
@@ -473,9 +531,10 @@ Usage: $(basename "$0") [options]
 
 Options:
 
-    -s    Strip ANSI codes instead of converting to HTML
-    -w    Set width
-    -h    Set height
+    -o format   Output format; html(default)|txt|ansi
+                
+    -w          Set width
+    -h          Set height
 
 Richard H. Tingstad
 EOF
@@ -534,7 +593,7 @@ if [ "$1" = test ]; then
     assert "$(printf '\033[38;5;233mTestC' | main -w 5)" \
      "$(printf "$pre"'<span style="color:rgb(18,18,18);">TestC</span>\n</pre>')"
 
-    assert "$(printf '\033[91mTestD' | main -w5 -s)" \
+    assert "$(printf '\033[91mTestD' | main -w5 -o txt)" \
         "TestD"
 
     assert "$(printf 'TestE å\033[Dx' | main -w 10)" \
@@ -548,6 +607,9 @@ if [ "$1" = test ]; then
 
     assert "$(printf 'TestF \2331mF' | main -w 7)" \
         "$(printf "$pre"'TestF <span style="font-weight:bold;">F</span>\n</pre>')"
+
+    assert "$(printf '\033[2m\033[1mTestG\033[m ' | main -w6 -o ansi)" \
+        "$(printf '\033[1mTestG\033[m ')"
 
     exit $?
 fi
