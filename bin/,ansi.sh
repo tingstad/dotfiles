@@ -137,8 +137,11 @@ main() {
             if (style[i]) {
                 sgr(style[i]) # sets vars; intensity, italics, underlined, ...
                 rendered = render(output)
+                presentation = (intensity == 1 ? "bold" : "")
+                presentation = presentation (italics ? "italic" : "")
             }
             rendition[y * width + x] = rendered
+            styles[y * width + x] = presentation
             term[y * width + x] = transform(data[i])
             if (data[i]) x++
         }
@@ -163,7 +166,7 @@ main() {
                     laststyle = rendition[i]
                 }
                 if (term[i])
-                    print term[i]
+                    print txt(term[i], styles[i])
                 else
                     print "20" # space
             }
@@ -357,6 +360,45 @@ main() {
             s = "\033[m"
 
         return s
+    }
+
+    function txt(char, styles) {
+        if (output != "txt" || !styles)
+            return char
+
+        d = dec[char]
+
+        # Mathematical Alphanumeric Symbols,
+        # except where otherwise specified
+
+        if (65 <= d && d <= 90) { # A-Z
+            if (styles ~ /bolditalic/) {
+                if (d <= 88) # A-X
+                return "f0\n9d\n91\n" sprintf("%x", d+103)
+                return "f0\n9d\n92\n" sprintf("%x", d+39)
+            }
+            if (styles ~ /italic/) {
+                if (d <= 76) # A-L
+                return "f0\n9d\n90\n" sprintf("%x", d+115)
+                return "f0\n9d\n91\n" sprintf("%x", d+51)
+            }
+            if (styles ~ /bold/)
+                return "f0\n9d\n90\n" sprintf("%x", d+63)
+        }
+
+        if (97 <= d && d <= 122) { # a-z
+            if (styles ~ /bolditalic/)
+                return "f0\n9d\n92\n" sprintf("%x", d+33)
+            if (styles ~ /bold/)
+                return "f0\n9d\n90\n" sprintf("%x", d+57)
+            if (styles ~ /italic/) {
+                if (d == 104) # h
+                return "e2\n84\n8e" # Planck Constant, Letterlike Symbols
+                return "f0\n9d\n91\n" sprintf("%x", d+45)
+            }
+        }
+
+        return char
     }
 
     function transform(char) {
@@ -657,8 +699,26 @@ if [ "$1" = test ]; then
     assert "$(printf 'TestH\033c' | main -w6 -o txt)" \
         "$(printf '      ')"
 
-    assert "$(printf 'TestI \033[20mGreetings, Fraktur!' | main -w25 -o txt)" \
+    assert "$(printf 'TestI \033[20mGreetings, Fraktur!' |main -w25 -o txt)" \
         "TestI 𝔊𝔯𝔢𝔢𝔱𝔦𝔫𝔤𝔰, 𝔉𝔯𝔞𝔨𝔱𝔲𝔯!"
+
+    assert "$(printf '\033[1mABCDEFGHIJKLMNOPQRSTUVWXYZ' |main -w26 -o txt)" \
+        "𝐀𝐁𝐂𝐃𝐄𝐅𝐆𝐇𝐈𝐉𝐊𝐋𝐌𝐍𝐎𝐏𝐐𝐑𝐒𝐓𝐔𝐕𝐖𝐗𝐘𝐙"
+
+    assert "$(printf '\033[3mABCDEFGHIJKLMNOPQRSTUVWXYZ' |main -w26 -o txt)" \
+        "𝐴𝐵𝐶𝐷𝐸𝐹𝐺𝐻𝐼𝐽𝐾𝐿𝑀𝑁𝑂𝑃𝑄𝑅𝑆𝑇𝑈𝑉𝑊𝑋𝑌𝑍"
+
+    assert "$(printf '\033[1;3mABCDEFGHIJKLMNOPQRSTUVWXYZ' |main -w26 -o txt)" \
+        "𝑨𝑩𝑪𝑫𝑬𝑭𝑮𝑯𝑰𝑱𝑲𝑳𝑴𝑵𝑶𝑷𝑸𝑹𝑺𝑻𝑼𝑽𝑾𝑿𝒀𝒁"
+
+    assert "$(printf '\033[1mabcdefghijklmnopqrstuvwxyz' | main -w26 -o txt)" \
+        "𝐚𝐛𝐜𝐝𝐞𝐟𝐠𝐡𝐢𝐣𝐤𝐥𝐦𝐧𝐨𝐩𝐪𝐫𝐬𝐭𝐮𝐯𝐰𝐱𝐲𝐳"
+
+    assert "$(printf '\033[3mabcdefghijklmnopqrstuvwxyz' | main -w26 -o txt)" \
+        "𝑎𝑏𝑐𝑑𝑒𝑓𝑔ℎ𝑖𝑗𝑘𝑙𝑚𝑛𝑜𝑝𝑞𝑟𝑠𝑡𝑢𝑣𝑤𝑥𝑦𝑧"
+
+    assert "$(printf '\033[1;3mabcdefghijklmnopqrstuvwxyz' | main -w26 -o txt)" \
+        "𝒂𝒃𝒄𝒅𝒆𝒇𝒈𝒉𝒊𝒋𝒌𝒍𝒎𝒏𝒐𝒑𝒒𝒓𝒔𝒕𝒖𝒗𝒘𝒙𝒚𝒛"
 
     exit $?
 fi
