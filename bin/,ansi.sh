@@ -41,7 +41,7 @@ main() {
         { print }
         function csi(code) {
             print "1b"; print "5b"; print code }' \
-    | awk -v width=${width:-80} -v height=${height:-25} \
+    | awk -v width=${width:-80} -v height=${height:-0} \
         -v output=${output:-html} '
     BEGIN {
         for (i = 0; i < 128; i++) {
@@ -130,6 +130,7 @@ main() {
                     split(res, a, ",")
                     x = a[1]
                     y = a[2]
+                    if (y > maxy) maxy = y
                 }
             }
             if (style[i]) {
@@ -140,6 +141,8 @@ main() {
             term[y * width + x] = data[i]
             if (data[i]) x++
         }
+
+        if (height == 0) height = maxy + 1
 
         max = 0
         for (i = 0; i < width * height; i++)
@@ -415,7 +418,7 @@ main() {
         } else if (op == "B") { # Down
             n = (n ? n : 1)
             y = y0 + n
-            if (y >= height) y = height-1
+            if (height && y >= height) y = height-1
         } else if (op == "C") { # Forward
             n = (n ? n : 1)
             x = x0 + n
@@ -428,7 +431,7 @@ main() {
             x = 0
             n = (n ? n : 1)
             y = y0 + n
-            if (y >= height) y = height-1
+            if (height && y >= height) y = height-1
         } else if (op == "F") { # Previous line
             x = 0
             n = (n ? n : 1)
@@ -451,11 +454,11 @@ main() {
                 p = index(n, ";")
                 if (p > 1) y = substr(n, 1, p-1) - 1
                 if (y < 0) y = 0
-                if (y >= height) y = height-1
+                if (height && y >= height) y = height-1
             }
         } else if (op == "J") { # Erase screen
             j1 = y * width + x
-            j2 = width * height
+            j2 = (height ? width * height : width * (maxy+1))
             if (n == 1) {
                 j2 = j1
                 j1 = 0
@@ -550,7 +553,7 @@ Options:
     -o format   Output format; html(default)|txt|ansi
                 
     -w          Set width
-    -h          Set height
+    -h          Set height (default 0=endless)
 
 Richard H. Tingstad
 EOF
