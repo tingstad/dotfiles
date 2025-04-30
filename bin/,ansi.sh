@@ -49,6 +49,7 @@ main() {
             s = sprintf("%c", i)
             ascii[h] = s
             hex[s] = h
+            dec[h] = i
         }
         initcolor()
     }
@@ -138,7 +139,7 @@ main() {
                 rendered = render(output)
             }
             rendition[y * width + x] = rendered
-            term[y * width + x] = data[i]
+            term[y * width + x] = transform(data[i])
             if (data[i]) x++
         }
 
@@ -199,6 +200,7 @@ main() {
                 bg = 0
                 blinking = 0
                 crossedout = 0
+                fraktur = 0
             } else if (op == 1) { # bold
                 intensity = 1
             } else if (op == 2) { # faint
@@ -215,7 +217,8 @@ main() {
                 crossedout = 1
             # 10 default font
             # 11-19 alternative fonts
-            # 20 fraktur
+            } else if (op == 20) { # fraktur
+                fraktur = 1
             } else if (op == 21) { # double underlined
                 underlined = 2
             } else if (op == 22) { # normal intensity
@@ -354,6 +357,28 @@ main() {
             s = "\033[m"
 
         return s
+    }
+
+    function transform(char) {
+        # A-Z, a-z:
+        if (fraktur && char ~ /^[46][1-9a-f]|[57][0-9a]$/) {
+            d = dec[char]
+            # "ABCDEFGHIJKLMNOPQRSTUVWXYZ" 0x41=65..
+            # "abcdefghijklmnopqrstuvwxyz" 0x61=97..
+            # "𝔄𝔅ℭ𝔇𝔈𝔉𝔊ℌℑ𝔍𝔎𝔏𝔐𝔑𝔒𝔓𝔔ℜ𝔖𝔗𝔘𝔙𝔚𝔛𝔜ℨ" 0x84=132..
+            # "𝔞𝔟𝔠𝔡𝔢𝔣𝔤𝔥𝔦𝔧𝔨𝔩𝔪𝔫𝔬𝔭𝔮𝔯𝔰𝔱𝔲𝔳𝔴𝔵𝔶𝔷" 0x9e=158..
+
+            # These are better supported in Letterlike Symbols:
+            if (d == 67) return "e2\n84\nad" # C
+            if (d == 72) return "e2\n84\n8c" # H
+            if (d == 73) return "e2\n84\n91" # I
+            if (d == 82) return "e2\n84\n9c" # R
+            if (d == 90) return "e2\n84\na8" # Z
+
+            # Mathematical Alphanumeric Symbols:
+            return "f0\n9d\n94\n" sprintf("%x", (d < 97 ? d+67 : d+61))
+        }
+        return char
     }
 
     function initcolor() {
@@ -513,7 +538,6 @@ main() {
     }
 
     # TODO 
-    # "𝔄𝔅ℭ𝔇𝔈𝔉𝔊ℌℑ𝔍𝔎𝔏𝔐𝔑𝔒𝔓𝔔ℜ𝔖𝔗𝔘𝔙𝔚𝔛𝔜ℨ"
     # "abcdefghijklmnopqrstuvwxyz{}`~"
     # "▒␉␌␍␊°±␤␋┘┐┌└┼⎺⎻─⎼⎽├┤┴┬│≤≥π£◆·"
 
@@ -632,6 +656,9 @@ if [ "$1" = test ]; then
 
     assert "$(printf 'TestH\033c' | main -w6 -o txt)" \
         "$(printf '      ')"
+
+    assert "$(printf 'TestI \033[20mGreetings, Fraktur!' | main -w25 -o txt)" \
+        "TestI 𝔊𝔯𝔢𝔢𝔱𝔦𝔫𝔤𝔰, 𝔉𝔯𝔞𝔨𝔱𝔲𝔯!"
 
     exit $?
 fi
