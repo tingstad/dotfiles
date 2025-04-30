@@ -139,7 +139,7 @@ main() {
                 rendered = render(output)
             }
             rendition[y * width + x] = rendered
-            term[y * width + x] = transform(data[i])
+            term[y * width + x] = data[i]
             if (data[i]) x++
         }
 
@@ -163,7 +163,7 @@ main() {
                     laststyle = rendition[i]
                 }
                 if (term[i])
-                    print term[i]
+                    print txt(term[i], rendition[i])
                 else
                     print "20" # space
             }
@@ -279,6 +279,8 @@ main() {
             return renderhtml()
         } else if (output == "ansi") {
             return renderansi()
+        } else if (output == "txt") {
+            return rendertxt()
         }
     }
 
@@ -359,7 +361,22 @@ main() {
         return s
     }
 
-    function transform(char) {
+    function rendertxt() {
+        s = ""
+        if (fraktur)
+            s = s "fraktur"
+        if (intensity == 1)
+            s = s "bold"
+        if (italics)
+            s = s "italic"
+        return s
+    }
+
+    function txt(char, styles) {
+        if (output != "txt") return char
+
+        fraktur = (styles ~ /fraktur/)
+
         # A-Z, a-z:
         if (fraktur && char ~ /^[46][1-9a-f]|[57][0-9a]$/) {
             d = dec[char]
