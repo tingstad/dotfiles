@@ -98,7 +98,10 @@ main() {
     }
     state == 2 && /6d/ { # m
         params = (params (params ? " " : "") $1)
-        style[c + 1] = params
+        if (params == "6d") params = "30 6d" # m -> 0m
+        pre = style[c + 1]
+        if (pre) sub(/6d$/, "3b", pre) # m -> ;
+        style[c + 1] = (pre (pre ? " " : "") params)
         params = ""
         state = 0
         next
@@ -130,7 +133,7 @@ main() {
                 }
             }
             if (style[i]) {
-                sgr(style[i])
+                sgr(style[i]) # sets vars; intensity, italics, underlined, ...
                 rendered = render(output)
             }
             rendition[y * width + x] = rendered
@@ -158,10 +161,10 @@ main() {
                 if (term[i])
                     print term[i]
                 else
-                    print "20"
+                    print "20" # space
             }
             if (i >= max) break
-            print "0a"
+            print "0a" # newline
         }
         if (output == "html") {
             if (laststyle != "") printhex("</span>")
@@ -259,6 +262,8 @@ main() {
     }
 
     function printansi(laststyle, current) {
+        if (laststyle != "" && current == "")
+            printhex("\033[m")
         if (current)
             printhex(current)
     }
