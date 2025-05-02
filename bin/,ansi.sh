@@ -85,6 +85,7 @@ main() {
         state = 0
         next
     }
+    state == 1 && /28/ { state = 3; next } # (
     state == 2 && /3[0-9b]/ { # 0–9;
         params = (params (params ? " " : "") $1)
         next
@@ -107,8 +108,18 @@ main() {
         state = 0
         next
     }
+    state == 3 && /30|42/ { # 0|B
+        params = "28 " $1 " 6d" # ( $1 m
+        pre = style[c + 1]
+        if (pre) sub(/6d$/, "3b", pre) # m -> ;
+        style[c + 1] = (pre (pre ? " " : "") params)
+        params = ""
+        state = 0
+        next
+    }
     state > 0 { data[++c] = "1b" } # ESC
-    state > 1 { data[++c] = "5b" } # [
+    state == 2{ data[++c] = "5b" } # [
+    state == 3{ data[++c] = "28" } # (
     {
         data[++c] = $1
         params = ""
@@ -260,6 +271,10 @@ main() {
                     bg = a[++j] ";" a[++j]
             } else if (op == 49) { # default background color
                 bg = 0
+            } else if (op == "(0") { # Special graphics characters
+                graphics = 1         # and line drawing set
+            } else if (op == "(B") { # Default G0 character set
+                graphics = 0
             }
         }
     }
@@ -420,6 +435,12 @@ main() {
             # Mathematical Alphanumeric Symbols:
             return "f0\n9d\n94\n" sprintf("%x", (d < 97 ? d+67 : d+61))
         }
+
+        if (graphics && char ~ /^[67]/ && char != "7f") {
+            if (!graphs[96]) initgraphs()
+            return graphs[dec[char]]
+        }
+
         return char
     }
 
@@ -445,6 +466,46 @@ main() {
         color["95m"] = "fuchsia" #ff00ff "magenta"
         color["96m"] = "aqua"    #00ffff "cyan"
         color["97m"] = "white"   #ffffff
+    }
+
+    function initgraphs() {
+
+        # DEC Special Graphics Set
+        # a.k.a.
+        # VT100 Line Drawing Character Set
+
+        d = 96
+        graphs[d++] = "e2\n97\n86" # ◆ ← `
+        graphs[d++] = "e2\n96\n92" # ▒ ← a
+        graphs[d++] = "e2\n90\n89" # ␉ ← b
+        graphs[d++] = "e2\n90\n8c" # ␌ ← c
+        graphs[d++] = "e2\n90\n8d" # ␍ ← d
+        graphs[d++] = "e2\n90\n8a" # ␊ ← e
+        graphs[d++] = "c2\nb0"     # ° ← f
+        graphs[d++] = "c2\nb1"     # ± ← g
+        graphs[d++] = "e2\n90\na4" # ␤ ← h
+        graphs[d++] = "e2\n90\n8b" # ␋ ← i
+        graphs[d++] = "e2\n94\n98" # ┘ ← j
+        graphs[d++] = "e2\n94\n90" # ┐ ← k
+        graphs[d++] = "e2\n94\n8c" # ┌ ← l
+        graphs[d++] = "e2\n94\n94" # └ ← m
+        graphs[d++] = "e2\n94\nbc" # ┼ ← n
+        graphs[d++] = "e2\n8e\nba" # ⎺ ← o
+        graphs[d++] = "e2\n8e\nbb" # ⎻ ← p
+        graphs[d++] = "e2\n94\n80" # ─ ← q
+        graphs[d++] = "e2\n8e\nbc" # ⎼ ← r
+        graphs[d++] = "e2\n8e\nbd" # ⎽ ← s
+        graphs[d++] = "e2\n94\n9c" # ├ ← t
+        graphs[d++] = "e2\n94\na4" # ┤ ← u
+        graphs[d++] = "e2\n94\nb4" # ┴ ← v
+        graphs[d++] = "e2\n94\nac" # ┬ ← w
+        graphs[d++] = "e2\n94\n82" # │ ← x
+        graphs[d++] = "e2\n89\na4" # ≤ ← y
+        graphs[d++] = "e2\n89\na5" # ≥ ← z
+        graphs[d++] = "cf\n80"     # π ← {
+        graphs[d++] = "e2\n89\na0" # ≠ ← |
+        graphs[d++] = "c2\na3"     # £ ← }
+        graphs[d++] = "c2\nb7"     # · ← ~
     }
 
     function execc(x0, y0, code) {
@@ -473,11 +534,12 @@ main() {
         for (j = 1; j <= n; j++)
             s = (s ascii[a[j]])
         n = length(s)
-        op = substr(s, n)
+        op = substr(s, n) # last character
         if (n > 1)
-            n = substr(s, 1, n-1)
+            n = substr(s, 1, n-1) # params
         else
             n = ""
+
         if (op == "A") { # Up
             n = (n ? n : 1)
             y = y0 - n
@@ -719,6 +781,9 @@ if [ "$1" = test ]; then
 
     assert "$(printf '\033[1;3mabcdefghijklmnopqrstuvwxyz' | main -w26 -o txt)" \
         "𝒂𝒃𝒄𝒅𝒆𝒇𝒈𝒉𝒊𝒋𝒌𝒍𝒎𝒏𝒐𝒑𝒒𝒓𝒔𝒕𝒖𝒗𝒘𝒙𝒚𝒛"
+
+    assert "$(printf '\033(0`afgjklmnopqrstuvwxyz{|}' | main -w24 -o txt)" \
+        "◆▒°±┘┐┌└┼⎺⎻─⎼⎽├┤┴┬│≤≥π≠£"
 
     exit $?
 fi
