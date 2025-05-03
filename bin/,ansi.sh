@@ -77,10 +77,16 @@ main() {
 
     state == 0 && /1b/ { state++; next } # ESC
     state == 1 && /5b/ { state++; next } # [
-    state == 1 && /63/ { # c (reset)
+    state == 1 && /37/ { # 7 (save cursor position)
         pre = code[c + 1]
-        code[c + 1] = (pre (pre ? "," : "") "48,4a") # H,J
-        style[c + 1] = "m"
+        code[c + 1] = (pre (pre ? "," : "") "73") # s
+        params = ""
+        state = 0
+        next
+    }
+    state == 1 && /38/ { # 8 (restore cursor position)
+        pre = code[c + 1]
+        code[c + 1] = (pre (pre ? "," : "") "75") # u
         params = ""
         state = 0
         next
@@ -99,12 +105,28 @@ main() {
         state = 0
         next
     }
+    state == 1 && /63/ { # c (reset)
+        pre = code[c + 1]
+        code[c + 1] = (pre (pre ? "," : "") "48,4a") # H,J
+        style[c + 1] = "m"
+        params = ""
+        state = 0
+        next
+    }
     state == 1 && /28/ { state = 3; next } # (
     state == 2 && /3[0-9b]/ { # 0–9;
         params = (params (params ? " " : "") $1)
         next
     }
     state == 2 && /4[1-8ab]/ { # A-H,J,K
+        params = (params (params ? " " : "") $1)
+        pre = code[c + 1]
+        code[c + 1] = (pre (pre ? "," : "") params)
+        params = ""
+        state = 0
+        next
+    }
+    state == 2 && /7[35]/ { # s,u
         params = (params (params ? " " : "") $1)
         pre = code[c + 1]
         code[c + 1] = (pre (pre ? "," : "") params)
@@ -146,18 +168,13 @@ main() {
         x = 0
         y = 0
 
-        #rendered = render(output)
-        #rendition[y * width + x] = rendered
-
         for (i = 1; i <= c; i++) {
             if (code[i]) {
                 res = execc(x, y, code[i])
-                if (res) {
-                    split(res, a, ",")
-                    x = a[1]
-                    y = a[2]
-                    if (y > maxy) maxy = y
-                }
+                split(res, a, ",")
+                x = a[1]
+                y = a[2]
+                if (y > maxy) maxy = y
             }
             if (style[i]) {
                 sgr(style[i]) # sets vars; intensity, italics, underlined, ...
@@ -531,11 +548,9 @@ main() {
         y = y0
         for (jj = 1; jj <= nn; jj++) {
             res = exec(x, y, ar[jj])
-            if (length(res)) {
-                split(res, a, ",")
-                x = a[1]
-                y = a[2]
-            }
+            split(res, a, ",")
+            x = a[1]
+            y = a[2]
         }
         return x "," y
     }
@@ -626,8 +641,13 @@ main() {
                 delete term[y * width + j]
                 delete rendition[y * width + j]
             }
+        } else if (op == "s") { # Save cursor position
+            cursorx = x
+            cursory = y
+        } else if (op == "u") { # Restore cursor position
+            x = cursorx
+            y = cursory
         }
-        if (x == x0 && y == y0) return ""
         return x "," y
     }
 
@@ -802,6 +822,9 @@ if [ "$1" = test ]; then
     assert "$(printf 'TestK \033E..........newline' | main -w17 -o txt)" \
         'TestK            
 ..........newline'
+
+    assert "$(printf 'TestL \0337hi\033[uH' | main -w20 -o txt)" \
+        'TestL Hi            '
 
     exit $?
 fi
