@@ -85,6 +85,13 @@ main() {
         state = 0
         next
     }
+    state == 1 && /44/ { # D (linefeed)
+        pre = code[c + 1]
+        code[c + 1] = (pre (pre ? "," : "") "42") # B (down)
+        params = ""
+        state = 0
+        next
+    }
     state == 1 && /28/ { state = 3; next } # (
     state == 2 && /3[0-9b]/ { # 0–9;
         params = (params (params ? " " : "") $1)
@@ -641,10 +648,6 @@ main() {
         return r "," g "," b
     }
 
-    # TODO 
-    # "abcdefghijklmnopqrstuvwxyz{}`~"
-    # "▒␉␌␍␊°±␤␋┘┐┌└┼⎺⎻─⎼⎽├┤┴┬│≤≥π£◆·"
-
     function toascii(hex) {
         s = ""
         n = split(hex, a, " ")
@@ -681,7 +684,7 @@ Options:
     -o format   Output format; html(default)|txt|ansi
                 
     -w          Set width
-    -h          Set height (default 0=endless)
+    -h          Set height (default 0=unlimited)
 
 Richard H. Tingstad
 EOF
@@ -784,6 +787,10 @@ if [ "$1" = test ]; then
 
     assert "$(printf '\033(0`afgjklmnopqrstuvwxyz{|}' | main -w24 -o txt)" \
         "◆▒°±┘┐┌└┼⎺⎻─⎼⎽├┤┴┬│≤≥π≠£"
+
+    assert "$(printf 'TestJ \033D linefeed' | main -w15 -o txt)" \
+        'TestJ          
+       linefeed'
 
     exit $?
 fi
