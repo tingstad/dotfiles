@@ -92,6 +92,13 @@ main() {
         state = 0
         next
     }
+    state == 1 && /45/ { # E (newline)
+        pre = code[c + 1]
+        code[c + 1] = (pre (pre ? "," : "") "45") # E (beginning next line)
+        params = ""
+        state = 0
+        next
+    }
     state == 1 && /28/ { state = 3; next } # (
     state == 2 && /3[0-9b]/ { # 0–9;
         params = (params (params ? " " : "") $1)
@@ -791,6 +798,10 @@ if [ "$1" = test ]; then
     assert "$(printf 'TestJ \033D linefeed' | main -w15 -o txt)" \
         'TestJ          
        linefeed'
+
+    assert "$(printf 'TestK \033E..........newline' | main -w17 -o txt)" \
+        'TestK            
+..........newline'
 
     exit $?
 fi
