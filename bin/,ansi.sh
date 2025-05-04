@@ -38,9 +38,16 @@ main() {
         /08/ { csi("44"); next } # BS -> ^[[D
         /0a/ { csi("45"); next } # LF -> ^[[E
         /0d/ { csi("47"); next } # CR -> ^[[G
+        /0e/ { cgz("30"); next } # ^N (G1) -> ^[(0
+        /0f/ { cgz("42"); next } # ^O (G0) -> ^[(B
         { print }
         function csi(code) {
-            print "1b"; print "5b"; print code }' \
+            print "1b"; print "5b"; print code }
+        function cgz(code) {
+            print "1b"; print "28"; print code
+            # changes G0 charset - this is an approximation only,
+            # not the actual behaviour of ^N/^O
+        }' \
     | awk -v width=${width:-80} -v height=${height:-0} \
         -v output=${output:-html} '
     BEGIN {
@@ -844,6 +851,9 @@ if [ "$1" = test ]; then
 
     assert "$(printf 'TestL \0337hi\033[uH' | main -w20 -o txt)" \
         'TestL Hi            '
+
+    assert "$(printf 'TestM \016 lqqqk \017 end' | main -w17 -o txt)" \
+        'TestM  ┌───┐  end'
 
     exit $?
 fi
