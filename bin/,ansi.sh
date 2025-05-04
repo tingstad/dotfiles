@@ -653,6 +653,7 @@ main() {
     }
 
     function rgb(x) {
+        x = int(x)
         if (x > 231) { # grayscale
             x = (x - 232) * 10 + 8
             return x "," x "," x
