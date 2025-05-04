@@ -178,7 +178,7 @@ main() {
             }
             if (style[i]) {
                 sgr(style[i]) # sets vars; intensity, italics, underlined, ...
-                rendered = render(output)
+                rendered = render(output, fg, bg)
                 presentation = (intensity == 1 ? "bold" : "")
                 presentation = presentation (italics ? "italic" : "")
             }
@@ -247,6 +247,7 @@ main() {
                 blinking = 0
                 crossedout = 0
                 fraktur = 0
+                reverse = 0
             } else if (op == 1) { # bold
                 intensity = 1
             } else if (op == 2) { # faint
@@ -257,7 +258,8 @@ main() {
                 underlined = 1
             } else if (op == 5 || op == 6) { # slowly/rapidly blinking
                 blinking = op                # (lt or gte than 150 per minute)
-            # 7 negative image
+            } else if (op == 7) { # negative image
+                reverse = 1
             # 8 concealed data
             } else if (op == 9) { # crossed out
                 crossedout = 1
@@ -275,7 +277,8 @@ main() {
                 underlined = 0
             } else if (op == 25) { # not blinking
                 blinking = 0
-            # 27 not negative image
+            } else if (op == 27) { # not negative image
+                reverse = 0
             # 28 not concealed
             } else if (op == 29) { # not crossed out
                 crossedout = 0
@@ -324,15 +327,29 @@ main() {
             printhex(current)
     }
 
-    function render(output) {
+    function render(output, fg, bg) {
+        if (reverse) {
+            # dark background is assumed
+            if (!fg) fg = 97
+            if (!bg) bg = 40
+            temp = fg
+            if (bg ~ /^4/)
+                fg = "3" substr(bg, 2)
+            else
+                fg = "9" substr(bg, 3)
+            if (temp ~ /^3/)
+                bg = "4" substr(temp, 2)
+            else
+                bg = "10" substr(temp, 2)
+        }
         if (output == "html") {
-            return renderhtml()
+            return renderhtml(fg, bg)
         } else if (output == "ansi") {
-            return renderansi()
+            return renderansi(fg, bg)
         }
     }
 
-    function renderhtml() {
+    function renderhtml(fg, bg) {
         s = ""
         if (!class) {
             if (intensity == 1)
@@ -384,7 +401,7 @@ main() {
         return s
     }
 
-    function renderansi() {
+    function renderansi(fg, bg) {
         s = ""
         if (intensity)
             s = s "\033[" intensity "m"
