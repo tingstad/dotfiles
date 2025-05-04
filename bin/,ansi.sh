@@ -195,7 +195,8 @@ main() {
             if (term[i]) max = i
 
         if (output == "html")
-            printhex("<pre style=\"background-color:black;\">")
+            printhex("<pre style=\"background-color:black;color:white;\">")
+            # perhaps #1e1e1e and/or silver/#c0c0c0 are better?
         laststyle = ""
         for (y = 0; y < height; y++) {
             for (x = 0; x < width; x++) {
@@ -728,7 +729,7 @@ assert() {
 
 if [ "$1" = test ]; then
 
-    pre='<pre style="background-color:black;">'
+    pre='<pre style="background-color:black;color:white;">'
 
     assert "$(printf 'Test1' | main -w 20)" \
         "$(printf "$pre"'Test1               \n</pre>')"
