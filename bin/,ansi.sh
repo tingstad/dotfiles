@@ -383,7 +383,7 @@ main() {
                 } else if (fg ~ "^5;")
                     val = "rgb(" rgb(substr(fg, 3)) ")"
                 else
-                    val = color[fg "m"]
+                    val = color[(fg < 90 ? fg - 30 : fg - 82)]
                 s = s "color:" val ";"
             }
             if (bg) {
@@ -394,7 +394,7 @@ main() {
                 } else if (bg ~ "^5;")
                     val = "rgb(" rgb(substr(bg, 3)) ")"
                 else
-                    val = color[(bg-10) "m"]
+                    val = color[(bg < 90 ? bg - 40 : bg - 92)]
                 s = s "background-color:" val ";"
             }
         } else {
@@ -515,22 +515,22 @@ main() {
         color["fg"] = "white"
         # perhaps #1e1e1e and/or silver/#c0c0c0 are better?
 
-        color["30m"] = "black"   #000000
-        color["31m"] = "maroon"  #800000
-        color["32m"] = "green"   #008000
-        color["33m"] = "olive"   #808000
-        color["34m"] = "navy"    #000080
-        color["35m"] = "purple"  #800080 "magenta"
-        color["36m"] = "teal"    #008080 "cyan"
-        color["37m"] = "silver"  #c0c0c0
-        color["90m"] = "gray"    #808080
-        color["91m"] = "red"     #ff0000
-        color["92m"] = "lime"    #00ff00
-        color["93m"] = "yellow"  #ffff00
-        color["94m"] = "blue"    #0000ff
-        color["95m"] = "fuchsia" #ff00ff "magenta"
-        color["96m"] = "aqua"    #00ffff "cyan"
-        color["97m"] = "white"   #ffffff
+        color[0]  = "black"   #000000           ← 30m 40m
+        color[1]  = "maroon"  #800000           ← 31m 41m
+        color[2]  = "green"   #008000           ← 32m 42m
+        color[3]  = "olive"   #808000           ← 33m 43m
+        color[4]  = "navy"    #000080           ← 34m 44m
+        color[5]  = "purple"  #800080 "magenta" ← 35m 45m
+        color[6]  = "teal"    #008080 "cyan"    ← 36m 46m
+        color[7]  = "silver"  #c0c0c0           ← 37m 47m
+        color[8]  = "gray"    #808080           ← 90m 100m
+        color[9]  = "red"     #ff0000           ← 91m 101m
+        color[10] = "lime"    #00ff00           ← 92m 102m
+        color[11] = "yellow"  #ffff00           ← 93m 103m
+        color[12] = "blue"    #0000ff           ← 94m 104m
+        color[13] = "fuchsia" #ff00ff "magenta" ← 95m 105m
+        color[14] = "aqua"    #00ffff "cyan"    ← 96m 106m
+        color[15] = "white"   #ffffff           ← 97m 107m
     }
 
     function initgraphs() {
