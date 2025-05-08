@@ -201,9 +201,11 @@ main() {
         for (i = 0; i < width * height; i++)
             if (term[i]) max = i
 
-        if (output == "html")
-            printhex("<pre style=\"background-color:black;color:white;\">")
-            # perhaps #1e1e1e and/or silver/#c0c0c0 are better?
+        if (output == "html") {
+            pre = "<pre style=\"background-color:" color["bg"] ";"
+            pre = pre "color:" color["fg"] ";\">"
+            printhex(pre)
+        }
         laststyle = ""
         for (y = 0; y < height; y++) {
             for (x = 0; x < width; x++) {
@@ -502,9 +504,16 @@ main() {
 
     function initcolor() {
 
+        for (k in color)
+            delete color[k]
+
         # Cascading Style Sheets, level 1 W3C Recommendation 17 Dec 1996
         # "suggested list of keyword color names [...]
         # These 16 colors are taken from the Windows VGA palette"
+
+        color["bg"] = "black"
+        color["fg"] = "white"
+        # perhaps #1e1e1e and/or silver/#c0c0c0 are better?
 
         color["30m"] = "black"   #000000
         color["31m"] = "maroon"  #800000
@@ -678,6 +687,8 @@ main() {
 
     function rgb(x) {
         x = int(x)
+        if (color[x])
+            return color[x]
         if (x > 231) { # grayscale
             x = (x - 232) * 10 + 8
             return x "," x "," x
