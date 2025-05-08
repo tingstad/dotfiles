@@ -35,6 +35,7 @@ main() {
         # one per line (tr -s " " "\n" | grep . | tr "[:upper:]" "[:lower:]")
         for (i = 1; i <= NF; i++) print tolower($i) }' \
     | awk '
+        # substitute some control characters to simplify later processing
         /08/ { csi("44"); next } # BS -> ^[[D
         /0a/ { csi("45"); next } # LF -> ^[[E
         /0d/ { csi("47"); next } # CR -> ^[[G
@@ -83,36 +84,36 @@ main() {
     }
 
     state == 0 && /1b/ { state++; next } # ESC
-    state == 1 && /5b/ { state++; next } # [
-    state == 1 && /37/ { # 7 (save cursor position)
+    state == 1 && /5b/ { state++; next } # [ CSI Control Sequence Introducer
+    state == 1 && /37/ { # 7 (save cursor position) => CSI s
         pre = code[c + 1]
         code[c + 1] = (pre (pre ? "," : "") "73") # s
         params = ""
         state = 0
         next
     }
-    state == 1 && /38/ { # 8 (restore cursor position)
+    state == 1 && /38/ { # 8 (restore cursor position) => CSI u
         pre = code[c + 1]
         code[c + 1] = (pre (pre ? "," : "") "75") # u
         params = ""
         state = 0
         next
     }
-    state == 1 && /44/ { # D (linefeed)
+    state == 1 && /44/ { # D (linefeed) => CSI B
         pre = code[c + 1]
         code[c + 1] = (pre (pre ? "," : "") "42") # B (down)
         params = ""
         state = 0
         next
     }
-    state == 1 && /45/ { # E (newline)
+    state == 1 && /45/ { # E (newline) => CSI E
         pre = code[c + 1]
         code[c + 1] = (pre (pre ? "," : "") "45") # E (beginning next line)
         params = ""
         state = 0
         next
     }
-    state == 1 && /63/ { # c (reset)
+    state == 1 && /63/ { # c (reset) => CSI H,J
         pre = code[c + 1]
         code[c + 1] = (pre (pre ? "," : "") "48,4a") # H,J
         style[c + 1] = "m"
@@ -120,20 +121,13 @@ main() {
         state = 0
         next
     }
-    state == 1 && /28/ { state = 3; next } # (
+    state == 1 && /28/ { state = 3; next } # ( Define G0 character set
+    state == 1 && /5d/ { state = 4; next } # ] OSC Operating System Command
     state == 2 && /3[0-9b]/ { # 0–9;
         params = (params (params ? " " : "") $1)
         next
     }
-    state == 2 && /4[1-8ab]/ { # A-H,J,K
-        params = (params (params ? " " : "") $1)
-        pre = code[c + 1]
-        code[c + 1] = (pre (pre ? "," : "") params)
-        params = ""
-        state = 0
-        next
-    }
-    state == 2 && /7[35]/ { # s,u
+    state == 2 && /4[1-8ab]|7[35]/ { # A-H,J,K s,u
         params = (params (params ? " " : "") $1)
         pre = code[c + 1]
         code[c + 1] = (pre (pre ? "," : "") params)
@@ -160,9 +154,34 @@ main() {
         state = 0
         next
     }
+    state == 4 && /52/ { # R reset palette
+        initcolor()
+        state = 0
+        params = ""
+        next
+    }
+    state == 4 && params ~ /50( (3[0-9]|6[1-6])){7}/ {
+        # ESC ] P   Set palette, with parameter given in 7
+        #           hexadecimal digits nrrggbb after the final P.
+        #           Here n is the color (0–15), and rrggbb indicates
+        #           the red/green/blue values (0–255).
+        split(params, a, " ")
+        params = "#"
+        for (i = 0; i < 7; i++)
+            params = (params ascii[a[i + 3]])
+        color[ascii[a[2]]] = params
+        state = 0
+        params = ""
+    }
+    state == 4 && /3[0-9ab]|6[1-6]|23|72|67|62|50/ { # 0–9:;a-f # rgb P
+        params = (params (params ? " " : "") $1)
+        next
+    }
+
     state > 0 { data[++c] = "1b" } # ESC
     state == 2{ data[++c] = "5b" } # [
     state == 3{ data[++c] = "28" } # (
+    state == 4{ data[++c] = "5d" } # ]
     {
         data[++c] = $1
         params = ""
@@ -865,6 +884,11 @@ if [ "$1" = test ]; then
 
     assert "$(printf 'TestM \016 lqqqk \017 end' | main -w17 -o txt)" \
         'TestM  ┌───┐  end'
+
+    assert "$(printf 'TestN\n\033[31m\033]P1dc322fHELLO' | main -w 5)" \
+        "$pre"'TestN
+<span style="color:#dc322f;">HELLO</span>
+</pre>'
 
     exit $?
 fi
