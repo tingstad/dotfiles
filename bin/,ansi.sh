@@ -173,8 +173,18 @@ main() {
         state = 0
         params = ""
     }
-    state == 4 && /3[0-9ab]|6[1-6]|23|72|67|62|50/ { # 0–9:;a-f # rgb P
+    state == 4 && /3[0-9ab]|[46][1-6]|2[3f]|72|67|62|50/ { # 0–9:;A-f #/ rgb P
         params = (params (params ? " " : "") $1)
+        next
+    }
+    state == 4 && /1b/ { # ESC
+        state++; next
+    }
+    state == 5 || state == 4 && /07/ { # BEL = String Terminator (ST)
+        # if state==5, $0 should be \ (5c) (also ST), just assume so
+        osc(params)
+        state = 0
+        params = ""
         next
     }
 
@@ -322,7 +332,7 @@ main() {
                 } else
                     fg = a[++j] ";" a[++j]
             } else if (op == 39) { # default color
-                fg = 0
+                fg = color["fg"]
             } else if (40 <= op && op <= 47 || 100 <= op && op <= 108) {
                 bg = op
             } else if (op == 48 && n >= j+4 && a[j+1] == 2) {
@@ -333,7 +343,7 @@ main() {
                 } else
                     bg = a[++j] ";" a[++j]
             } else if (op == 49) { # default background color
-                bg = 0
+                bg = color["bg"]
             } else if (op == "(0") { # Special graphics characters
                 graphics = 1         # and line drawing set
             } else if (op == "(B") { # Default G0 character set
@@ -360,6 +370,7 @@ main() {
             # dark background is assumed
             if (!fg) fg = 97
             if (!bg) bg = 40
+            # TODO: fix for fg/bg set to color
             temp = fg
             if (bg ~ /^4/)
                 fg = "3" substr(bg, 2)
@@ -704,6 +715,42 @@ main() {
         return x "," y
     }
 
+    function osc(params) {
+        # OSC Operating System Command
+
+        n = split(params, a, " ")
+        params = ""
+        for (i = 1; i <= n; i++)
+            params = (params ascii[a[i]])
+
+        n = split(tolower(params), a, ";")
+
+        if (a[1] == 4) {
+            # ESC ] 4 ; c ; spec  Set ANSI color c to spec.
+            for (i = 2; i <= n; i += 2)
+                color[a[i]] = spec(a[i+1])
+        } else if (a[1] == 10) {
+            # ESC ] 10 ; txt ST  Set dynamic text color to txt.
+            color["fg"] = spec(a[2])
+        } else if (a[1] == 11) {
+            # ESC ] 11  Set Default Text Background Color
+            color["bg"] = spec(a[2])
+        } else if (a[1] == 104) { # Reset color palette entries
+            # TODO: reset the colors specified in text as ; separated list.
+            initcolor()
+        }
+    }
+
+    function spec(val) {
+        # Color spec (XParseColor)
+        if (substr(val, 1, 4) == "rgb:")
+            return ("#" substr(val,5,2) substr(val,8,2) substr(val,11,2))
+        # TODO: support h,hhh,hhhh too, not just hh ↑
+        # Also support #rgb, #rrrbbbggg, #rrrrbbbbgggg
+        # There is also rgbi, CIELuv, etc. and named colors
+        return val
+    }
+
     function rgb(x) {
         x = int(x)
         if (color[x])
@@ -888,6 +935,29 @@ if [ "$1" = test ]; then
     assert "$(printf 'TestN\n\033[31m\033]P1dc322fHELLO' | main -w 5)" \
         "$pre"'TestN
 <span style="color:#dc322f;">HELLO</span>
+</pre>'
+
+    assert "$(printf 'TestM\n\033]4;2;#993300\007\033[32mHELLO' | main -w 5)" \
+        "$pre"'TestM
+<span style="color:#993300;">HELLO</span>
+</pre>'
+
+    assert "$(printf 'TestM\n\033]4;2;#993300\007\033[32mHELLO' | main -w 5)" \
+        "$pre"'TestM
+<span style="color:#993300;">HELLO</span>
+</pre>'
+
+    assert "$(printf 'TestO\n\033]4;2;rgb:99/33/00\007\033[32mH' | main -w 5)" \
+        "$pre"'TestO
+<span style="color:#993300;">H</span>    
+</pre>'
+
+    assert "$(printf 'TestP\n\033]10;#993300\007' | main -w 5)" \
+        '<pre style="background-color:black;color:#993300;">TestP
+</pre>'
+
+    assert "$(printf 'TestQ\n\033]11;#993300\007' | main -w 5)" \
+        '<pre style="background-color:#993300;color:white;">TestQ
 </pre>'
 
     exit $?
