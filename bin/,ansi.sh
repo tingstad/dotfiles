@@ -3,6 +3,23 @@
 # by Richard H. Tingstad
 set -e
 
+usage() {
+    cat <<-EOF
+Converts ANSI codes to HTML (primarily).
+
+Usage: $(basename "$0") [options]
+
+Options:
+
+    -o format   Output format; html(default)|txt|ansi
+                
+    -w          Set width
+    -h          Set height (default 0=unlimited)
+
+Richard H. Tingstad
+EOF
+}
+
 main() {
     while getopts o:sw:h: opt; do
         case $opt in
@@ -20,13 +37,11 @@ main() {
     shift $((OPTIND - 1))
     [ -n "$width" ] || width=$COLUMNS
     [ -n "$height" ] || height=$LINES
-    [ -n "$width" ] && [ -n "$height" ] || read h w <<-EOF
-		$(stty size 2>/dev/null)
-		EOF
-    [ -n "$width" ] || width=$w \
-        && [ -n "$width" ] || width=$(tput cols 2>/dev/null) || true
-    [ -n "$height" ] || height=$h \
-        && [ -n "$height" ] || height=$(tput lines 2>/dev/null) || true
+    [ -n "$width" ] && [ -n "$height" ] || {
+        size=$(withtty stty size)
+        [ -n "$width"  ] || [ -z "$size" ] || width=${size#* }
+        [ -n "$height" ] || [ -z "$size" ] || height=${size% *}
+    }
 
     hexdump="od -v -A n -t x1"
 
@@ -804,21 +819,12 @@ main() {
     done
 }
 
-usage() {
-    cat <<-EOF
-Converts ANSI codes to HTML (primarily).
-
-Usage: $(basename "$0") [options]
-
-Options:
-
-    -o format   Output format; html(default)|txt|ansi
-                
-    -w          Set width
-    -h          Set height (default 0=unlimited)
-
-Richard H. Tingstad
-EOF
+withtty() {
+    if [ -t 2 ]; then
+        "$@" <&2
+    elif [ -r /dev/tty ]; then
+        "$@" </dev/tty
+    fi
 }
 
 assert() {
