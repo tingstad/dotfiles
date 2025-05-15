@@ -728,11 +728,12 @@ main() {
         if (a[1] == 4) {
             # ESC ] 4 ; c ; spec  Set ANSI color c to spec.
             for (i = 2; i <= n; i += 2)
-                color[a[i]] = spec(a[i+1])
-        } else if (a[1] == 10) {
+                if (a[i+1] != "?")
+                    color[a[i]] = spec(a[i+1])
+        } else if (a[1] == 10 && a[2] != "?") {
             # ESC ] 10 ; txt ST  Set dynamic text color to txt.
             color["fg"] = spec(a[2])
-        } else if (a[1] == 11) {
+        } else if (a[1] == 11 && a[2] != "?") {
             # ESC ] 11  Set Default Text Background Color
             color["bg"] = spec(a[2])
         } else if (a[1] == 104) { # Reset color palette entries
