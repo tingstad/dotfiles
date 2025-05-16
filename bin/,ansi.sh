@@ -759,9 +759,14 @@ main() {
 
     function spec(val) {
         # Color spec (XParseColor)
-        if (substr(val, 1, 4) == "rgb:")
-            return ("#" substr(val,5,2) substr(val,8,2) substr(val,11,2))
-        # TODO: support h,hhh,hhhh too, not just hh ↑
+        if (substr(val, 1, 4) == "rgb:") {
+            m = split(substr(val, 5), v, "/")
+            r = "#"
+            for (j = 1; j <= m; j++)
+                r = (r substr(v[j], 1, 2))
+            return r
+        }
+        # TODO: support h,hhh too, not just hh,hhhh ↑
         # Also support #rgb, #rrrbbbggg, #rrrrbbbbgggg
         # There is also rgbi, CIELuv, etc. and named colors
         return val
@@ -965,6 +970,11 @@ if [ "$1" = test ]; then
 
     assert "$(printf 'TestQ\n\033]11;#993300\007' | main -w 5)" \
         '<pre style="background-color:#993300;color:white;">TestQ
+</pre>'
+
+    assert "$(printf 'TestP\n\033]4;2;rgb:9999/3333/0000\007\033[32mH' \
+        | main -w 5)" "$pre"'TestP
+<span style="color:#993300;">H</span>    
 </pre>'
 
     exit $?
