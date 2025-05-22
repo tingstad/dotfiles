@@ -15,22 +15,24 @@ Options:
                 
     -w          Set width
     -h          Set height (default 0=unlimited)
+    -d          Disable detection of terminal palette colors (OSC)
 
 Richard H. Tingstad
 EOF
 }
 
 main() {
-    while getopts o:sw:h: opt; do
+    while getopts o:dw:h: opt; do
         case $opt in
             o)  case $OPTARG in
                     html|txt|ansi) output=$OPTARG ;;
-                    *) echo >/dev/stderr \
+                    *) echo >&2 \
                         "invalid -o $OPTARG, expected html|txt|ansi"
                         return 1 ;;
                 esac ;;
             w) width=$OPTARG ;;
             h) height=$OPTARG ;;
+            d) skiptty=true ;;
             ?) usage; exit 1 ;;
         esac
     done
@@ -45,7 +47,9 @@ main() {
 
     hexdump="od -v -A n -t x1"
 
-    $hexdump \
+    {   [ -n "$skiptty" ] || ttydata # prepend any OSC colors
+        cat; } \
+    | $hexdump \
     | awk '/./ {
         # one per line (tr -s " " "\n" | grep . | tr "[:upper:]" "[:lower:]")
         for (i = 1; i <= NF; i++) print tolower($i) }' \
@@ -820,7 +824,7 @@ main() {
 
     ' \
     | while read hex; do
-        printf \\$(printf %03o 0x$hex)
+        printf "$(printf '\\%03o' 0x$hex)"
     done
 }
 
@@ -830,6 +834,42 @@ withtty() {
     elif [ -r /dev/tty ]; then
         "$@" </dev/tty
     fi
+}
+
+ttydata() {  # prints OSC codes to set colors, if any
+    [ -r /dev/tty ] && [ -w /dev/tty ] || return
+    sh -c '
+    exec 3<> /dev/tty
+    oldtty=$(stty -g <&3 2>/dev/null || true)
+    cleanup(){ [ -z "$oldtty" ] || stty "$oldtty" <&3; }
+    trap cleanup INT TERM
+    stty -icanon -echo min 0 time 1 <&3
+    query() {
+        printf "\033]$1;?\007" >&3
+        response=""
+        while true; do
+            c=$(dd <&3 bs=1 count=1 2>/dev/null | od -v -An -tx1 \
+                | awk "/./ { print \$1 }")
+            [ -n "$c" ] || break
+            case "$response $c" in
+              *07|*1b\ 5c) break ;;
+            esac
+            response="${response:+$response }$c"
+        done
+        [ -n "$response" ] || return 1
+        printf "${response% 1b} 07 " | tr " " "\n" \
+        | while IFS= read hex; do
+            [ -z "$hex" ] || \
+            printf "$(printf '\''\\%03o'\'' 0x$hex)"
+        done | sed -e "s,\\][0-9;]*,]$1;,"
+    }
+    query "10"  # get foreground color
+    query "11"  # get background color
+    i=0; while [ $i -le 21 ]; do
+        query "4;$i" || [ $i -ne 8 ] || break # many terminals only support 0-7
+        i=$((i + 1))
+    done
+    cleanup'
 }
 
 assert() {
@@ -845,135 +885,135 @@ if [ "$1" = test ]; then
 
     pre='<pre style="background-color:black;color:white;">'
 
-    assert "$(printf 'Test1' | main -w 20)" \
+    assert "$(printf 'Test1' | main -dw 20)" \
         "$(printf "$pre"'Test1               \n</pre>')"
 
-    assert "$(printf 'Test2 \nHello' | main -w 20)" \
+    assert "$(printf 'Test2 \nHello' | main -dw 20)" \
         "$(printf "$pre"'Test2               \nHello               \n</pre>')"
 
-    assert "$(printf 'Test3 \033[999Gx' | main -w 20)" \
+    assert "$(printf 'Test3 \033[999Gx' | main -dw 20)" \
         "$(printf "$pre"'Test3              x\n</pre>')"
 
-    assert "$(printf '\033[1mTest4' | main -w 5)" \
+    assert "$(printf '\033[1mTest4' | main -dw 5)" \
         "$(printf "$pre"'<span style="font-weight:bold;">Test4</span>\n</pre>')"
 
-    assert "$(printf 'Test5\n\033[31mHello' | main -w 10)" \
+    assert "$(printf 'Test5\n\033[31mHello' | main -dw 10)" \
         "$pre"'Test5     
 <span style="color:maroon;">Hello</span>     
 </pre>'
 
-    assert "$(printf 'Test6 abcd\033[5D left' | main -w 20)" \
+    assert "$(printf 'Test6 abcd\033[5D left' | main -dw 20)" \
         "$(printf "$pre"'Test6 left          \n</pre>')"
 
-    assert "$(printf '\033[38;2;3;2;1mTest7' | main -w 5)" \
+    assert "$(printf '\033[38;2;3;2;1mTest7' | main -dw 5)" \
         "$(printf "$pre"'<span style="color:rgb(3,2,1);">Test7</span>\n</pre>')"
 
-    assert "$(printf 'Test8 \n \033[AeS' | main -w 10)" \
+    assert "$(printf 'Test8 \n \033[AeS' | main -dw 10)" \
         "$(printf "$pre"'TeSt8     \n          \n</pre>')"
 
-    assert "$(printf 'Test9 \n\033[At\n ' | main -w 10)" \
+    assert "$(printf 'Test9 \n\033[At\n ' | main -dw 10)" \
         "$(printf "$pre"'test9     \n          \n</pre>')"
 
-    assert "$(printf '\033[38;5;6mTestA' | main -w 5)" \
+    assert "$(printf '\033[38;5;6mTestA' | main -dw 5)" \
         "$(printf "$pre"'<span style="color:teal;">TestA</span>\n</pre>')"
         # 16 + 36r + 6g + b
 
-    assert "$(printf '\033[38;5;18mTestB' | main -w 5)" \
+    assert "$(printf '\033[38;5;18mTestB' | main -dw 5)" \
       "$(printf "$pre"'<span style="color:rgb(0,0,135);">TestB</span>\n</pre>')"
       # 16 + 36r + 6g + b [0, 95, 135, 175, 215, 255] => 16 + 0r + 0g + 2 = 18
 
-    assert "$(printf '\033[38;5;233mTestC' | main -w 5)" \
+    assert "$(printf '\033[38;5;233mTestC' | main -dw 5)" \
      "$(printf "$pre"'<span style="color:rgb(18,18,18);">TestC</span>\n</pre>')"
 
-    assert "$(printf '\033[91mTestD' | main -w5 -o txt)" \
+    assert "$(printf '\033[91mTestD' | main -dw5 -o txt)" \
         "TestD"
 
-    assert "$(printf 'TestE å\033[Dx' | main -w 10)" \
+    assert "$(printf 'TestE å\033[Dx' | main -dw 10)" \
         "$(printf "$pre"'TestE x   \n</pre>')"
 
-    assert "$(printf 'TestF\n\033[31mØ\033[32m✆\n\033[33m📞' | main -w 8)" \
-        "$pre"'TestF   
+    assert "$(printf 'TestF...\n\033[31mØ\033[32m✆\n\033[33m📞' \
+        | main -dw 8)" "$pre"'TestF...
 <span style="color:maroon;">Ø</span><span style="color:green;">✆</span>      
 <span style="color:olive;">📞</span>       
 </pre>'
 
-    assert "$(printf 'TestF \2331mF' | main -w 7)" \
+    assert "$(printf 'TestF \2331mF' | main -dw 7)" \
         "$(printf "$pre"'TestF <span style="font-weight:bold;">F</span>\n</pre>')"
 
-    assert "$(printf '\033[2m\033[1mTestG\033[m ' | main -w6 -o ansi)" \
+    assert "$(printf '\033[2m\033[1mTestG\033[m ' | main -dw6 -o ansi)" \
         "$(printf '\033[1mTestG\033[m ')"
 
-    assert "$(printf 'TestH\033c' | main -w6 -o txt)" \
+    assert "$(printf 'TestH\033c' | main -dw6 -o txt)" \
         "$(printf '      ')"
 
-    assert "$(printf 'TestI \033[20mGreetings, Fraktur!' |main -w25 -o txt)" \
+    assert "$(printf 'TestI \033[20mGreetings, Fraktur!' |main -dw25 -o txt)" \
         "TestI 𝔊𝔯𝔢𝔢𝔱𝔦𝔫𝔤𝔰, 𝔉𝔯𝔞𝔨𝔱𝔲𝔯!"
 
-    assert "$(printf '\033[1mABCDEFGHIJKLMNOPQRSTUVWXYZ' |main -w26 -o txt)" \
+    assert "$(printf '\033[1mABCDEFGHIJKLMNOPQRSTUVWXYZ' |main -dw26 -o txt)" \
         "𝐀𝐁𝐂𝐃𝐄𝐅𝐆𝐇𝐈𝐉𝐊𝐋𝐌𝐍𝐎𝐏𝐐𝐑𝐒𝐓𝐔𝐕𝐖𝐗𝐘𝐙"
 
-    assert "$(printf '\033[3mABCDEFGHIJKLMNOPQRSTUVWXYZ' |main -w26 -o txt)" \
+    assert "$(printf '\033[3mABCDEFGHIJKLMNOPQRSTUVWXYZ' |main -dw26 -o txt)" \
         "𝐴𝐵𝐶𝐷𝐸𝐹𝐺𝐻𝐼𝐽𝐾𝐿𝑀𝑁𝑂𝑃𝑄𝑅𝑆𝑇𝑈𝑉𝑊𝑋𝑌𝑍"
 
-    assert "$(printf '\033[1;3mABCDEFGHIJKLMNOPQRSTUVWXYZ' |main -w26 -o txt)" \
+    assert "$(printf '\033[1;3mABCDEFGHIJKLMNOPQRSTUVWXYZ' |main -dw26 -otxt)" \
         "𝑨𝑩𝑪𝑫𝑬𝑭𝑮𝑯𝑰𝑱𝑲𝑳𝑴𝑵𝑶𝑷𝑸𝑹𝑺𝑻𝑼𝑽𝑾𝑿𝒀𝒁"
 
-    assert "$(printf '\033[1mabcdefghijklmnopqrstuvwxyz' | main -w26 -o txt)" \
+    assert "$(printf '\033[1mabcdefghijklmnopqrstuvwxyz' | main -dw26 -o txt)" \
         "𝐚𝐛𝐜𝐝𝐞𝐟𝐠𝐡𝐢𝐣𝐤𝐥𝐦𝐧𝐨𝐩𝐪𝐫𝐬𝐭𝐮𝐯𝐰𝐱𝐲𝐳"
 
-    assert "$(printf '\033[3mabcdefghijklmnopqrstuvwxyz' | main -w26 -o txt)" \
+    assert "$(printf '\033[3mabcdefghijklmnopqrstuvwxyz' | main -dw26 -o txt)" \
         "𝑎𝑏𝑐𝑑𝑒𝑓𝑔ℎ𝑖𝑗𝑘𝑙𝑚𝑛𝑜𝑝𝑞𝑟𝑠𝑡𝑢𝑣𝑤𝑥𝑦𝑧"
 
-    assert "$(printf '\033[1;3mabcdefghijklmnopqrstuvwxyz' | main -w26 -o txt)" \
+    assert "$(printf '\033[1;3mabcdefghijklmnopqrstuvwxyz' | main -dw26 -otxt)" \
         "𝒂𝒃𝒄𝒅𝒆𝒇𝒈𝒉𝒊𝒋𝒌𝒍𝒎𝒏𝒐𝒑𝒒𝒓𝒔𝒕𝒖𝒗𝒘𝒙𝒚𝒛"
 
-    assert "$(printf '\033(0`afgjklmnopqrstuvwxyz{|}' | main -w24 -o txt)" \
+    assert "$(printf '\033(0`afgjklmnopqrstuvwxyz{|}' | main -dw24 -o txt)" \
         "◆▒°±┘┐┌└┼⎺⎻─⎼⎽├┤┴┬│≤≥π≠£"
 
-    assert "$(printf 'TestJ \033D linefeed' | main -w15 -o txt)" \
+    assert "$(printf 'TestJ \033D linefeed' | main -dw15 -o txt)" \
         'TestJ          
        linefeed'
 
-    assert "$(printf 'TestK \033E..........newline' | main -w17 -o txt)" \
+    assert "$(printf 'TestK \033E..........newline' | main -dw17 -o txt)" \
         'TestK            
 ..........newline'
 
-    assert "$(printf 'TestL \0337hi\033[uH' | main -w20 -o txt)" \
+    assert "$(printf 'TestL \0337hi\033[uH' | main -dw20 -o txt)" \
         'TestL Hi            '
 
-    assert "$(printf 'TestM \016 lqqqk \017 end' | main -w17 -o txt)" \
+    assert "$(printf 'TestM \016 lqqqk \017 end' | main -dw17 -o txt)" \
         'TestM  ┌───┐  end'
 
-    assert "$(printf 'TestN\n\033[31m\033]P1dc322fHELLO' | main -w 5)" \
+    assert "$(printf 'TestN\n\033[31m\033]P1dc322fHELLO' | main -dw 5)" \
         "$pre"'TestN
 <span style="color:#dc322f;">HELLO</span>
 </pre>'
 
-    assert "$(printf 'TestM\n\033]4;2;#993300\007\033[32mHELLO' | main -w 5)" \
-        "$pre"'TestM
-<span style="color:#993300;">HELLO</span>
-</pre>'
-
-    assert "$(printf 'TestM\n\033]4;2;#993300\007\033[32mHELLO' | main -w 5)" \
-        "$pre"'TestM
-<span style="color:#993300;">HELLO</span>
-</pre>'
-
-    assert "$(printf 'TestO\n\033]4;2;rgb:99/33/00\007\033[32mH' | main -w 5)" \
+    assert "$(printf 'TestO\n\033]4;2;#993300\007\033[32mHELLO' | main -dw 5)" \
         "$pre"'TestO
+<span style="color:#993300;">HELLO</span>
+</pre>'
+
+    assert "$(printf 'TestP\n\033]4;2;#993300\007\033[32mHELLO' | main -dw 5)" \
+        "$pre"'TestP
+<span style="color:#993300;">HELLO</span>
+</pre>'
+
+    assert "$(printf 'TestQ\n\033]4;2;rgb:99/33/00\007\033[32mH' | main -dw5)" \
+        "$pre"'TestQ
 <span style="color:#993300;">H</span>    
 </pre>'
 
-    assert "$(printf 'TestP\n\033]10;#993300\007' | main -w 5)" \
-        '<pre style="background-color:black;color:#993300;">TestP
+    assert "$(printf 'TestR\n\033]10;#993300\007' | main -dw 5)" \
+        '<pre style="background-color:black;color:#993300;">TestR
 </pre>'
 
-    assert "$(printf 'TestQ\n\033]11;#993300\007' | main -w 5)" \
-        '<pre style="background-color:#993300;color:white;">TestQ
+    assert "$(printf 'TestS\n\033]11;#993300\007' | main -dw 5)" \
+        '<pre style="background-color:#993300;color:white;">TestS
 </pre>'
 
-    assert "$(printf 'TestP\n\033]4;2;rgb:9999/3333/0000\007\033[32mH' \
-        | main -w 5)" "$pre"'TestP
+    assert "$(printf 'TestT\n\033]4;2;rgb:9999/3333/0000\007\033[32mH' \
+        | main -d -w 5)" "$pre"'TestT
 <span style="color:#993300;">H</span>    
 </pre>'
 
