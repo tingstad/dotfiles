@@ -838,7 +838,7 @@ withtty() {
 
 ttydata() {  # prints OSC codes to set colors, if any
     [ -r /dev/tty ] && [ -w /dev/tty ] || return
-    sh -c '
+    /bin/sh <<'EOF'
     exec 3<> /dev/tty
     oldtty=$(stty -g <&3 2>/dev/null || true)
     cleanup(){ [ -z "$oldtty" ] || stty "$oldtty" <&3; }
@@ -860,7 +860,7 @@ ttydata() {  # prints OSC codes to set colors, if any
         printf "${response% 1b} 07 " | tr " " "\n" \
         | while IFS= read hex; do
             [ -z "$hex" ] || \
-            printf "$(printf '\''\\%03o'\'' 0x$hex)"
+            printf "$(printf '\\%03o' 0x$hex)"
         done | sed -e "s,\\][0-9;]*,]$1;,"
     }
     query "10"  # get foreground color
@@ -869,7 +869,8 @@ ttydata() {  # prints OSC codes to set colors, if any
         query "4;$i" || [ $i -ne 8 ] || break # many terminals only support 0-7
         i=$((i + 1))
     done
-    cleanup'
+    cleanup
+EOF
 }
 
 assert() {
