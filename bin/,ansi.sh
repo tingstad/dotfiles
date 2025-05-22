@@ -430,7 +430,7 @@ main() {
                     gsub(";", ",", val)
                     val = "rgb(" val ")"
                 } else if (fg ~ "^5;")
-                    val = "rgb(" rgb(substr(fg, 3)) ")"
+                    val = rgb(substr(fg, 3))
                 else
                     val = color[(fg < 90 ? fg - 30 : fg - 82)]
                 s = s "color:" val ";"
@@ -441,7 +441,7 @@ main() {
                     gsub(";", ",", val)
                     val = "rgb(" val ")"
                 } else if (bg ~ "^5;")
-                    val = "rgb(" rgb(substr(bg, 3)) ")"
+                    val = rgb(substr(bg, 3))
                 else
                     val = color[(bg < 90 ? bg - 40 : bg - 92)]
                 s = s "background-color:" val ";"
@@ -782,7 +782,7 @@ main() {
             return color[x]
         if (x > 231) { # grayscale
             x = (x - 232) * 10 + 8
-            return x "," x "," x
+            return "rgb(" x "," x "," x ")"
         }
 
         r1 = int( (x - 16) / 36 )
@@ -800,7 +800,7 @@ main() {
           b = 0
         else
           b = b1 * 40 + 55
-        return r "," g "," b
+        return "rgb(" r "," g "," b ")"
     }
 
     function toascii(hex) {
@@ -1013,9 +1013,14 @@ if [ "$1" = test ]; then
         '<pre style="background-color:#993300;color:white;">TestS
 </pre>'
 
-    assert "$(printf 'TestT\n\033]4;2;rgb:9999/3333/0000\007\033[32mH' \
+    assert "$(printf 'TestT\n\033]4;2;rgb:9999/3333/0000\007\033[32mHello' \
         | main -d -w 5)" "$pre"'TestT
-<span style="color:#993300;">H</span>    
+<span style="color:#993300;">Hello</span>
+</pre>'
+
+    assert "$(printf 'TestU\n\033]4;40;#993300\007\033[38;5;40mHello' \
+        | main -d -w 5)" "$pre"'TestU
+<span style="color:#993300;">Hello</span>
 </pre>'
 
     exit $?
