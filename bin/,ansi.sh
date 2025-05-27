@@ -347,7 +347,7 @@ main() {
             } else if (op == 38 && n >= j+2 && a[j+1] == 5) {
                 # 8 bit 256 colors (palette table)
                 if (a[j+2] < 16) {
-                    fg = (a[j+2] < 8 ? 30 : 90) + a[j+2]; j+=2
+                    fg = (a[j+2] < 8 ? 30 : 82) + a[j+2]; j+=2
                 } else
                     fg = a[++j] ";" a[++j]
             } else if (op == 39) { # default color
@@ -1026,6 +1026,11 @@ if [ "$1" = test ]; then
     assert "$(printf 'TestV\n\033[48;5;2mHello' \
         | main -d -w 5)" "$pre"'TestV
 <span style="background-color:green;">Hello</span>
+</pre>'
+
+    assert "$(printf 'TestW\n\033[38;5;11mHello' \
+        | main -d -w 5)" "$pre"'TestW
+<span style="color:yellow;">Hello</span>
 </pre>'
 
     exit $?
