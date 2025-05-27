@@ -358,7 +358,7 @@ main() {
                 bg = a[++j] ";" a[++j] ";" a[++j] ";" a[++j]
             } else if (op == 48 && n >= j+2 && a[j+1] == 5) {
                 if (a[j+2] < 16) {
-                    bg = (a[j+2] < 8 ? 30 : 90) + a[j+2]; j+=2
+                    bg = (a[j+2] < 8 ? 40 : 92) + a[j+2]; j+=2
                 } else
                     bg = a[++j] ";" a[++j]
             } else if (op == 49) { # default background color
@@ -1021,6 +1021,11 @@ if [ "$1" = test ]; then
     assert "$(printf 'TestU\n\033]4;40;#993300\007\033[38;5;40mHello' \
         | main -d -w 5)" "$pre"'TestU
 <span style="color:#993300;">Hello</span>
+</pre>'
+
+    assert "$(printf 'TestV\n\033[48;5;2mHello' \
+        | main -d -w 5)" "$pre"'TestV
+<span style="background-color:green;">Hello</span>
 </pre>'
 
     exit $?
