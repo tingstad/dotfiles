@@ -708,6 +708,7 @@ main() {
             if (length(n)) {
                 p = index(n, ";")
                 if (p > 1) y = substr(n, 1, p-1) - 1
+                else y = int(n) - 1
                 if (y < 0) y = 0
                 if (height && y >= height) y = height-1
             }
@@ -1055,6 +1056,12 @@ ap across lines
     assert "$(printf 'TestY ──────────....' \
         | main -d -w 10)" "$pre"'TestY ────
 ──────....
+</pre>'
+
+    assert "$(printf 'TestZ.\033[3H bye..\033[2H Bye..' \
+        | main -d -w 6)" "$pre"'TestZ.
+ Bye..
+ bye..
 </pre>'
 
     exit $?
