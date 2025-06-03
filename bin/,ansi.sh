@@ -240,7 +240,13 @@ main() {
             rendition[y * width + x] = rendered
             styles[y * width + x] = presentation
             term[y * width + x] = transform(data[i])
-            if (data[i]) x++
+            if (data[i]) {
+                x++
+                if (x >= width) {
+                    x = 0
+                    y++
+                }
+            }
         }
 
         if (height == 0) height = maxy + 1
@@ -932,7 +938,7 @@ if [ "$1" = test ]; then
     assert "$(printf 'TestE å\033[Dx' | main -dw 10)" \
         "$(printf "$pre"'TestE x   \n</pre>')"
 
-    assert "$(printf 'TestF...\n\033[31mØ\033[32m✆\n\033[33m📞' \
+    assert "$(printf 'TestF...\033[31mØ\033[32m✆\n\033[33m📞' \
         | main -dw 8)" "$pre"'TestF...
 <span style="color:maroon;">Ø</span><span style="color:green;">✆</span>      
 <span style="color:olive;">📞</span>       
@@ -985,52 +991,57 @@ if [ "$1" = test ]; then
     assert "$(printf 'TestM \016 lqqqk \017 end' | main -dw17 -o txt)" \
         'TestM  ┌───┐  end'
 
-    assert "$(printf 'TestN\n\033[31m\033]P1dc322fHELLO' | main -dw 5)" \
+    assert "$(printf 'TestN\033[31m\033]P1dc322fHELLO' | main -dw 5)" \
         "$pre"'TestN
 <span style="color:#dc322f;">HELLO</span>
 </pre>'
 
-    assert "$(printf 'TestO\n\033]4;2;#993300\007\033[32mHELLO' | main -dw 5)" \
+    assert "$(printf 'TestO\033]4;2;#993300\007\033[32mHELLO' | main -dw 5)" \
         "$pre"'TestO
 <span style="color:#993300;">HELLO</span>
 </pre>'
 
-    assert "$(printf 'TestP\n\033]4;2;#993300\007\033[32mHELLO' | main -dw 5)" \
+    assert "$(printf 'TestP\033]4;2;#993300\007\033[32mHELLO' | main -dw 5)" \
         "$pre"'TestP
 <span style="color:#993300;">HELLO</span>
 </pre>'
 
-    assert "$(printf 'TestQ\n\033]4;2;rgb:99/33/00\007\033[32mH' | main -dw5)" \
+    assert "$(printf 'TestQ\033]4;2;rgb:99/33/00\007\033[32mH' | main -dw5)" \
         "$pre"'TestQ
 <span style="color:#993300;">H</span>    
 </pre>'
 
-    assert "$(printf 'TestR\n\033]10;#993300\007' | main -dw 5)" \
+    assert "$(printf 'TestR\033]10;#993300\007' | main -dw 5)" \
         '<pre style="background-color:black;color:#993300;">TestR
 </pre>'
 
-    assert "$(printf 'TestS\n\033]11;#993300\007' | main -dw 5)" \
+    assert "$(printf 'TestS\033]11;#993300\007' | main -dw 5)" \
         '<pre style="background-color:#993300;color:white;">TestS
 </pre>'
 
-    assert "$(printf 'TestT\n\033]4;2;rgb:9999/3333/0000\007\033[32mHello' \
+    assert "$(printf 'TestT\033]4;2;rgb:9999/3333/0000\007\033[32mHello' \
         | main -d -w 5)" "$pre"'TestT
 <span style="color:#993300;">Hello</span>
 </pre>'
 
-    assert "$(printf 'TestU\n\033]4;40;#993300\007\033[38;5;40mHello' \
+    assert "$(printf 'TestU\033]4;40;#993300\007\033[38;5;40mHello' \
         | main -d -w 5)" "$pre"'TestU
 <span style="color:#993300;">Hello</span>
 </pre>'
 
-    assert "$(printf 'TestV\n\033[48;5;2mHello' \
+    assert "$(printf 'TestV\033[48;5;2mHello' \
         | main -d -w 5)" "$pre"'TestV
 <span style="background-color:green;">Hello</span>
 </pre>'
 
-    assert "$(printf 'TestW\n\033[38;5;11mHello' \
+    assert "$(printf 'TestW\033[38;5;11mHello' \
         | main -d -w 5)" "$pre"'TestW
 <span style="color:yellow;">Hello</span>
+</pre>'
+
+    assert "$(printf 'TestX should wrap across lines' \
+        | main -d -w 15)" "$pre"'TestX should wr
+ap across lines
 </pre>'
 
     exit $?
