@@ -16,13 +16,14 @@ Options:
     -w          Set width
     -h          Set height (default 0=unlimited)
     -d          Disable detection of terminal palette colors (OSC)
+    -b          Bold as bright
 
 Richard H. Tingstad
 EOF
 }
 
 main() {
-    while getopts o:dw:h: opt; do
+    while getopts o:dbw:h: opt; do
         case $opt in
             o)  case $OPTARG in
                     html|txt|ansi) output=$OPTARG ;;
@@ -33,6 +34,7 @@ main() {
             w) width=$OPTARG ;;
             h) height=$OPTARG ;;
             d) skiptty=true ;;
+            b) boldbright=1 ;;
             ?) usage; exit 1 ;;
         esac
     done
@@ -69,7 +71,7 @@ main() {
             # not the actual behaviour of ^N/^O
         }' \
     | awk -v width=${width:-80} -v height=${height:-0} \
-        -v output=${output:-html} '
+        -v output=${output:-html} -v boldbright=${boldbright:-0} '
     BEGIN {
         for (i = 0; i < 128; i++) {
             h = sprintf("%x", i)
@@ -414,6 +416,8 @@ main() {
             else
                 bg = "10" substr(temp, 2)
         }
+        if (boldbright && intensity == 1 && fg ~ /^[0-9]+$/ && fg < 90)
+            fg += 60
         if (output == "html") {
             return renderhtml(fg, bg)
         } else if (output == "ansi") {
@@ -1062,6 +1066,11 @@ ap across lines
         | main -d -w 6)" "$pre"'TestZ.
  Bye..
  bye..
+</pre>'
+
+    assert "$(printf 'Test11\033[1;34mBright\033[m' \
+        | main -dbw6)" "$pre"'Test11
+<span style="font-weight:bold;color:blue;">Bright</span>
 </pre>'
 
     exit $?
