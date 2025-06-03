@@ -82,6 +82,17 @@ main() {
     }
 
     /[89a-f][0-9a-f]/ { # multi-byte character
+        # UTF-8 byte 1 of:
+        # 4 bytes: 11110xxx  128+64+32+16 => 240+(0,8-1) = 240,247 = f0,f7
+        # 3 bytes: 1110xxxx  128+64+32 => 224+(0,16-1) = 224,239 = e0,ef
+        # 2 bytes: 110xxxxx  128+64 => 192+(0,32-1) = 192,223 = c0,df
+        # Byte 2+ is always 10xxxxxx => 128+(0,64-1) = 128,191 = 80,bf
+        if      ($1 ~ /^f/)    multi = 3
+        else if ($1 ~ /^e/)    multi = 2
+        else if ($1 ~ /^[cd]/) multi = 1
+        else                   multi--
+        if (multi < 0) multi = 1
+
         pre = data[c+1]
         if ($1 == "9b" && (pre == "c2" || !pre)) {
             # 0x9b (UTF-8 c2 9b) CSI is equivalent to ESC [
@@ -91,15 +102,12 @@ main() {
             state = 2
             next
         }
-        multi = 1
         data[c+1] = (pre (pre ? "\n" : "") $1)
         params = ""
         state = 0
+        if (multi == 0)
+            c++
         next
-    }
-    multi {
-        multi = 0
-        c++
     }
 
     state == 0 && /1b/ { state++; next } # ESC
@@ -218,7 +226,7 @@ main() {
     }
 
     END {
-        if (multi || code[c+1]) c++
+        if (code[c+1]) c++
 
         x = 0
         y = 0
@@ -1042,6 +1050,11 @@ if [ "$1" = test ]; then
     assert "$(printf 'TestX should wrap across lines' \
         | main -d -w 15)" "$pre"'TestX should wr
 ap across lines
+</pre>'
+
+    assert "$(printf 'TestY ──────────....' \
+        | main -d -w 10)" "$pre"'TestY ────
+──────....
 </pre>'
 
     exit $?
