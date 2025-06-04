@@ -416,9 +416,10 @@ main() {
             else
                 bg = "10" substr(temp, 2)
         }
-        if (boldbright && intensity == 1 && fg ~ /^[0-9]+$/ && fg < 90) {
-            fg += 60
+        if (boldbright && intensity == 1) {
             intensity = 0
+            if (fg ~ /^[0-9]+$/ && 0 < fg && fg < 90)
+                fg += 60
         }
         if (output == "html") {
             return renderhtml(fg, bg, intensity)
