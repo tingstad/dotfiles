@@ -243,7 +243,7 @@ main() {
             }
             if (style[i]) {
                 sgr(style[i]) # sets vars; intensity, italics, underlined, ...
-                rendered = render(output, fg, bg)
+                rendered = render(output, fg, bg, intensity)
                 presentation = (intensity == 1 ? "bold" : "")
                 presentation = presentation (italics ? "italic" : "")
             }
@@ -400,7 +400,7 @@ main() {
             printhex(current)
     }
 
-    function render(output, fg, bg) {
+    function render(output, fg, bg, intensity) {
         if (reverse) {
             # dark background is assumed
             if (!fg) fg = 97
@@ -416,16 +416,18 @@ main() {
             else
                 bg = "10" substr(temp, 2)
         }
-        if (boldbright && intensity == 1 && fg ~ /^[0-9]+$/ && fg < 90)
+        if (boldbright && intensity == 1 && fg ~ /^[0-9]+$/ && fg < 90) {
             fg += 60
+            intensity = 0
+        }
         if (output == "html") {
-            return renderhtml(fg, bg)
+            return renderhtml(fg, bg, intensity)
         } else if (output == "ansi") {
-            return renderansi(fg, bg)
+            return renderansi(fg, bg, intensity)
         }
     }
 
-    function renderhtml(fg, bg) {
+    function renderhtml(fg, bg, intensity) {
         s = ""
         if (!class) {
             if (intensity == 1)
@@ -477,7 +479,7 @@ main() {
         return s
     }
 
-    function renderansi(fg, bg) {
+    function renderansi(fg, bg, intensity) {
         s = ""
         if (intensity)
             s = s "\033[" intensity "m"
@@ -1070,7 +1072,7 @@ ap across lines
 
     assert "$(printf 'Test11\033[1;34mBright\033[m' \
         | main -dbw6)" "$pre"'Test11
-<span style="font-weight:bold;color:blue;">Bright</span>
+<span style="color:blue;">Bright</span>
 </pre>'
 
     exit $?
