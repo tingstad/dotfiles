@@ -1,0 +1,14 @@
+#!/bin/sh
+
+randomstr() {                                                                   
+    awk -v len="${1:-20}" 'BEGIN {                                              
+        srand('$RANDOM');                                                       
+        while(len-- > 0) {                                                      
+            n = int(rand() * 62);                                               
+            printf("%c", (n>35 ? n+61 : (n>9 ? n+55 : n+48) ) );                
+        };                                                                      
+        print "";                                                               
+    }'                                                                          
+}
+randomstr "$@"
+
