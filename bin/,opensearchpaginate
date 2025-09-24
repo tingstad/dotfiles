@@ -1,0 +1,64 @@
+#!/bin/sh
+set -e
+
+main() {
+    [ $# -gt 1 ] || fail "Not enough arguments"
+    query=
+    for arg; do
+        if isQuery "$arg"; then
+            [ -z "$query" ] || fail "$(printf \
+                'Ambiguous query argument:\n%s\n%s\n' "$query" "$arg")"
+            query=$arg
+        fi
+    done
+    [ -n "$query" ] || fail 'No query found ("{...}")'
+    case "$query" in
+        *"sort"*) ;;
+        *) fail "Query must use sort" ;;
+    esac
+
+    i=0
+    fetch "" "$@" > results$i.json
+
+    while true; do
+
+        sort=$(jq <results$i.json -c '.hits.hits | last | .sort')
+        [ "$sort" != "null" ] || break
+
+        i=$(( i + 1 ))
+        fetch ".search_after=$sort" "$@" > results$i.json
+    done
+}
+
+fetch() {
+    filter=$1
+    shift
+    if [ -n "$filter" ]; then
+        for arg; do
+            if isQuery "$arg"; then
+                arg=$(printf %s "$arg" | jq "$filter")
+            fi
+            set -- "$@" "$arg"
+            shift
+        done
+    fi
+    printf >&2 "FETCHING: %s\n" "$*"
+    "$@"
+}
+
+isQuery() {
+    case "$arg" in
+        "{"*"}")
+            return 0 ;;
+        *)
+            return 1 ;;
+    esac
+}
+
+fail() {
+    printf >&2 '%s\n' "$*"
+    exit 1
+}
+
+main "$@"
+
