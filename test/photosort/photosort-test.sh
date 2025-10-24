@@ -45,6 +45,7 @@ testInvalidResizeValue() {
     assertTrue 'Invalid value should fail' "[ $status -gt 0 ]"
 }
 
+return 2>/dev/null || true
 [ -f "$0" ] || { >&2 echo "Do not source file"; exit 1; }
 DIR=$( dirname "$0" )
 DIR="${DIR##$(pwd)/}"

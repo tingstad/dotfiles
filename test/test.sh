@@ -10,7 +10,7 @@ DIR=$(cd -- "$DIR"; pwd)
 bin=$(cd -- "$DIR"; cd ../bin/; pwd)
 export PATH="$PATH:$bin"
 
-bash "$DIR/photosort/photosort-test.sh"
+source "$DIR/photosort/photosort-test.sh"
 source "$DIR/test_add_aliases.sh"
 source "$DIR/test_link_dotfiles.sh"
 source "$DIR/test_gitlog.sh"
