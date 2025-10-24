@@ -1,0 +1,15 @@
+#!/bin/sh
+set -e
+
+[ $# -eq 0 ] || data="$*"
+
+set -- \
+node -e 'for (let c of require("fs").readFileSync(0, "utf-8"))
+    console.log(c.codePointAt(0).toString(16), c);'
+
+if [ -z "$data" ]; then
+    "$@"
+else
+    printf %s "$data" | "$@"
+fi
+
