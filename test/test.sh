@@ -14,6 +14,7 @@ bash "$DIR/photosort/photosort-test.sh"
 source "$DIR/test_add_aliases.sh"
 source "$DIR/test_link_dotfiles.sh"
 source "$DIR/test_gitlog.sh"
+source "$DIR/test_bin.sh"
 
 testCapture() {
     assertEquals 'hello, world!' \
