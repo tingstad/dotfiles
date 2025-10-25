@@ -1,0 +1,30 @@
+#!/bin/sh
+# Richard H. Tingstad
+set -e
+
+if [ $# -lt 2 ]; then
+    cat <<-EOF
+		move files
+		
+		usage: target source...
+		
+		for easier composability, example usage:
+		
+		    find / -name \*.jpg -exec $(basename "$0") target/ {} \+
+	EOF
+    exit 1
+fi
+
+[ -d "$1" ] || {
+    printf 'Expected "%s" to be directory\n' "$1"
+    exit 1
+}
+
+fn() (
+    dest="$1"
+    shift
+    mv "$@" "$dest"
+)
+
+fn "$@"
+
