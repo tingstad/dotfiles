@@ -24,6 +24,8 @@ set ruler               " show cursor position and relative file position
 "set visualbell          " do not beep
 set laststatus=2        " always show status line
 set statusline=%<%f\ %h%m%r%=%-14.(%l,%c,%o%V%)\ %P  " show (line,column),byte offset (+1)
+set colorcolumn=80
+"set textwidth=80
 
 if &diff
     syntax off
