@@ -42,7 +42,7 @@ fetch() {
             shift
         done
     fi
-    printf >&2 "FETCHING: %s\n" "$*"
+    debug "$@"
     "$@"
 }
 
@@ -53,6 +53,22 @@ isQuery() {
         *)
             return 1 ;;
     esac
+}
+
+debug() {
+    case "$-" in
+        *x*) return ;;
+    esac
+    for arg; do
+        case "$arg" in
+          *[[:space:]]*)
+            arg=$(printf %s\\n "$1" | sed "s/'/'\\\\''/g;1s/^/'/;\$s/\$/'/")
+          ;;
+        esac
+        set -- "$@" "$arg"
+        shift
+    done
+    printf >&2 "FETCHING: %s\n" "$*"
 }
 
 fail() {
