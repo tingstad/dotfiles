@@ -1,0 +1,8 @@
+#!/bin/sh
+set -e
+
+dir=$(dirname -- "$0")
+dir=$(cd -- "$dir" && pwd -P)
+
+xsltproc "$dir/normalize.xsl" "$@"
+
