@@ -8,8 +8,18 @@ inplace()(
     file="$1"
     shift
     temp=$(mktemp)
-    "$@" < "$file" > "$temp" && mv "$temp" "$file"
+
+    cp "$file" "$temp" #preserves permission mode bits
+
+    "$@" < "$file" > "$temp"
+
+    mv "$temp" "$file"
 )
+
+function mktemp() {
+    tmpdir=${TMPDIR:-/tmp/}
+    echo "${tmpdir%/}/inplace$$"
+}
 
 inplace "$@"
 
