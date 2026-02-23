@@ -4,5 +4,7 @@ set -e
 dir=$(dirname -- "$0")
 dir=$(cd -- "$dir" && pwd -P)
 
+[ $# -gt 0 ] || set -- -
+
 xsltproc "$dir/normalize.xsl" "$@"
 
