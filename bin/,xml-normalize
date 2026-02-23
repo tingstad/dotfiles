@@ -4,7 +4,24 @@ set -e
 dir=$(dirname -- "$0")
 dir=$(cd -- "$dir" && pwd -P)
 
-[ $# -gt 0 ] || set -- -
+normalize() {
+    [ $# -gt 0 ] || set -- -
+    xsltproc "$dir/normalize.xsl" "$@"
+}
 
-xsltproc "$dir/normalize.xsl" "$@"
+if [ "x$*" != "x--test" ]; then
+    normalize "$@"
+    exit $?
+fi
+
+equal() {
+    if [ "$1" != "$2" ]; then
+        printf 'Unequal:\n%s\n%s\n' "$1" "$2"
+        return 1
+    fi
+}
+
+equal "$(printf '<a c="&amp;" b="&quot;">&amp;</a>' | normalize)" \
+    '<?xml version="1.0" encoding="UTF-8"?>
+<a b="&quot;" c="&amp;">&amp;</a>'
 

@@ -71,7 +71,11 @@ but may produce invalid XML e.g. if order of elements is significant.
         <for-each select="@*">
             <if test="local-name() != '__attr'">
                 <value-of disable-output-escaping="yes"
-                    select="concat(' ', name(), '=&quot;', ., '&quot;')" />
+                    select="concat(' ', name(), '=&quot;')" />
+                <call-template name="xml-escape">
+                    <with-param name="str" select="." />
+                </call-template>
+                <text>&quot;</text>
             </if>
         </for-each>
 
