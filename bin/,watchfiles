@@ -11,7 +11,7 @@ watchfiles() {
     shift
     while true; do
         if find . -name "$pattern" -newer "$tmp" | grep . ; then
-            "$@"
+            "$@" || printf >&2 "ERROR code: $?\n"
             touch "$tmp"
         fi
         sleep 0.1
