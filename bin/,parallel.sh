@@ -38,7 +38,7 @@ if [ $len -lt 1 ]; then
     exit $?
 fi
 
-names=123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
+names=123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0_,
 declare -a ps
 for (( i=0; i< $procs; i++ )); do
     ps[i]=${names:$i:1}
