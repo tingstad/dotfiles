@@ -63,3 +63,11 @@ assert "attribute namespace prefixes are preserved" \
     <b xmlns:op="ns:do" op:name="bar" op:v="" c="1"></b>
 </a>'
 
+assert "attribute __attr is preserved" \
+"$(printf '<a ___attr="x"><b __attr="X"/><b __attr="A"/></a>' | normalize)" \
+'<?xml version="1.0" encoding="UTF-8"?>
+<a ___attr="x">
+    <b __attr="A"></b>
+    <b __attr="X"></b>
+</a>'
+

@@ -24,7 +24,9 @@ but may produce invalid XML e.g. if order of elements is significant.
     <output method="text" />
 
     <variable name="attrname"><!-- name for stringified attributes attribute -->
-        <value-of select="'__attr'" />
+        <call-template name="find-unused-attr">
+            <with-param name="candidate" select="'__attr'" />
+        </call-template>
     </variable>
 
     <template match="/">
@@ -73,7 +75,7 @@ but may produce invalid XML e.g. if order of elements is significant.
         </for-each>
 
         <for-each select="@*">
-            <if test="local-name() != $attrname">
+            <if test="name() != $attrname">
                 <value-of disable-output-escaping="yes"
                     select="concat(' ', name(), '=&quot;')" />
                 <call-template name="xml-escape">
@@ -146,6 +148,22 @@ but may produce invalid XML e.g. if order of elements is significant.
             <value-of select="concat('{', namespace-uri(), '}', local-name(), '=', .)" />
             <if test="position() != last()">|</if>
         </for-each>
+    </template>
+
+    <!-- prepend _ until attr candidate name does not exist in document  -->
+    <template name="find-unused-attr">
+        <param name="candidate" />
+        <choose>
+            <when test="//@*[name() = $candidate]">
+                <call-template name="find-unused-attr">
+                    <with-param name="candidate"
+                        select="concat('_', $candidate)" />
+                </call-template>
+            </when>
+            <otherwise>
+                <value-of select="$candidate" />
+            </otherwise>
+        </choose>
     </template>
 
     <template name="indent">
