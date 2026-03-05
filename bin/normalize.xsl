@@ -30,11 +30,11 @@ but may produce invalid XML e.g. if order of elements is significant.
     </variable>
 
     <template match="/">
-        <variable name="pass1">
-            <apply-templates mode="sort" select="@*|node()" />
+        <variable name="preprocessed">
+            <apply-templates mode="preprocess" select="@*|node()" />
         </variable>
         <variable name="sorted">
-            <apply-templates mode="sort" select="exsl:node-set($pass1)" />
+            <apply-templates mode="sort" select="exsl:node-set($preprocessed)" />
         </variable>
         <apply-templates mode="print" select="exsl:node-set($sorted)" />
     </template>
@@ -110,12 +110,22 @@ but may produce invalid XML e.g. if order of elements is significant.
             select="concat('&lt;/', local-name(), '&gt;')" />
     </template>
 
-    <template mode="sort" match="*">
+    <template mode="preprocess" match="*">
         <element name="{local-name()}" namespace="{namespace-uri()}">
-            <variable name="v" select="$attrname" />
-            <attribute name="{$v}">
+            <attribute name="{$attrname}">
                 <call-template name="attr-str" />
             </attribute>
+
+            <apply-templates select="@*|text()" />
+
+            <for-each select="*">
+                <apply-templates mode="preprocess" select="." />
+            </for-each>
+        </element>
+    </template>
+
+    <template mode="sort" match="*">
+        <element name="{local-name()}" namespace="{namespace-uri()}">
 
             <for-each select="@*">
                 <sort select="concat('{', namespace-uri(), '}', local-name())" />
@@ -125,7 +135,7 @@ but may produce invalid XML e.g. if order of elements is significant.
 
             <for-each select="*">
                 <sort select="concat('{', namespace-uri(), '}', local-name())" />
-                <sort select="@*[name() = $attrname]" /><!-- not defined on 1st pass -->
+                <sort select="@*[name() = $attrname]" /><!-- from preprocess -->
                 <apply-templates mode="sort" select="." />
             </for-each>
 
@@ -133,7 +143,7 @@ but may produce invalid XML e.g. if order of elements is significant.
         </element>
     </template>
 
-    <template match="text()|comment()|processing-instruction()">
+    <template match="@*|text()|comment()|processing-instruction()">
         <copy />
     </template>
 
