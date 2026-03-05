@@ -89,8 +89,6 @@ but may produce invalid XML e.g. if order of elements is significant.
             select="concat('&gt;', '')" />
 
         <for-each select="*">
-            <sort select="concat('{', namespace-uri(), '}', local-name())" />
-            <sort select="@*[name() = $attrname]" />
             <apply-templates mode="print" select="." />
         </for-each>
 
@@ -129,7 +127,6 @@ but may produce invalid XML e.g. if order of elements is significant.
 
             <for-each select="@*">
                 <sort select="concat('{', namespace-uri(), '}', local-name())" />
-                <sort select="name()" />
                 <copy />
             </for-each>
 
@@ -154,7 +151,6 @@ but may produce invalid XML e.g. if order of elements is significant.
         <for-each select="@*">
             <sort select="namespace-uri()" />
             <sort select="local-name()" />
-            <sort select="name()" />
             <value-of select="concat('{', namespace-uri(), '}', local-name(), '=', .)" />
             <if test="position() != last()">|</if>
         </for-each>
