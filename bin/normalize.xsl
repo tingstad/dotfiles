@@ -23,6 +23,10 @@ but may produce invalid XML e.g. if order of elements is significant.
 
     <output method="text" />
 
+    <variable name="attrname"><!-- name for stringified attributes attribute -->
+        <value-of select="'__attr'" />
+    </variable>
+
     <template match="/">
         <variable name="pass1">
             <apply-templates mode="sort" select="@*|node()" />
@@ -69,7 +73,7 @@ but may produce invalid XML e.g. if order of elements is significant.
         </for-each>
 
         <for-each select="@*">
-            <if test="local-name() != '__attr'">
+            <if test="local-name() != $attrname">
                 <value-of disable-output-escaping="yes"
                     select="concat(' ', name(), '=&quot;')" />
                 <call-template name="xml-escape">
@@ -84,7 +88,7 @@ but may produce invalid XML e.g. if order of elements is significant.
 
         <for-each select="*">
             <sort select="concat('{', namespace-uri(), '}', local-name())" />
-            <sort select="@__attr" />
+            <sort select="@*[name() = $attrname]" />
             <apply-templates mode="print" select="." />
         </for-each>
 
@@ -106,7 +110,7 @@ but may produce invalid XML e.g. if order of elements is significant.
 
     <template mode="sort" match="*">
         <element name="{local-name()}" namespace="{namespace-uri()}">
-            <variable name="v">__attr</variable>
+            <variable name="v" select="$attrname" />
             <attribute name="{$v}">
                 <call-template name="attr-str" />
             </attribute>
@@ -119,7 +123,7 @@ but may produce invalid XML e.g. if order of elements is significant.
 
             <for-each select="*">
                 <sort select="concat('{', namespace-uri(), '}', local-name())" />
-                <sort select="@__attr" /><!-- not defined on 1st pass -->
+                <sort select="@*[name() = $attrname]" /><!-- not defined on 1st pass -->
                 <apply-templates mode="sort" select="." />
             </for-each>
 
@@ -131,6 +135,9 @@ but may produce invalid XML e.g. if order of elements is significant.
         <copy />
     </template>
 
+    <!-- stringifies attributes of current element, for example:
+        <e s:v="" s:name="bar" n="1" xmlns:s="ns:do">
+    ==> "{}n=1|{ns:do}name=bar|{ns:do}v=" -->
     <template name="attr-str">
         <for-each select="@*">
             <sort select="namespace-uri()" />
