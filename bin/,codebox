@@ -1,0 +1,48 @@
+#!/bin/bash
+set -eu
+
+image="code-sandbox"
+dir=$(cd -- "$(dirname -- "$0")" && pwd)
+
+tz=${TZ:-Europe/Oslo}
+
+build() {
+    docker build \
+        --build-arg TZ="$tz" \
+        --build-arg UID="$(id -u)" \
+        --build-arg GID="$(id -g)" \
+        -t "$image" \
+        -f "$dir"/codebox.Dockerfile
+}
+if [ "x$*" = "x--build" ]; then
+    build; exit; fi
+if ! docker image inspect "$image" > /dev/null 2>&1; then
+    build; fi
+
+[ -d "$HOME/.m2" ] || mkdir "$HOME/.m2"
+[ -d "$HOME/.claude" ] || mkdir "$HOME/.claude"
+[ -f "$HOME/.claude.json" ] || printf '{}' > "$HOME/.claude.json"
+[ -d "$(go env GOPATH 2>/dev/null)" ] || [ -d "$HOME/go" ] || mkdir "$HOME/go"
+
+opts=()
+
+[ -d "$(go env GOPATH 2>/dev/null)" ] \
+    && opts+=("-v" "$(go env GOPATH):/home/dev/go") \
+    || opts+=("-v" "$HOME/go:/home/dev/go")
+
+if [ -d "$HOME/.config/gcloud" ]; then
+    opts+=("-v" "$HOME/.config/gcloud:/home/dev/.config_gcloud:ro")
+fi
+
+docker run -it --rm \
+    -e TZ="$tz" \
+    -e HOST_UID="$(id -u)" \
+    -e HOST_GID="$(id -g)" \
+    -e AMEDIA_READ_TOKEN="$AMEDIA_READ_TOKEN" \
+    -v "$PWD":/workspace \
+    -v "$HOME"/.m2:/home/dev/.m2 \
+    -v "$HOME"/.claude:/home/dev/.claude \
+    -v "$HOME"/.claude.json:/home/dev/.claude.json \
+    "${opts[@]}" \
+    "$image" "$@"
+
