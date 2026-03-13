@@ -1,0 +1,4 @@
+#!/bin/sh
+
+docker run -it --rm --network=host edenhill/kcat:1.7.1 "$@"
+
