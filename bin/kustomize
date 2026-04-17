@@ -1,0 +1,5 @@
+#!/bin/sh
+set -e
+
+docker run -v "$PWD":"$PWD":ro -w "$PWD" registry.k8s.io/kustomize/kustomize:v5.0.0 "$@"
+
