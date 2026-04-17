@@ -35,6 +35,7 @@ if [ -d "$HOME/.config/gcloud" ]; then
 fi
 
 docker run -it --rm \
+    --memory=2048m \
     -e TZ="$tz" \
     -e HOST_UID="$(id -u)" \
     -e HOST_GID="$(id -g)" \
