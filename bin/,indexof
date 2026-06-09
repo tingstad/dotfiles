@@ -1,0 +1,42 @@
+#!/bin/sh
+#Richard H. Tingstad
+set -e
+
+# build state machine for awk:
+indexof() {
+    printf '{
+    for (i = 1; i <= NF; i++) {
+        if ($i == "%s") s = 1' "$1"
+    shift
+    i=1
+    for arg; do
+        [ $i -lt $# ] || break
+        printf '
+        else if (s == %d && $i == "%s") s = %d' $i $arg $(( i += 1 ))
+    done
+    printf '
+        else if (s == %d && $i == "%s") { print c-%d; s = 0; }
+        else s = 0
+        c++
+    }}' $i $arg $i
+}
+
+for bin in od awk; do
+    command -v "$bin" >/dev/null 2>&1 || {
+        echo "Missing required tool: $bin" >&2
+        exit 1
+    }
+done
+
+if [ $# -eq 0 ] || [ "x$*" = "x-h" ]; then
+    cat <<-EOF
+	Scans stdin for provided byte sequences and prints indices.
+	Richard H. Tingstad
+	Example:
+	    $0 ca fe < file
+	EOF
+    exit 1
+fi
+
+od -An -tx1 -v | awk "$(indexof "$@")"
+
