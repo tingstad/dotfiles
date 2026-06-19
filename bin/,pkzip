@@ -10,6 +10,8 @@ main() {
 
     for file; do
 
+    modtime=$(dosTime "$file" || epochToDosTime "$(date +%s)" \
+        || printf '00 00 00 00')
     sizeuncom=$(printf %x $(wc -c "$file" | awk '{print $1}') | littleEndInt)
     gzip -c < "$file" > "$file".gz
 
@@ -31,8 +33,7 @@ main() {
     put 14 00       # version needed to extract
     put 00 00       # general purpose bit flag
     put 08 00       # compression method
-    put b2 5b       # last mod file time
-    put a1 5c       # last mod file date
+    put $modtime    # last mod file time + date     2+2 bytes
     put $crc        # crc-32                          4 bytes
     put $sizecompr  # compressed size                 4 bytes
     put $sizeuncom  # uncompressed size               4 bytes
@@ -43,7 +44,7 @@ main() {
     cat "$file.deflate"
 
     { printf '%s\t' "$crc" "$sizecompr" "$sizeuncom" "$namelen" \
-        "$(printf %x "$offset" | littleEndInt)" "$name"
+        "$(printf %x "$offset" | littleEndInt)" "$modtime" "$name"
       printf '\n'; } >> table
 
     headerlen=$(( 30 + ${#filename} ))
@@ -54,7 +55,7 @@ main() {
     for filename; do
     i=$(( i + 1 ))
 
-    IFS="$tab" read crc sizecompr sizeuncom namelen localoff name <<-EOF
+    IFS="$tab" read crc sizecompr sizeuncom namelen localoff modtime name <<-EOF
 	$(awk "NR == $i" < table)
 	EOF
 
@@ -63,8 +64,7 @@ main() {
     put 14 00        # version needed to extract       2 bytes
     put 00 00        # general purpose bit flag        2 bytes
     put 08 00        # compression method              2 bytes
-    put b2 5b        # last mod file time              2 bytes
-    put a1 5c        # last mod file date              2 bytes
+    put $modtime     # last mod file time + date     2+2 bytes
     put $crc         # crc-32                          4 bytes
     put $sizecompr   # compressed size                 4 bytes
     put $sizeuncom   # uncompressed size               4 bytes
@@ -81,6 +81,7 @@ main() {
 
     dirlen=$(( dirlen + 46 + ${#filename} ))
 
+    rm "$filename.gz" "$filename.deflate"
     done
 
     numb=$(printf %02x $#)
@@ -97,13 +98,53 @@ main() {
     put 00 00        # .ZIP file comment length        2 bytes
                      # .ZIP file comment       (variable size)
 
-    rm table "$file.gz" "$file.deflate"
+    rm table
 }
 
 put() {
     for arg; do
         printf \\$(printf %03o 0x$arg)
     done
+}
+
+# Emit "tlo thi dlo dhi" hex bytes: MS-DOS time & date of file's mtime (UTC)
+dosTime() {
+    octal=$(tar cf - "$1" 2>/dev/null \
+        | dd bs=1 skip=136 count=11 2>/dev/null \
+        | tr -cd '0-7')
+    [ -n "$octal" ] || return 1
+    epoch=$(awk -v oct="$octal" 'BEGIN {
+        ep = 0
+        for (i = 1; i <= length(oct); i++) ep = ep*8 + substr(oct,i,1)+0
+        print ep
+    }')
+    epochToDosTime "$epoch"
+}
+
+# Emit "tlo thi dlo dhi" hex bytes: MS-DOS time & date from epoch seconds (UTC)
+epochToDosTime() {
+    awk -v ep="$1" 'BEGIN {
+        sec  = ep % 60; ep = int(ep/60)
+        min  = ep % 60; ep = int(ep/60)
+        hour = ep % 24; days = int(ep/24)
+        year = 1970
+        while (1) {
+            yd = ((year%4==0 && year%100!=0) || year%400==0) ? 366 : 365
+            if (days < yd) break
+            days -= yd; year++
+        }
+        split("31 28 31 30 31 30 31 31 30 31 30 31", dm)
+        if ((year%4==0 && year%100!=0) || year%400==0) dm[2] = 29
+        month = 1
+        while (days >= dm[month]) { days -= dm[month]; month++ }
+        day = days + 1
+        if (year < 1980) { year=1980; month=1; day=1; hour=0; min=0; sec=0 }
+        dt = (year-1980)*512 + month*32 + day
+        tm = hour*2048 + min*32 + int(sec/2)
+        printf "%02x %02x %02x %02x\n",
+            tm%256, int(tm/256), dt%256, int(dt/256)
+    }' | grep \
+        '^[0-9a-f][0-9a-f] [0-9a-f][0-9a-f] [0-9a-f][0-9a-f] [0-9a-f][0-9a-f]$'
 }
 
 # 32 bit (4 byte) little endian integer from hex
@@ -129,7 +170,7 @@ littleEndInt() {
     # dd cc bb aa
 }
 
-for bin in gzip od awk wc sed printf tail head dd; do
+for bin in gzip od awk wc sed printf tail head dd tar tr; do
     command -v "$bin" >/dev/null 2>&1 || {
         echo "Missing required tool: $bin" >&2
         exit 1
