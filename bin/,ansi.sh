@@ -292,6 +292,8 @@ main() {
         if (output == "html") {
             if (laststyle != "") printhex("</span>")
             printhex("\n</pre>")
+        } else if (output == "ansi" && laststyle != "") {
+            printhex("\033[m")
         }
     }
 
@@ -394,7 +396,7 @@ main() {
     }
 
     function printansi(laststyle, current) {
-        if (laststyle != "" && current == "")
+        if (laststyle != "")
             printhex("\033[m")
         if (current)
             printhex(current)
@@ -498,9 +500,6 @@ main() {
             s = s "\033[" ((fg ~ "^[25];") ? "38;" : "") fg "m"
         if (bg)
             s = s "\033[" ((bg ~ "^[25];") ? "48;" : "") bg "m"
-
-        if (s == "")
-            s = "\033[m"
 
         return s
     }
@@ -1075,6 +1074,10 @@ ap across lines
         | main -dbw6)" "$pre"'Test11
 <span style="color:blue;">Bright</span>
 </pre>'
+
+    assert "$(printf '\033[1;5;32mTest12\033[0;31;47m■\033[m' \
+        | main -d -w7 -o ansi)" \
+        "$(printf '\033[1m\033[5m\033[32mTest12\033[m\033[31m\033[47m■\033[m')"
 
     exit $?
 fi
