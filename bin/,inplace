@@ -16,7 +16,7 @@ inplace()(
     mv "$temp" "$file"
 )
 
-function mktemp() {
+mktemp() {
     tmpdir=${TMPDIR:-/tmp/}
     echo "${tmpdir%/}/inplace$$"
 }
