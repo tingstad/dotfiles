@@ -3,7 +3,7 @@
 set -e
 
 # Package given files (to stdout)
-# Writes temp files "$file".gz, "$file.deflate", and "table"
+# Writes temp files "$file.gz", "$file.deflate", and "table"
 main() {
     offset=0
     > table
