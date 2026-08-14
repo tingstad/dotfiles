@@ -44,22 +44,19 @@ for (( i=0; i< $procs; i++ )); do
     ps[i]=${names:$i:1}
 done
 
-declare -a start byteoffs adjustment
+declare -a linefix  # bytes from chunk border to next newline
+linefix[0]=0        # first chunk has no head to skip
+linefix[$procs]=0   # last chunk has no tail to append
 
-for i in ${!ps[@]}; do
-    offset=$(( i * len ))
-    start[$i]=$offset
-    [ $i -gt 0 ] || continue
-    offset=$(( offset * 1048576 ))
-    adjustment[$i]=$(dd if="$file" bs=1 skip=$offset count=2048 2>/dev/null \
+for (( i=1; i<procs; i++ )); do
+    offset=$(( i * len * 1048576 ))  # chunk border
+    linefix[$i]=$(dd if="$file" bs=1 skip=$offset count=2048 2>/dev/null \
       | head -n1 | wc -c | awk '{ print $1 }')
-    [ ${adjustment[$i]} -lt 2048 ] || {
+    [ ${linefix[$i]} -lt 2048 ] || {
         echo >&2 "WARNING: newlines sparse, may affect line-oriented commands"
-        adjustment[$i]=0
+        linefix[$i]=0
     }
-    byteoffs[$i]=$offset
 done
-adjustment[0]=0
 
 job() (
     i=$1; shift 1
@@ -67,15 +64,15 @@ job() (
     [ $i -lt $((procs-1)) ] && count="count=$len" || count=""
 
     (
-        dd if="$file" bs=1024k skip=${start[$i]} $count 2>/dev/null \
+        dd if="$file" bs=1024k skip=$((i*len)) $count 2>/dev/null \
         | (
-            [ ${adjustment[$i]} -eq 0 ] || \
-                dd bs=1 of=/dev/null count=${adjustment[$i]} 2>/dev/null
+            [ ${linefix[$i]} -eq 0 ] || \
+                dd bs=1 of=/dev/null count=${linefix[$i]} 2>/dev/null
             cat
         )
-        if [ $i -lt $((procs-1)) ] && [ ${adjustment[$((i+1))]} -gt 0 ]; then
-            dd if="$file" bs=1 skip=${byteoffs[$((i+1))]} \
-              count=${adjustment[$((i+1))]} 2>/dev/null
+        if [ ${linefix[$((i+1))]} -gt 0 ]; then
+            dd if="$file" bs=1 skip=$(( (i+1) * len * 1048576 )) \
+              count=${linefix[$((i+1))]} 2>/dev/null
         fi
     ) | "$@"
 )
