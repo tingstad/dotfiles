@@ -10,7 +10,7 @@ if [ $# -lt 3 ]; then
 		Usage: $p FILE JOBS COMMAND...
 		
 		Example:
-		  $p  big.txt 8 wc | awk '{ n+=$1; w+=$2; b+=$3 } END{ print n,w,b }'
+		  $p  big.txt 8 wc | awk '{ n+=\$1; w+=\$2; b+=\$3 } END{ print n,w,b }'
 		
 		Richard H. Tingstad
 		EOF
@@ -28,7 +28,7 @@ file="$1"; procs="$2"; shift 2
     exit 1; }
 
 size=$(ls -lkng "$file" | awk '{print $4}')
-megs=$(( size / 1024 / 1024 ))
+megs=$(( size / 1048576 )) # 1048576 = 1024 * 1024
 
 len=$(( megs / procs ))
 
@@ -80,14 +80,47 @@ job() (
     ) | "$@"
 )
 
+atomiclines() {
+    # Make sure concurrent writers to a shared pipe don't tear each other's
+    # output, by passing stdin to stdout in small enough chunks (<= $1), and
+    # redirecting long lines (> $1) to file ($2) for caller to handle
+    # (synchronously) after writers are finished.
+    # Whole lines are buffered until reaching limit ($1) and then flushed,
+    # staying atomic against other writers on the same pipe:
+    # POSIX guarantees write() to a pipe to be atomic for sizes <= PIPE_BUF
+    # (>= 512).  Line order is not preserved.
+    awk -v max="$1" -v file="$2" '{
+        s = length($0) + 1
+        if (s > max) {
+            print $0 >> file
+        } else if (n + s > max) {
+            printf "%s", buf; fflush()
+            buf = $0 "\n"
+            n = s
+        } else {
+            buf = buf $0 "\n"
+            n += s
+        }
+    }
+    END {
+        if (n) { printf "%s", buf; fflush() }
+    }'
+}
+
 declare -a pids
+pipebuf=$(getconf PIPE_BUF . 2>/dev/null || true)
+tmp=${TMPDIR:-/tmp}
+prefix=${tmp%/}/job_$$_
+trap 'rm -f "$prefix"*' EXIT INT TERM
 
 for i in ${!ps[@]}; do
-    job $i "$@" &
+    job $i "$@" | atomiclines ${pipebuf:-512} "$prefix$i" &
     pids[$i]=$!
 done
 
 wait
+
+cat "$prefix"* 2>/dev/null || true
 
 # TODO
 # auto-detect number of procs to use (when not specified)?
