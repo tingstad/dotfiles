@@ -44,37 +44,47 @@ for (( i=0; i< $procs; i++ )); do
     ps[i]=${names:$i:1}
 done
 
-declare -a linefix  # bytes from chunk border to next newline
-linefix[0]=0        # first chunk has no head to skip
-linefix[$procs]=0   # last chunk has no tail to append
+declare -a border  # chunk starts in absolute byte offsets
+border[0]=0
+
+flag=
+if echo test | dd bs=3 count=1 iflags=fullblock >/dev/null 2>&1; then
+    flag="iflags=fullblock"
+elif echo test | dd bs=3 count=1 iflag=fullblock >/dev/null 2>&1; then
+    flag="iflag=fullblock"
+fi
 
 for (( i=1; i<procs; i++ )); do
-    offset=$(( i * len * 1048576 ))  # chunk border
-    linefix[$i]=$(dd if="$file" bs=1 skip=$offset count=2048 2>/dev/null \
-      | head -n1 | wc -c | awk '{ print $1 }')
-    [ ${linefix[$i]} -lt 2048 ] || {
+    maxlinelen=65536
+    # lseek to nominal chunk border, then probe for next newline
+    linefix=$( (
+        dd bs=1024k skip=$((i*len)) count=0 2>/dev/null
+        dd bs=$maxlinelen $flag count=1 2>/dev/null
+      ) < "$file" | head -n1 | wc -c | awk '{ print $1 }')
+    [ $linefix -lt $maxlinelen ] || {
         echo >&2 "WARNING: newlines sparse, may affect line-oriented commands"
-        linefix[$i]=0
+        linefix=0
     }
+    border[$i]=$(( i * len * 1048576 + linefix ))
 done
 
 job() (
     i=$1; shift 1
-
-    [ $i -lt $((procs-1)) ] && count="count=$len" || count=""
-
     (
-        dd if="$file" bs=1024k skip=$((i*len)) $count 2>/dev/null \
-        | (
-            [ ${linefix[$i]} -eq 0 ] || \
-                dd bs=1 of=/dev/null count=${linefix[$i]} 2>/dev/null
+        [ $i -eq 0 ] || \
+            dd bs=1 skip=${border[$i]} count=0 2>/dev/null
+
+        if [ $((i+1)) -lt $procs ]; then
+            s=$(( border[$((i+1))] - border[$i] ))
+            q=$(( s / 1048576 ))
+            r=$(( s % 1048576 ))
+
+            [ $q -eq 0 ] || dd $flag bs=1024k count=$q 2>/dev/null
+            [ $r -eq 0 ] || dd $flag bs=$r    count=1  2>/dev/null
+        else
             cat
-        )
-        if [ ${linefix[$((i+1))]} -gt 0 ]; then
-            dd if="$file" bs=1 skip=$(( (i+1) * len * 1048576 )) \
-              count=${linefix[$((i+1))]} 2>/dev/null
         fi
-    ) | "$@"
+    ) < "$file" | "$@"
 )
 
 atomiclines() {
