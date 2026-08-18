@@ -28,12 +28,10 @@ file="$1"; procs="$2"; shift 2
     exit 1; }
 
 size=$(ls -lkng "$file" | awk '{print $4}')
-megs=$(( size / 1048576 )) # 1048576 = 1024 * 1024
+len=$(( size / procs ))
 
-len=$(( megs / procs ))
-
-if [ $len -lt 1 ]; then
-    echo >&2 "WARNING: less than 1M per job, not parallelizing"
+if [ $len -lt 2 ]; then
+    echo >&2 "WARNING: less than 2b per job, not parallelizing"
     "$@" < "$file"
     exit $?
 fi
@@ -54,18 +52,21 @@ elif echo test | dd bs=3 count=1 iflag=fullblock >/dev/null 2>&1; then
     flag="iflag=fullblock"
 fi
 
+maxlinelen=$(( len / 4 ))
+maxlinelen=$(( maxlinelen > 4096 ? maxlinelen : 4096 ))
+maxlinelen=$(( maxlinelen < 65536 ? maxlinelen : 65536 ))
+
 for (( i=1; i<procs; i++ )); do
-    maxlinelen=65536
     # lseek to nominal chunk border, then probe for next newline
     linefix=$( (
-        dd bs=1024k skip=$((i*len)) count=0 2>/dev/null
+        dd bs=1 skip=$((i*len)) count=0 2>/dev/null
         dd bs=$maxlinelen $flag count=1 2>/dev/null
       ) < "$file" | head -n1 | wc -c | awk '{ print $1 }')
     [ $linefix -lt $maxlinelen ] || {
         echo >&2 "WARNING: newlines sparse, may affect line-oriented commands"
         linefix=0
     }
-    border[$i]=$(( i * len * 1048576 + linefix ))
+    border[$i]=$(( i * len + linefix ))
 done
 
 job() (
