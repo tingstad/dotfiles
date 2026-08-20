@@ -36,12 +36,6 @@ if [ $len -lt 2 ]; then
     exit $?
 fi
 
-names=123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0_,
-declare -a ps
-for (( i=0; i< $procs; i++ )); do
-    ps[i]=${names:$i:1}
-done
-
 declare -a border  # chunk starts in absolute byte offsets
 border[0]=0
 
@@ -56,17 +50,30 @@ maxlinelen=$(( len / 4 ))
 maxlinelen=$(( maxlinelen > 4096 ? maxlinelen : 4096 ))
 maxlinelen=$(( maxlinelen < 65536 ? maxlinelen : 65536 ))
 
+back=$(( len > maxlinelen ? maxlinelen / 2 : len / 2 ))
+
+start=0
 for (( i=1; i<procs; i++ )); do
-    # lseek to nominal chunk border, then probe for next newline
+    start=$(( start + len - back ))
+    [ $start -lt $size ] || break
     linefix=$( (
-        dd bs=1 skip=$((i*len)) count=0 2>/dev/null
+        dd bs=1 skip=$start count=0 2>/dev/null
         dd bs=$maxlinelen $flag count=1 2>/dev/null
       ) < "$file" | head -n1 | wc -c | awk '{ print $1 }')
     [ $linefix -lt $maxlinelen ] || {
         echo >&2 "WARNING: newlines sparse, may affect line-oriented commands"
         linefix=0
     }
-    border[$i]=$(( i * len + linefix ))
+    start=$(( start + linefix ))
+    [ $start -lt $size ] || break
+    border[$i]=$start
+done
+procs=${#border[@]}
+
+names=123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0_,
+declare -a ps
+for (( i=0; i< $procs; i++ )); do
+    ps[i]=${names:$i:1}
 done
 
 job() (
