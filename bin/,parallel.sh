@@ -50,7 +50,8 @@ maxlinelen=$(( len / 4 ))
 maxlinelen=$(( maxlinelen > 4096 ? maxlinelen : 4096 ))
 maxlinelen=$(( maxlinelen < 65536 ? maxlinelen : 65536 ))
 
-back=$(( len > maxlinelen ? maxlinelen / 2 : len / 2 ))
+back=$(( maxlinelen / 2 < 384 ? maxlinelen / 2 : 384 ))
+back=$(( back < len / 2 ? back : len / 2 ))
 
 start=0
 for (( i=1; i<procs; i++ )); do
@@ -59,8 +60,18 @@ for (( i=1; i<procs; i++ )); do
     linefix=$( (
         dd bs=1 skip=$start count=0 2>/dev/null
         dd bs=$maxlinelen $flag count=1 2>/dev/null
-      ) < "$file" | head -n1 | wc -c | awk '{ print $1 }')
-    [ $linefix -lt $maxlinelen ] || {
+      ) < "$file" | od -An -tu1 -v \
+        | awk -v X=$back 'BEGIN { n=1; prev=0 } { for (i=1; i<=NF; i++) {
+            if ($i == 10) {
+                if (n >= X) {
+                    if (prev == 0 || n - X < X - prev) print n
+                    else print prev
+                    prev = 0; exit
+                }
+                prev = n
+            } n++ } }
+            END { if (prev > 0) print prev }')
+    [ ${linefix:-$maxlinelen} -lt $maxlinelen ] || {
         echo >&2 "WARNING: newlines sparse, may affect line-oriented commands"
         linefix=0
     }
@@ -104,7 +115,7 @@ atomiclines() {
     # staying atomic against other writers on the same pipe:
     # POSIX guarantees write() to a pipe to be atomic for sizes <= PIPE_BUF
     # (>= 512).  Line order is not preserved.
-    awk -v max="$1" -v file="$2" '{
+    LC_ALL=C awk -v max="$1" -v file="$2" '{
         s = length($0) + 1
         if (s > max) {
             print $0 >> file
