@@ -104,13 +104,18 @@ prefix=${tmp%/}/job_$$_
 trap 'rm -f "$prefix"*' EXIT INT TERM
 
 for i in ${!ps[@]}; do
-    job $i "$@" | atomiclines ${pipebuf:-512} "$prefix$i" &
+    ( set -o pipefail; job $i "$@" | atomiclines ${pipebuf:-512} "$prefix$i" ) &
     pids[$i]=$!
 done
 
-wait
+rc=0
+for pid in ${pids[@]}; do
+    wait $pid || rc=$(( rc > 0 ? rc : $? ))
+done
 
 cat "$prefix"* 2>/dev/null || true
+
+return $rc
 
 }
 
