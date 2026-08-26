@@ -2,16 +2,7 @@
 # Richard H. Tingstad
 set -e
 
-maxline=65536
-while getopts ":m:" opt; do
-    case $opt in
-        m) maxline=$OPTARG ;;
-        *) echo >&2 "Unknown option: -$OPTARG"; exit 2 ;;
-    esac
-done
-shift $((OPTIND - 1))
-
-if [ $# -lt 3 ]; then
+usage() {
     p=$(basename $0)
     cat <<-EOF
 		parallel
@@ -20,13 +11,28 @@ if [ $# -lt 3 ]; then
 
 		  -m BYTES  scan window for finding a newline near each chunk boundary
 		            (default 65536)
+		  -h        show this help
 
 		Example:
 		  $p  big.txt 8 wc | awk '{ n+=\$1; w+=\$2; b+=\$3 } END{ print n,w,b }'
 
 		Richard H. Tingstad
 		EOF
-    exit
+}
+
+maxline=65536
+while getopts "m:h" opt; do
+    case $opt in
+        m) maxline=$OPTARG ;;
+        h) usage; exit ;;
+        *) echo >&2 "Try -h for help."; exit 2 ;;
+    esac
+done
+shift $((OPTIND - 1))
+
+if [ $# -lt 3 ]; then
+    usage >&2
+    exit 2
 fi
 
 file="$1"; procs="$2"; shift 2
