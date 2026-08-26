@@ -80,17 +80,7 @@ for (( i=1; i<procs; i++ )); do
     linefix=$( (
         dd bs=1 skip=$start count=0 2>/dev/null
         dd bs=$maxlinelen $flag count=1 2>/dev/null
-      ) < "$file" | od -An -tu1 -v \
-        | awk -v X=$back 'BEGIN { n=1; prev=0 } { for (i=1; i<=NF; i++) {
-            if ($i == 10) {
-                if (n >= X) {
-                    if (prev == 0 || n - X < X - prev) print n
-                    else print prev
-                    prev = 0; exit
-                }
-                prev = n
-            } n++ } }
-            END { if (prev > 0) print prev }')
+      ) < "$file" | findnewline $back)
     [ ${linefix:-$maxlinelen} -lt $maxlinelen ] || {
         echo >&2 "ERROR: no newline within $maxlinelen bytes near chunk boundary (increase -m)"
         exit 1
@@ -168,6 +158,22 @@ atomiclines() {
     END {
         if (n) { printf "%s", buf; fflush() }
     }'
+}
+
+# Read stdin and print byte offset to newline+1 which is closest to $1,
+# preferring the earliest (so $1 -1 wins over $1 +1).
+findnewline() {
+    od -An -tu1 -v \
+    | awk -v X=$1 'BEGIN { n=1; prev=0 } { for (i=1; i<=NF; i++) {
+        if ($i == 10) {
+            if (n >= X) {
+                if (prev == 0 || n - X < X - prev) print n
+                else print prev
+                prev = 0; exit
+            }
+            prev = n
+        } n++ } }
+        END { if (prev > 0) print prev }'
 }
 
 main "$@"
