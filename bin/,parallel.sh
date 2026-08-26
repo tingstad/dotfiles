@@ -2,16 +2,28 @@
 # Richard H. Tingstad
 set -e
 
+maxline=65536
+while getopts ":m:" opt; do
+    case $opt in
+        m) maxline=$OPTARG ;;
+        *) echo >&2 "Unknown option: -$OPTARG"; exit 2 ;;
+    esac
+done
+shift $((OPTIND - 1))
+
 if [ $# -lt 3 ]; then
     p=$(basename $0)
     cat <<-EOF
 		parallel
-		
-		Usage: $p FILE JOBS COMMAND...
-		
+
+		Usage: $p [-m BYTES] FILE JOBS COMMAND...
+
+		  -m BYTES  scan window for finding a newline near each chunk boundary
+		            (default 65536)
+
 		Example:
 		  $p  big.txt 8 wc | awk '{ n+=\$1; w+=\$2; b+=\$3 } END{ print n,w,b }'
-		
+
 		Richard H. Tingstad
 		EOF
     exit
@@ -48,7 +60,7 @@ fi
 
 maxlinelen=$(( len / 4 ))
 maxlinelen=$(( maxlinelen > 4096 ? maxlinelen : 4096 ))
-maxlinelen=$(( maxlinelen < 65536 ? maxlinelen : 65536 ))
+maxlinelen=$(( maxlinelen < maxline ? maxlinelen : maxline ))
 
 back=$(( maxlinelen / 2 < 384 ? maxlinelen / 2 : 384 ))
 back=$(( back < len / 2 ? back : len / 2 ))
@@ -72,8 +84,8 @@ for (( i=1; i<procs; i++ )); do
             } n++ } }
             END { if (prev > 0) print prev }')
     [ ${linefix:-$maxlinelen} -lt $maxlinelen ] || {
-        echo >&2 "WARNING: newlines sparse, may affect line-oriented commands"
-        linefix=0
+        echo >&2 "ERROR: no newline within $maxlinelen bytes near chunk boundary (increase -m)"
+        exit 1
     }
     start=$(( start + linefix ))
     [ $start -lt $size ] || break
