@@ -20,6 +20,8 @@ usage() {
 		EOF
 }
 
+main() {
+
 maxline=65536
 while getopts "m:h" opt; do
     case $opt in
@@ -105,6 +107,23 @@ for (( i=0; i< $procs; i++ )); do
     ps[i]=${names:$i:1}
 done
 
+declare -a pids
+pipebuf=$(getconf PIPE_BUF . 2>/dev/null || true)
+tmp=${TMPDIR:-/tmp}
+prefix=${tmp%/}/job_$$_
+trap 'rm -f "$prefix"*' EXIT INT TERM
+
+for i in ${!ps[@]}; do
+    job $i "$@" | atomiclines ${pipebuf:-512} "$prefix$i" &
+    pids[$i]=$!
+done
+
+wait
+
+cat "$prefix"* 2>/dev/null || true
+
+}
+
 job() (
     i=$1; shift 1
     (
@@ -151,20 +170,7 @@ atomiclines() {
     }'
 }
 
-declare -a pids
-pipebuf=$(getconf PIPE_BUF . 2>/dev/null || true)
-tmp=${TMPDIR:-/tmp}
-prefix=${tmp%/}/job_$$_
-trap 'rm -f "$prefix"*' EXIT INT TERM
-
-for i in ${!ps[@]}; do
-    job $i "$@" | atomiclines ${pipebuf:-512} "$prefix$i" &
-    pids[$i]=$!
-done
-
-wait
-
-cat "$prefix"* 2>/dev/null || true
+main "$@"
 
 # TODO
 # auto-detect number of procs to use (when not specified)?
